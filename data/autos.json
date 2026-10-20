@@ -210,7 +210,23 @@
   "disponible": true,
   "destacado": true,
   "orden": 5,
-  "galeria": []
+  "galeria": [
+   "fotos/ram-limited-2021/01.jpg",
+   "fotos/ram-limited-2021/02.jpg",
+   "fotos/ram-limited-2021/03.jpg",
+   "fotos/ram-limited-2021/04.jpg",
+   "fotos/ram-limited-2021/05.jpg",
+   "fotos/ram-limited-2021/06.jpg",
+   "fotos/ram-limited-2021/07.jpg",
+   "fotos/ram-limited-2021/08.jpg",
+   "fotos/ram-limited-2021/09.jpg",
+   "fotos/ram-limited-2021/10.jpg",
+   "fotos/ram-limited-2021/11.jpg",
+   "fotos/ram-limited-2021/12.jpg"
+  ],
+  "foto": "fotos/ram-limited-2021/01.jpg",
+  "kilometraje": 83000,
+  "descripcion": "<p>La pickup de lujo por excelencia: potencia, espacio y el interior más refinado de su segmento en la versión Limited. De un solo dueño, con 83,000 km y servicios de agencia. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor HEMI V8 con sistema eTorque</li><li>Tracción 4x4</li></ul><h4>Interior y tecnología</h4><ul><li>Versión Limited</li><li>Vestiduras en piel</li><li>Pantalla vertical de 12 pulgadas</li><li>Tablero digital</li></ul><h4>Exterior</h4><ul><li>Rines de 22 pulgadas con llantas 35x12.50</li><li>Tapa enrollable en la caja</li><li>Gancho de arrastre</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>83,000 km</li><li>Servicios de agencia</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Mercedes-Benz A35 AMG 2024",
