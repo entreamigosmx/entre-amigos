@@ -147,7 +147,7 @@ onAuthStateChanged(auth, async (u) => {
 /* ---------------- App ---------------- */
 let TAB = "";
 const TABS = () => isAdmin()
-  ? [["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["personas", "Personas"], ["tasas", "Tasas"]]
+  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["personas", "Personas"], ["tasas", "Tasas"]]
   : isTeam() ? [["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"]]
   : [["mis", "Mis préstamos"]];
 
@@ -157,7 +157,7 @@ function startApp() {
   if (isTeam()) unsubs.push(onSnapshot(doc(db, "config", "tasas"), (s) => { CFG = s.data() || {}; if (TAB === "cotizar" && !touched) applyCfg(); if (TAB === "tasas") draw(); }, () => {}));
   const qc = isAdmin() ? collection(db, "cotizaciones") : isTeam() ? query(collection(db, "cotizaciones"), where("por", "==", ME.uid)) : null;
   if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); }, () => {}));
-  const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis") draw(); };
+  const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
   if (isAdmin()) listenP("all", collection(db, "prestamos"));
   else if (USER.rol === "cliente") {
@@ -165,7 +165,7 @@ function startApp() {
     unsubs.push(onSnapshot(query(collection(db, "cotizaciones"), where("aceptadoPor", "==", ME.uid)), (s) => { MYCOTS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "mis") cotBox(); }, () => {}));
     if (ME.emailVerified && ME.email) listenP("mail", query(collection(db, "prestamos"), where("clienteEmail", "==", ME.email.toLowerCase())));
   }
-  if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos") draw(); drawTabs(); }, () => {}));
+  if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos" || TAB === "agenda") draw(); drawTabs(); }, () => {}));
   go(TABS()[0][0]);
 }
 const isNew = (u) => u.rol !== "admin" && u.creado && Date.now() - new Date(u.creado).getTime() < 3 * 864e5 && !u.visto;
@@ -175,7 +175,7 @@ function drawTabs() {
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
 function go(t) { TAB = t; drawTabs(); draw(); window.scrollTo(0, 0); }
-function draw() { const f = { cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
+function draw() { const f = { agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
 const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
 
 /* ---------- Cotizar ---------- */
@@ -666,4 +666,91 @@ function docsCard(box, uid, admin) {
   let SEE = "";
   docsUnsub = onSnapshot(collection(db, "expedientes", uid, "archivos"), (snap) => { FILES = {}; snap.docs.forEach((d) => (FILES[d.id] = d.data())); render(); }, () => { box.innerHTML = ""; });
   render();
+}
+
+
+/* ---------- Agenda de cobranza (admin) ---------- */
+let AG_DAY = "", AG_MONTH = null;
+const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+// Todas las cuotas de todos los préstamos con su estado.
+function cuotas() {
+  const out = [], hoy = today();
+  PRES.forEach((p) => {
+    if (!p.inicio) return;
+    const a = avance(p); let acum = 0;
+    a.corrida.filas.forEach((f) => {
+      acum += f.pago;
+      const fecha = iso(fechaPago(p.inicio, f.n, p.tipo));
+      const pagada = a.pagado + 0.5 >= acum;
+      const debe = pagada ? 0 : Math.round(Math.min(f.pago, acum - a.pagado) * 100) / 100;
+      out.push({ p, n: f.n, total: a.total, monto: f.pago, debe, fecha, pagada, atrasada: !pagada && fecha < hoy, noPago: p.noPago?.[f.n] || "", restante: a.restante, pagado: a.pagado });
+    });
+  });
+  return out;
+}
+function recMsg(c) {
+  const atr = c.atrasada;
+  return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Llevas ${mxn2(c.pagado)} pagados y te restan ${mxn2(c.restante)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
+}
+function cuotaRow(c, showDate) {
+  const key = c.p.id + ":" + c.n;
+  const st = c.pagada ? `<span class="pill ok">Pagó</span>` : c.atrasada ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
+  return `<div class="item">
+    <div class="item-top"><b>${esc(c.p.cliente)}</b><span>${st}</span></div>
+    <div class="item-mid">${c.p.tipo === "semanal" ? "Semana" : "Mes"} ${c.n} de ${c.total} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
+    ${c.pagada ? "" : `<div class="item-bot">
+      <button class="btn sm primary" type="button" data-pago="${key}">Sí pagó</button>
+      <button class="btn sm" type="button" data-otro="${key}">Pagó otra cantidad</button>
+      <button class="btn sm" type="button" data-nopago="${key}">No pagó</button>
+      ${c.p.telefono ? `<a class="btn sm" href="${waTo(c.p.telefono, recMsg(c))}" target="_blank" rel="noopener">Recordatorio</a>` : `<span class="muted">Sin WhatsApp registrado</span>`}
+    </div>
+    <form data-otrof="${key}" class="row" hidden novalidate style="margin-top:6px"><label>Monto recibido<input name="m" inputmode="decimal" value="${c.debe}"></label><button class="btn sm primary" type="submit">Registrar</button></form>`}
+  </div>`;
+}
+function vAgenda() {
+  const all = cuotas(), hoy = today();
+  const en7 = iso(new Date(Date.now() + 7 * 864e5));
+  const atr = all.filter((c) => c.atrasada).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  const deHoy = all.filter((c) => c.fecha === hoy);
+  const prox = all.filter((c) => !c.pagada && c.fecha > hoy && c.fecha <= en7).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  const recientes = [];
+  PRES.forEach((p) => (p.pagos || []).forEach((x) => { if (x.fecha >= iso(new Date(Date.now() - 7 * 864e5))) recientes.push({ p, ...x }); }));
+  recientes.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  const sum = (l, k) => l.reduce((s, c) => s + (c[k] || 0), 0);
+  // calendario del mes
+  const base = AG_MONTH || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const y = base.getFullYear(), m = base.getMonth(), first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
+  const off = (first.getDay() + 6) % 7; // lunes primero
+  const byDay = {}; all.forEach((c) => { if (c.fecha.startsWith(iso(first).slice(0, 7))) (byDay[c.fecha] = byDay[c.fecha] || []).push(c); });
+  let cells = ""; for (let i = 0; i < off; i++) cells += `<span></span>`;
+  for (let d = 1; d <= days; d++) {
+    const k = iso(new Date(y, m, d)), l = byDay[k] || [];
+    const cls = !l.length ? "" : l.some((c) => c.atrasada) ? "late" : l.every((c) => c.pagada) ? "paid" : "due";
+    cells += `<button type="button" class="day ${cls}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}">${d}${l.length ? `<i>${l.length}</i>` : ""}</button>`;
+  }
+  const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
+  $("panel").innerHTML = `
+  <div class="card">
+    <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2></div>
+    <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
+  </div>
+  ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${atr.map((c) => cuotaRow(c, true)).join("")}</div></div>` : ""}
+  <div class="card"><h2>Pagos de hoy</h2><div class="list">${deHoy.length ? deHoy.map((c) => cuotaRow(c, false)).join("") : `<p class="muted">No hay pagos programados para hoy.</p>`}</div></div>
+  <div class="card"><h2>Próximos 7 días</h2><div class="list">${prox.length ? prox.map((c) => cuotaRow(c, true)).join("") : `<p class="muted">Sin pagos en los próximos 7 días.</p>`}</div></div>
+  <div class="card">
+    <div class="head"><h2>Calendario</h2><div class="actions"><button class="btn sm" type="button" id="m-prev" aria-label="Mes anterior">‹</button><b style="align-self:center;min-width:120px;text-align:center">${first.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</b><button class="btn sm" type="button" id="m-next" aria-label="Mes siguiente">›</button></div></div>
+    <div class="cal"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>${cells}</div>
+    <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado</p>
+    ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3><div class="list">${sel.length ? sel.map((c) => cuotaRow(c, false)).join("") : `<p class="muted">Sin pagos ese día.</p>`}</div>` : `<p class="muted">Toca un día para ver quién paga.</p>`}
+  </div>
+  <div class="card"><h2>Pagos recibidos (últimos 7 días)</h2><div class="list">${recientes.length ? recientes.map((r) => `<div class="item"><div class="item-top"><b>${esc(r.p.cliente)}</b><span>${fcorta(new Date(r.fecha + "T12:00:00"))}</span></div><div class="item-mid">${mxn2(r.monto)}</div></div>`).join("") : `<p class="muted">Sin pagos registrados esta semana.</p>`}</div></div>`;
+  const find = (key) => { const [id, n] = key.split(":"); return all.find((c) => c.p.id === id && c.n === Number(n)); };
+  const pay = (c, m) => updateDoc(doc(db, "prestamos", c.p.id), { pagos: arrayUnion({ monto: m, fecha: today(), reg: new Date().toISOString() }) });
+  $("panel").querySelectorAll("[data-pago]").forEach((b) => (b.onclick = () => { b.disabled = true; pay(find(b.dataset.pago), find(b.dataset.pago).debe); }));
+  $("panel").querySelectorAll("[data-otro]").forEach((b) => (b.onclick = () => { const f = $("panel").querySelector(`[data-otrof="${b.dataset.otro}"]`); f.hidden = !f.hidden; }));
+  $("panel").querySelectorAll("form[data-otrof]").forEach((f) => f.addEventListener("submit", (e) => { e.preventDefault(); const m = num(f.querySelector("[name=m]").value); if (m) pay(find(f.dataset.otrof), m); }));
+  $("panel").querySelectorAll("[data-nopago]").forEach((b) => (b.onclick = () => { const c = find(b.dataset.nopago); updateDoc(doc(db, "prestamos", c.p.id), { ["noPago." + c.n]: today() }); }));
+  $("panel").querySelectorAll("[data-day]").forEach((b) => (b.onclick = () => { AG_DAY = AG_DAY === b.dataset.day ? "" : b.dataset.day; vAgenda(); }));
+  $("m-prev").onclick = () => { AG_MONTH = new Date(y, m - 1, 1); AG_DAY = ""; vAgenda(); };
+  $("m-next").onclick = () => { AG_MONTH = new Date(y, m + 1, 1); AG_DAY = ""; vAgenda(); };
 }
