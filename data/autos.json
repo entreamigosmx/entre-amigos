@@ -710,14 +710,29 @@
   "marca": "RAM",
   "modelo": "ProMaster",
   "anio": 2024,
-  "precio": 269000,
-  "precioAnterior": 280000,
-  "precioEspecial": true,
+  "precio": 280000,
+  "precioEspecial": false,
   "categoria": "Trabajo",
   "disponible": true,
   "destacado": false,
   "orden": 19,
-  "galeria": []
+  "galeria": [
+   "fotos/ram-promaster-2024/01.jpg",
+   "fotos/ram-promaster-2024/02.jpg",
+   "fotos/ram-promaster-2024/03.jpg",
+   "fotos/ram-promaster-2024/04.jpg",
+   "fotos/ram-promaster-2024/05.jpg",
+   "fotos/ram-promaster-2024/06.jpg",
+   "fotos/ram-promaster-2024/07.jpg",
+   "fotos/ram-promaster-2024/08.jpg",
+   "fotos/ram-promaster-2024/09.jpg",
+   "fotos/ram-promaster-2024/10.jpg",
+   "fotos/ram-promaster-2024/11.jpg",
+   "fotos/ram-promaster-2024/12.jpg"
+  ],
+  "foto": "fotos/ram-promaster-2024/01.jpg",
+  "kilometraje": 15000,
+  "descripcion": "<p>Van de carga compacta, práctica y económica, ideal para tu negocio. Prácticamente nueva: con 15,000 km, factura original y lista para reestrenar.</p><h4>Para trabajar</h4><ul><li>Caja de carga cerrada con piso protegido</li><li>Puertas traseras de doble hoja</li><li>Mampara divisoria entre cabina y carga</li><li>Ganchos de sujeción para la carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Vidrios eléctricos</li><li>Transmisión manual</li></ul><h4>Historial</h4><ul><li>15,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Ford Transit 2022",
