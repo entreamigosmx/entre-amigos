@@ -13,4 +13,4 @@ Página estática (GitHub Pages) del negocio Entre Amigos, Guadalajara. El dueñ
 - Sin emojis; tono profesional. Colores: negro + verde limón (#b6e21f).
 - Difuminar placas en cada foto antes de publicar.
 - Marcar "apartado" cuando lo pida; quitar (disponible:false) cuando se venda.
-- Enganche publicado: 35% (pendiente confirmar si cambia a 20%).
+- Enganche publicado: desde 35%; con buen historial crediticio puede ser menor (lo decide el dueño).
