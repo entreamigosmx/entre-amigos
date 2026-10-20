@@ -2,19 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signed() { return request.auth != null; }
+    function verified() { return signed() && request.auth.token.email_verified == true; }
     function admin() {
-      return signed() && request.auth.token.email_verified == true
-        && request.auth.token.email.lower() in ['jesusreynosoalfaro@gmail.com'];
+      return verified() && request.auth.token.email.lower() in ['jesusreynosoalfaro@gmail.com'];
     }
     function myRol() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol; }
     function team() {
       return admin() || (signed() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) && myRol() == 'equipo');
     }
-
     match /usuarios/{uid} {
       allow read: if admin() || (signed() && request.auth.uid == uid);
       allow create: if signed() && request.auth.uid == uid
-        && (request.resource.data.rol == 'pendiente' || (admin() && request.resource.data.rol == 'admin'));
+        && (request.resource.data.rol == 'cliente' || (admin() && request.resource.data.rol == 'admin'));
       allow update: if admin() || (signed() && request.auth.uid == uid && request.resource.data.rol == resource.data.rol);
       allow delete: if admin();
     }
@@ -28,7 +27,9 @@ service cloud.firestore {
       allow update, delete: if admin();
     }
     match /prestamos/{id} {
-      allow read: if admin() || (signed() && resource.data.clienteUid == request.auth.uid);
+      allow read: if admin()
+        || (signed() && resource.data.clienteUid == request.auth.uid)
+        || (verified() && resource.data.clienteEmail == request.auth.token.email.lower());
       allow write: if admin();
     }
   }
