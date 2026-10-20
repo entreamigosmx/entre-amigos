@@ -55,7 +55,11 @@ service cloud.firestore {
         || (verified() && resource.data.clienteEmail == request.auth.token.email.lower());
       allow create: if admin() || (team() && request.resource.data.por == request.auth.uid);
       allow update: if admin()
-        || (team() && resource.data.por == request.auth.uid && request.resource.data.por == request.auth.uid)
+        || (team() && resource.data.por == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pagos', 'noPago', 'clienteEmail'])
+            && (request.resource.data.get('pagos', []) == resource.data.get('pagos', [])
+                || (request.resource.data.get('pagos', []).size() == resource.data.get('pagos', []).size() + 1
+                    && request.resource.data.get('pagos', []).hasAll(resource.data.get('pagos', [])))))
         || (signed() && resource.data.get('clienteUid', '') == '' && request.resource.data.clienteUid == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clienteUid']));
       allow delete: if admin();

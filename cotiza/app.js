@@ -786,13 +786,13 @@ function loanItem0(p) {
         <label>Monto del pago<input name="m" inputmode="decimal" value="${a.siguiente ? a.siguiente.monto : ""}"></label>
         <label>Fecha<input name="f" type="date" value="${today()}"></label>
         <button class="btn primary" type="submit">Registrar pago</button>
-        ${p.pagos?.length ? `<button class="btn" type="button" data-undo="${p.id}">Borrar último pago</button>` : ""}
+        ${p.pagos?.length && isAdmin() ? `<button class="btn" type="button" data-undo="${p.id}">Borrar último pago</button>` : ""}
       </form>
       <label>Correo del cliente<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
       <label${isAdmin() ? "" : " hidden"}>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
-      ${schedule(p, a, true)}
-      <div class="actions" style="margin-top:6px"><button class="btn sm" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button>${isAdmin() ? `<button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button>` : ""}</div>
-      ${EDIT === p.id ? editForm(p) : ""}
+      ${schedule(p, a, isAdmin())}
+      ${isAdmin() ? `<div class="actions" style="margin-top:6px"><button class="btn sm" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button><button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button></div>
+      ${EDIT === p.id ? editForm(p) : ""}` : ""}
       ${isAdmin() ? repartoBox(p) : ""}` : ""}
   </div>`;
 }
@@ -1223,8 +1223,7 @@ function pagoRow(r) {
     <div class="item-top"><b>${esc(p.cliente)}</b><span><b>${mxn2(r.monto)}</b></span></div>
     <div class="item-mid">Pagó el ${fcorta(new Date(r.fecha + "T12:00:00"))}${r.debia ? ` · Debía pagarse el ${fcorta(new Date(r.debia + "T12:00:00"))} (${cuotaLbl(p, r.n, avance(p).total)})` : r.tipo === "capital" ? " · Abono a capital" : ""}${r.nota ? " · " + esc(r.nota) : ""}
       ${r.debia ? (r.tarde > 0 ? ` <span class="pill warn">${r.tarde} ${r.tarde === 1 ? "día" : "días"} tarde</span>` : ` <span class="pill ok">A tiempo</span>`) : ""}</div>
-    <div class="item-bot"><span>Registrado ${r.reg ? "el " + fhora(r.reg) : ""}${quien ? " por " + esc(quien) : ""}${r.editado ? " · Corregido el " + fhora(r.editado) : ""}</span><span>Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</span><button class="link" type="button" data-payed="${p.id}:${r.i}">${PEDIT === p.id + ":" + r.i ? "Cerrar" : "Corregir"}</button></div>
-    ${PEDIT === p.id + ":" + r.i ? payForm(p, r.i) : ""}
+    <div class="item-bot"><span>Registrado ${r.reg ? "el " + fhora(r.reg) : ""}${quien ? " por " + esc(quien) : ""}${r.editado ? " · Corregido el " + fhora(r.editado) : ""}</span><span>Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</span></div>
   </div>`;
 }
 function vAgenda() {
@@ -1280,5 +1279,5 @@ function vAgenda() {
   $("panel").querySelectorAll("[data-day]").forEach((b) => (b.onclick = () => { AG_DAY = AG_DAY === b.dataset.day ? "" : b.dataset.day; vAgenda(); }));
   $("m-prev").onclick = () => { AG_MONTH = new Date(y, m - 1, 1); AG_DAY = ""; vAgenda(); };
   $("m-next").onclick = () => { AG_MONTH = new Date(y, m + 1, 1); AG_DAY = ""; vAgenda(); };
-  bindPayEdit(vAgenda);
+
 }
