@@ -758,10 +758,10 @@
   "precioAnterior": 280000
  },
  {
-  "title": "Ford Transit 2022",
+  "title": "Ford Transit Courier 2022",
   "slug": "ford-transit-2022",
   "marca": "Ford",
-  "modelo": "Transit",
+  "modelo": "Transit Courier",
   "anio": 2022,
   "precio": 259000,
   "precioAnterior": 265000,
@@ -770,7 +770,23 @@
   "disponible": true,
   "destacado": false,
   "orden": 20,
-  "galeria": []
+  "galeria": [
+   "fotos/ford-transit-2022/01.jpg",
+   "fotos/ford-transit-2022/02.jpg",
+   "fotos/ford-transit-2022/03.jpg",
+   "fotos/ford-transit-2022/04.jpg",
+   "fotos/ford-transit-2022/05.jpg",
+   "fotos/ford-transit-2022/06.jpg",
+   "fotos/ford-transit-2022/07.jpg",
+   "fotos/ford-transit-2022/08.jpg",
+   "fotos/ford-transit-2022/09.jpg",
+   "fotos/ford-transit-2022/10.jpg",
+   "fotos/ford-transit-2022/11.jpg",
+   "fotos/ford-transit-2022/12.jpg"
+  ],
+  "foto": "fotos/ford-transit-2022/01.jpg",
+  "kilometraje": 22000,
+  "descripcion": "<p>Van de carga compacta, ágil y económica, ideal para repartos en ciudad. De un solo dueño, con factura original y en excelente estado.</p><h4>Para trabajar</h4><ul><li>Área de carga con piso protegido y paneles de madera</li><li>Puertas traseras de doble hoja</li><li>Puerta lateral corrediza</li><li>Rejilla divisoria entre cabina y carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Radio con Bluetooth y entrada auxiliar</li><li>Transmisión manual de 6 velocidades</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>22,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Can-Am Ryker 2023",
