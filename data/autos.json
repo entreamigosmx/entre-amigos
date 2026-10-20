@@ -121,8 +121,24 @@
   "disponible": true,
   "destacado": false,
   "orden": 2.1,
-  "galeria": [],
-  "descripcion": "<p>Espacio, confort y presencia para toda la familia en la versión RST de la Suburban, con su estilo deportivo y acabados oscuros. De un solo dueño, con 55,000 km y factura original. Seminueva certificada por Entre Amigos.</p><h4>Versión</h4><ul><li>Suburban RST</li><li>Amplio espacio para pasajeros y equipaje</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>55,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "galeria": [
+   "fotos/chevrolet-suburban-rst-2023/01.jpg",
+   "fotos/chevrolet-suburban-rst-2023/02.jpg",
+   "fotos/chevrolet-suburban-rst-2023/03.jpg",
+   "fotos/chevrolet-suburban-rst-2023/04.jpg",
+   "fotos/chevrolet-suburban-rst-2023/05.jpg",
+   "fotos/chevrolet-suburban-rst-2023/06.jpg",
+   "fotos/chevrolet-suburban-rst-2023/07.jpg",
+   "fotos/chevrolet-suburban-rst-2023/08.jpg",
+   "fotos/chevrolet-suburban-rst-2023/09.jpg",
+   "fotos/chevrolet-suburban-rst-2023/10.jpg",
+   "fotos/chevrolet-suburban-rst-2023/11.jpg",
+   "fotos/chevrolet-suburban-rst-2023/12.jpg",
+   "fotos/chevrolet-suburban-rst-2023/13.jpg",
+   "fotos/chevrolet-suburban-rst-2023/14.jpg"
+  ],
+  "descripcion": "<p>Espacio, confort y presencia para toda la familia en la versión RST de la Suburban, con su estilo deportivo y acabados oscuros. De un solo dueño, con 55,000 km y factura original. Seminueva certificada por Entre Amigos.</p><h4>Versión</h4><ul><li>Suburban RST</li><li>Amplio espacio para pasajeros y equipaje</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>55,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "foto": "fotos/chevrolet-suburban-rst-2023/01.jpg"
  },
  {
   "title": "Porsche Macan S 2020",
@@ -627,7 +643,9 @@
    "fotos/toyota-sequoia-limited-2013/10.jpg",
    "fotos/toyota-sequoia-limited-2013/11.jpg"
   ],
-  "foto": "fotos/toyota-sequoia-limited-2013/01.jpg"
+  "foto": "fotos/toyota-sequoia-limited-2013/01.jpg",
+  "kilometraje": 190000,
+  "descripcion": "<p>Una SUV de tamaño completo con la confiabilidad que distingue a Toyota: espacio para toda la familia, motor V8 y la versión más equipada de la Sequoia. Con 190,000 km y dos dueños. Seminueva certificada por Entre Amigos.</p><h4>Versión y motor</h4><ul><li>Versión Limited</li><li>Motor i-Force V8 de 5.7L</li><li>Transmisión automática</li></ul><h4>Interior</h4><ul><li>Tres filas de asientos</li><li>Vestiduras en piel</li><li>Clima independiente para pasajeros traseros</li></ul><h4>Historial</h4><ul><li>Dos dueños</li><li>190,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Can-Am Spyder F3 2018",
