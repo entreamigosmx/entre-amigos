@@ -449,7 +449,21 @@
   "disponible": true,
   "destacado": false,
   "orden": 12,
-  "galeria": []
+  "galeria": [
+   "fotos/audi-q5-2018/01.jpg",
+   "fotos/audi-q5-2018/02.jpg",
+   "fotos/audi-q5-2018/03.jpg",
+   "fotos/audi-q5-2018/04.jpg",
+   "fotos/audi-q5-2018/05.jpg",
+   "fotos/audi-q5-2018/06.jpg",
+   "fotos/audi-q5-2018/07.jpg",
+   "fotos/audi-q5-2018/08.jpg",
+   "fotos/audi-q5-2018/09.jpg",
+   "fotos/audi-q5-2018/10.jpg"
+  ],
+  "foto": "fotos/audi-q5-2018/01.jpg",
+  "kilometraje": 95000,
+  "descripcion": "<p>SUV premium con la elegancia y el manejo que distinguen a Audi, con un interior en piel color café que la hace especial. Con 95,000 km. Seminueva certificada por Entre Amigos.</p><h4>Tecnología</h4><ul><li>Audi Virtual Cockpit: tablero digital con navegación</li><li>Apple CarPlay</li><li>Cámara de reversa y sensores de estacionamiento</li><li>Clima automático de dos zonas</li></ul><h4>Interior y exterior</h4><ul><li>Vestiduras en piel color café</li><li>Techo panorámico</li><li>Tracción quattro</li><li>Faros LED</li></ul><h4>Historial</h4><ul><li>95,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Audi Q3 S line 2020",
@@ -790,5 +804,37 @@
   "foto": "fotos/can-am-ryker-2023/01.jpg",
   "kilometraje": 10000,
   "descripcion": "<p>La forma más divertida de rodar en tres ruedas. Una Ryker de un solo dueño, con 10,000 km, factura original y varios extras que la hacen lista para viajar.</p><h4>Extras</h4><ul><li>Baúl trasero GIVI</li><li>Parabrisas alto</li><li>Faros auxiliares LED</li><li>Espejos en los extremos del manubrio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>10,000 km</li><li>Factura original</li></ul><p>Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+ },
+ {
+  "title": "Ford Lobo Limited Híbrida 2023",
+  "slug": "ford-lobo-limited-hibrida-2023",
+  "marca": "Ford",
+  "modelo": "Lobo Limited Híbrida",
+  "anio": 2023,
+  "precio": 1050000,
+  "precioEspecial": false,
+  "categoria": "Lujo",
+  "kilometraje": 69000,
+  "disponible": true,
+  "destacado": true,
+  "orden": 2.5,
+  "foto": "fotos/ford-lobo-limited-hibrida-2023/01.jpg",
+  "galeria": [
+   "fotos/ford-lobo-limited-hibrida-2023/01.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/02.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/03.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/04.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/05.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/06.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/07.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/08.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/09.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/10.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/11.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/12.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/13.jpg",
+   "fotos/ford-lobo-limited-hibrida-2023/14.jpg"
+  ],
+  "descripcion": "<p>La pickup más completa de Ford: el lujo de la versión Limited con la potencia y la eficiencia del sistema híbrido PowerBoost. De un solo dueño, con 69,000 km y se factura. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor 3.5L V6 biturbo híbrido PowerBoost</li><li>430 hp</li><li>Tracción 4x4</li><li>Pro Trailer Backup Assist para maniobrar con remolque</li></ul><h4>Interior y tecnología</h4><ul><li>Versión Limited</li><li>Asientos en piel con costura acolchada</li><li>Techo panorámico</li><li>Pantalla táctil de 12 pulgadas con SYNC y navegación</li><li>Tablero digital de 12 pulgadas</li></ul><h4>Exterior</h4><ul><li>Rines pulidos de 22 pulgadas</li><li>Estribos eléctricos</li><li>Caja con recubrimiento de fábrica</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>69,000 km</li><li>Se factura</li><li>Disponible para arrendamiento</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  }
 ]
