@@ -22,9 +22,18 @@ service cloud.firestore {
       allow write: if admin();
     }
     match /cotizaciones/{id} {
-      allow read: if admin() || (team() && resource.data.por == request.auth.uid);
+      allow get: if signed();
+      allow list: if admin()
+        || (team() && resource.data.por == request.auth.uid)
+        || (signed() && resource.data.aceptadoPor == request.auth.uid);
       allow create: if team() && request.resource.data.por == request.auth.uid;
-      allow update, delete: if admin();
+      allow update: if admin()
+        || (signed() && resource.data.estado == 'cotizado'
+            && request.resource.data.estado == 'aceptado'
+            && request.resource.data.aceptadoPor == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['estado', 'aceptadoPor', 'aceptadoEmail', 'aceptadoNombre', 'aceptadoEn']));
+      allow delete: if admin();
     }
     match /prestamos/{id} {
       allow read: if admin()

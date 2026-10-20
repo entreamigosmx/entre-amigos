@@ -53,6 +53,7 @@ document.querySelectorAll("#l-tipo button").forEach((b) => (b.onclick = () => se
 const QS = new URLSearchParams(location.search);
 if (QS.has("nueva")) setSignup(true);
 if (QS.get("tipo") === "colaborador") setTipo("colaborador");
+if (QS.has("c")) { setSignup(true); $("l-sub").textContent = "Para ver y confirmar tu cotización, crea tu cuenta. Si ya tienes una, toca \"Entra aquí\" abajo."; $("l-tipo-w").hidden = true; }
 
 const ERR = {
   "auth/invalid-email": "Revisa el correo, parece que tiene un error.",
@@ -161,6 +162,7 @@ function startApp() {
   if (isAdmin()) listenP("all", collection(db, "prestamos"));
   else if (USER.rol === "cliente") {
     listenP("uid", query(collection(db, "prestamos"), where("clienteUid", "==", ME.uid)));
+    unsubs.push(onSnapshot(query(collection(db, "cotizaciones"), where("aceptadoPor", "==", ME.uid)), (s) => { MYCOTS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "mis") cotBox(); }, () => {}));
     if (ME.emailVerified && ME.email) listenP("mail", query(collection(db, "prestamos"), where("clienteEmail", "==", ME.email.toLowerCase())));
   }
   if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos") draw(); drawTabs(); }, () => {}));
@@ -177,7 +179,7 @@ function draw() { const f = { cotizar: vCotizar, cotizaciones: vCotizaciones, pr
 const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
 
 /* ---------- Cotizar ---------- */
-let MODE = "garantia", touched = false, LAST = null, lastKey = "";
+let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null;
 function vCotizar() {
   touched = false;
   $("panel").innerHTML = `
@@ -258,6 +260,8 @@ function calc() {
       tbl: "<tr><th>Semana</th><th>Fecha</th><th>Pago</th><th>Resta</th></tr>" + c.filas.map((x) => `<tr><td>${x.n}</td><td>${fcorta(fechaPago(ini, x.n, "semanal"))}</td><td>${mxn2(x.pago)}</td><td>${mxn2(x.saldo)}</td></tr>`).join("") };
   }
   r.cliente = nom; r.telefono = tel10(tel);
+  { const { msg, tbl, lbl, ...dd } = r; const k = JSON.stringify(dd); if (k !== curKey) { curKey = k; CUR_REF = doc(collection(db, "cotizaciones")); } }
+  r.msg += "\n\nRevisa y confirma tu cotización aquí:\n" + location.origin + location.pathname + "?c=" + CUR_REF.id;
   LAST = r; $("r-err").hidden = true;
   $("r-lbl").textContent = r.lbl; $("r-pago").textContent = mxn2(r.pago); $("r-m").textContent = mxn(r.monto); $("r-i").textContent = mxn(r.intereses); $("r-t").textContent = mxn(r.total);
   $("r-tbl").innerHTML = r.tbl; $("r-msg").textContent = r.msg; $("b-wa").href = waTo(tel, r.msg);
@@ -266,8 +270,8 @@ function calc() {
 function saveCot() {
   if (!LAST) return;
   const { msg, tbl, lbl, ...d } = LAST;
-  const key = JSON.stringify(d); if (key === lastKey) return; lastKey = key;
-  addDoc(collection(db, "cotizaciones"), { ...d, por: ME.uid, fecha: new Date().toISOString(), estado: "cotizado" }).catch(() => (lastKey = ""));
+  if (CUR_REF.id === lastKey) return; lastKey = CUR_REF.id;
+  setDoc(CUR_REF, { ...d, por: ME.uid, fecha: new Date().toISOString(), estado: "cotizado" }).catch(() => (lastKey = ""));
 }
 
 /* ---------- Cotizaciones ---------- */
@@ -289,17 +293,18 @@ function vCotizaciones() {
       const f = new Date(r.fecha), est = r.estado || "cotizado";
       return `<div class="item"><div class="item-top"><b>${esc(r.cliente || "Sin nombre")}</b><span>${f.toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${f.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span></div>
         <div class="item-mid">${detCot(r)}</div>
+        ${r.aceptadoPor ? `<div class="item-bot"><span class="pill ok">Confirmada por el cliente</span><span>${esc(r.aceptadoNombre || "")} · ${esc(r.aceptadoEmail || "")}</span></div>` : ""}
         <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span><button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`
           : `<span class="pill${est === "aceptado" ? " ok" : est === "descartado" ? " no" : ""}">${EST[est]}</span>`}
         ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
   $("c-f") && ($("c-f").onchange = (e) => { FILT = e.target.value; vCotizaciones(); });
   $("panel").querySelectorAll("select[data-cot]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "cotizaciones", s.dataset.cot), { estado: s.value })));
-  $("panel").querySelectorAll("[data-mk]").forEach((b) => (b.onclick = () => { const c = COTS.find((x) => x.id === b.dataset.mk); DRAFT = c; go("prestamos"); }));
+  $("panel").querySelectorAll("[data-mk]").forEach((b) => (b.onclick = () => { const c = COTS.find((x) => x.id === b.dataset.mk); DRAFT = { ...c, email: c.aceptadoEmail || "", clienteUid: c.aceptadoPor || "", cotId: c.id }; go("prestamos"); }));
 }
 
 /* ---------- Préstamos (admin) ---------- */
-let DRAFT = null, OPEN = "";
+let DRAFT = null, OPEN = "", DRAFT_COT = "";
 function vPrestamos() {
   const clientes = USERS.filter((u) => u.rol === "cliente");
   const d = DRAFT || {};
@@ -313,7 +318,7 @@ function vPrestamos() {
       <div class="row"><label for="p-nom">Cliente<input id="p-nom" value="${esc(d.cliente || "")}" placeholder="Nombre"></label>
       <label for="p-tel">WhatsApp<input id="p-tel" inputmode="tel" value="${esc(d.telefono || "")}" placeholder="33 1234 5678"></label></div>
       <label for="p-mail">Correo del cliente (con este correo verá su avance al crear su cuenta)<input id="p-mail" type="email" inputmode="email" value="${esc(d.email || "")}" placeholder="cliente@correo.com"></label>
-      <label for="p-uid">O elige su cuenta si ya la creó<select id="p-uid"><option value="">Todavía sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}">${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
+      <label for="p-uid">O elige su cuenta si ya la creó<select id="p-uid"><option value="">Todavía sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === d.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
       <div class="row"><label for="p-monto">Monto<input id="p-monto" inputmode="numeric" value="${d.monto ? Number(d.monto).toLocaleString("es-MX") : ""}"></label>
       <label for="p-tasa" id="p-tasa-l">${d.tipo === "semanal" ? "Pago por cada $1,000" : "Interés mensual (%)"}<input id="p-tasa" inputmode="decimal" value="${d.tasa ?? ""}"></label></div>
       <div class="row"><label for="p-plazo" id="p-plazo-l">${d.tipo === "semanal" ? "Semanas" : "Meses"}<input id="p-plazo" inputmode="numeric" value="${d.plazo ?? ""}"></label>
@@ -329,7 +334,7 @@ function vPrestamos() {
     <div class="list">${act.length ? act.map(loanItem).join("") : `<p class="muted">Sin préstamos activos. Crea uno arriba o desde una cotización aceptada.</p>`}</div>
   </div>
   ${liq.length ? `<div class="card"><details><summary>Liquidados (${liq.length})</summary><div class="list" style="margin-top:12px">${liq.map(loanItem).join("")}</div></details></div>` : ""}`;
-  DRAFT = null;
+  DRAFT_COT = d.cotId || ""; DRAFT = null;
   $("panel").querySelectorAll("[data-pt]").forEach((b) => (b.onclick = () => {
     const t = b.dataset.pt; $("p-tipo").value = t;
     $("panel").querySelectorAll("[data-pt]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -344,7 +349,7 @@ function vPrestamos() {
     const tipo = $("p-tipo").value, monto = num($("p-monto").value), tasa = num($("p-tasa").value), plazo = parseInt($("p-plazo").value, 10) || 0;
     if (!$("p-nom").value.trim() || !monto || !tasa || !plazo) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, tasa y plazo."; return; }
     const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
-      garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
+      cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
     try { await addDoc(collection(db, "prestamos"), p); } catch (er) { $("p-err").hidden = false; $("p-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
   });
   $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { OPEN = OPEN === b.dataset.open ? "" : b.dataset.open; vPrestamos(); }));
@@ -392,13 +397,41 @@ function schedule(p, a) {
 }
 
 /* ---------- Mis préstamos (cliente) ---------- */
+const COT_ID = new URLSearchParams(location.search).get("c") || "";
+let MYCOTS = [];
+async function cotBox() {
+  const box = $("cot-box"); if (!box) return;
+  const ids = new Set(MYCOTS.map((c) => c.id));
+  let list = MYCOTS.slice();
+  if (COT_ID && !ids.has(COT_ID)) { try { const s = await getDoc(doc(db, "cotizaciones", COT_ID)); if (s.exists()) list.unshift({ id: s.id, ...s.data() }); } catch (e) {} }
+  const conPrestamo = new Set(PRES.map((p) => p.cotId).filter(Boolean));
+  list = list.filter((c) => !conPrestamo.has(c.id));
+  box.innerHTML = list.map((c) => {
+    const mine = c.aceptadoPor === ME.uid, libre = !c.aceptadoPor && c.estado === "cotizado";
+    const detalle = c.tipo === "semanal" ? `${c.plazo} pagos semanales de ${mxn2(c.pago)}` : `${c.plazo} pagos mensuales de ${mxn2(c.pago)} · interés ${c.tasa}% mensual sobre saldo`;
+    return `<div class="card"><h2>Tu cotización</h2>
+      <div class="big"><span>Monto del préstamo</span><b>${mxn(c.monto)}</b></div>
+      <p>${detalle}</p><p class="muted">Total a pagar: ${mxn2(c.total)}${c.tipo !== "semanal" && c.garantia && c.garantia !== "ff" ? " · Garantía: " + esc(c.desc || GARANTIAS[c.garantia]) : ""}</p>
+      ${mine ? `<p class="ok">Confirmaste esta cotización. Te avisaremos por WhatsApp cuando tu préstamo esté listo y la fecha de tu primer pago.</p>`
+        : libre ? `<button class="btn primary" type="button" data-acc="${c.id}">Confirmar cotización</button><p class="note">Al confirmar, Entre Amigos prepara tu préstamo y te indica la fecha de inicio.</p>`
+        : `<p class="muted">Esta cotización ya no está disponible. Escríbenos si quieres una nueva.</p>`}</div>`;
+  }).join("");
+  box.querySelectorAll("[data-acc]").forEach((b) => (b.onclick = async () => {
+    b.disabled = true;
+    try {
+      await updateDoc(doc(db, "cotizaciones", b.dataset.acc), { estado: "aceptado", aceptadoPor: ME.uid, aceptadoEmail: (ME.email || "").toLowerCase(), aceptadoNombre: USER.nombre || "", aceptadoEn: new Date().toISOString() });
+      const s = await getDoc(doc(db, "cotizaciones", b.dataset.acc)); MYCOTS = MYCOTS.filter((x) => x.id !== s.id).concat([{ id: s.id, ...s.data() }]); cotBox();
+    } catch (e) { b.disabled = false; b.insertAdjacentHTML("afterend", `<p class="err">No se pudo confirmar. Intenta de nuevo o escríbenos por WhatsApp.</p>`); }
+  }));
+}
 function vMis() {
   const ver = ME.emailVerified ? "" : `<div class="card"><h3>Confirma tu correo</h3><p class="muted">Te mandamos un enlace a ${esc(ME.email)}. Ábrelo para que aparezcan tus préstamos, y luego toca "Ya lo confirmé". Revisa también la carpeta de spam.</p><div class="actions"><button class="btn primary" type="button" id="b-ver">Ya lo confirmé</button><button class="btn" type="button" id="b-rev">Reenviar correo</button></div><p class="toast" id="ver-t"></p></div>`;
   setTimeout(() => {
     $("b-ver") && ($("b-ver").onclick = async () => { await ME.reload(); if (auth.currentUser.emailVerified) { await auth.currentUser.getIdToken(true); location.reload(); } else $("ver-t").textContent = "Todavía no aparece confirmado. Abre el enlace del correo e intenta de nuevo."; });
     $("b-rev") && ($("b-rev").onclick = () => sendEmailVerification(auth.currentUser).then(() => ($("ver-t").textContent = "Correo reenviado."), () => ($("ver-t").textContent = "Espera un momento antes de reenviar.")));
   });
-  $("panel").innerHTML = ver + (PRES.length ? PRES.map((p) => {
+  setTimeout(cotBox);
+  $("panel").innerHTML = ver + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => {
     const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes", pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
     return `<div class="card">
       <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : ""}</div>
