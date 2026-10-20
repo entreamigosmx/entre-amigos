@@ -585,6 +585,7 @@ function editHandlers() {
   P.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => { EDIT = EDIT === b.dataset.edit ? "" : b.dataset.edit; vPrestamos(); }));
   P.querySelectorAll("[data-delp]").forEach((b) => twice(b, "Toca otra vez para borrarlo con todos sus pagos", async () => { await deleteDoc(doc(db, "prestamos", b.dataset.delp)); deleteDoc(doc(db, "repartos", b.dataset.delp)).catch(() => {}); OPEN = ""; EDIT = ""; }));
   repartoHandlers(twice);
+  bindPayEdit(vPrestamos);
   P.querySelectorAll("[data-rmpay]").forEach((b) => twice(b, "¿Quitar?", async () => {
     const [id, i] = b.dataset.rmpay.split(":"), p = PRES.find((x) => x.id === id);
     await updateDoc(doc(db, "prestamos", id), { pagos: (p.pagos || []).filter((_, k) => k !== Number(i)) });
@@ -632,21 +633,25 @@ function repTxt(p, x) {
   return `${esc(persName(x))} · ${PAPEL[x.papel]} · ${v}${x.capital ? " · recibe el capital" : ""}`;
 }
 let REPOPEN = "";
+let RPEDIT = "";
 function repartoBox(p) {
   const L = REP[p.id]?.participantes || [], eq = USERS.filter((u) => u.rol === "equipo");
+  const ei = RPEDIT.startsWith(p.id + ":") ? Number(RPEDIT.split(":")[1]) : -1, ed = L[ei] || null;
+  const sl = (a, b) => (a === b ? " selected" : "");
   const intShare = L.filter((x) => x.base !== "fijo").reduce((s, x) => s + (x.base === "puntos" ? (p.tasa ? (x.valor / p.tasa) * 100 : 0) : x.valor), 0);
   return `<details class="rep" data-repd="${p.id}"${REPOPEN === p.id ? " open" : ""}><summary>Fondeo y comisiones${L.length ? " (" + L.length + ")" : ""}</summary>
-    <div class="list" style="margin-top:8px">${L.length ? L.map((x, i) => `<div class="item"><div class="item-top"><span>${repTxt(p, x)}</span><button class="link del" type="button" data-reprm="${p.id}:${i}">Quitar</button></div></div>`).join("") : `<p class="muted">Sin reparto. Todo el interés de este préstamo es para ti.</p>`}</div>
+    <div class="list" style="margin-top:8px">${L.length ? L.map((x, i) => `<div class="item"><div class="item-top"><span>${repTxt(p, x)}</span><span><button class="link" type="button" data-reped="${p.id}:${i}">${RPEDIT === p.id + ":" + i ? "Cancelar" : "Editar"}</button> <button class="link del" type="button" data-reprm="${p.id}:${i}">Quitar</button></span></div></div>`).join("") : `<p class="muted">Sin reparto. Todo el interés de este préstamo es para ti.</p>`}</div>
     ${L.length && intShare ? `<p class="note">Del interés que pague el cliente: ${Math.round(intShare)}% se reparte y ${Math.max(0, Math.round(100 - intShare))}% queda para ti${L.some((x) => x.base === "fijo") ? " (antes de los pagos fijos)" : ""}.</p>` : ""}
-    <form class="edit" data-repf="${p.id}" novalidate>
-      <div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${eq.map((u) => `<option value="${u.uid}">${esc(u.nombre)}</option>`).join("")}</select></label>
-      <label data-rn>Nombre<input name="nombre" placeholder="Ej. Mamá"></label></div>
-      <div class="row"><label>Papel<select name="papel"><option value="fondeo">Fondeó el dinero</option><option value="comision">Comisión</option></select></label>
-      <label>Cómo se calcula<select name="base">${p.tipo !== "semanal" ? `<option value="puntos">Le pago X% al mes (de los ${p.tasa}% que cobro)</option>` : ""}<option value="pct">% del interés que cobro</option><option value="fijo">Monto fijo por cada pago</option></select></label></div>
-      <div class="row"><label><span data-vl>Valor</span><input name="valor" inputmode="decimal" placeholder="Ej. 3"></label>
-      <label class="chk"><input type="checkbox" name="capital" checked> Se le regresa el capital que pague el cliente</label></div>
+    <form class="edit" data-repf="${p.id}" data-idx="${ei}" novalidate>
+      ${ed ? `<h3>Editar a ${esc(persName(ed))}</h3>` : ""}
+      <div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${eq.map((u) => `<option value="${u.uid}"${sl(u.uid, ed?.uid)}>${esc(u.nombre)}</option>`).join("")}</select></label>
+      <label data-rn>Nombre<input name="nombre" placeholder="Ej. Mamá" value="${esc(ed && !ed.uid ? ed.nombre : "")}"></label></div>
+      <div class="row"><label>Papel<select name="papel"><option value="fondeo">Fondeó el dinero</option><option value="comision"${sl("comision", ed?.papel)}>Comisión</option></select></label>
+      <label>Cómo se calcula<select name="base">${p.tipo !== "semanal" ? `<option value="puntos">Le pago X% al mes (de los ${p.tasa}% que cobro)</option>` : ""}<option value="pct"${sl("pct", ed?.base)}>% del interés que cobro</option><option value="fijo"${sl("fijo", ed?.base)}>Monto fijo por cada pago</option></select></label></div>
+      <div class="row"><label><span data-vl>Valor</span><input name="valor" inputmode="decimal" placeholder="Ej. 3" value="${ed ? ed.valor : ""}"></label>
+      <label class="chk"><input type="checkbox" name="capital"${!ed || ed.capital ? " checked" : ""}> Se le regresa el capital que pague el cliente</label></div>
       <p class="err" hidden></p>
-      <button class="btn sm primary" type="submit">Agregar al reparto</button>
+      <button class="btn sm primary" type="submit">${ed ? "Guardar cambios" : "Agregar al reparto"}</button>
     </form></details>`;
 }
 function repartoHandlers(twice) {
@@ -666,6 +671,7 @@ function repartoHandlers(twice) {
     };
     g("uid").onchange = sync; g("base").onchange = sync;
     g("papel").onchange = () => { g("capital").checked = g("papel").value === "fondeo"; };
+    P.querySelectorAll("[data-reped]").forEach((b) => (b.onclick = () => { RPEDIT = RPEDIT === b.dataset.reped ? "" : b.dataset.reped; REPOPEN = b.dataset.reped.split(":")[0]; vPrestamos(); }));
     sync();
     f.onsubmit = async (e) => {
       e.preventDefault();
@@ -674,14 +680,17 @@ function repartoHandlers(twice) {
       if (!nombre || !valor) { err.hidden = false; err.textContent = "Escribe el nombre y el valor."; return; }
       const x = { uid, nombre, papel: g("papel").value, base: g("base").value, valor, capital: g("capital").checked };
       REPOPEN = id;
-      try { await setDoc(doc(db, "repartos", id), { participantes: [...(REP[id]?.participantes || []), x] }); }
+      const L = (REP[id]?.participantes || []).slice(), idx = Number(f.dataset.idx);
+      if (idx >= 0 && L[idx]) L[idx] = x; else L.push(x);
+      RPEDIT = "";
+      try { await setDoc(doc(db, "repartos", id), { participantes: L }); }
       catch (er) { err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
     };
   });
 }
 
 /* ---------- Cuentas (admin) ---------- */
-let CU_MONTH = null, CU_OPEN = "";
+let CU_MONTH = null, CU_OPEN = "", ENTEDIT = "";
 function movimientos() {
   // Para cada pago, cuánto le toca a cada persona del reparto.
   const L = ledger(PRES), por = {};
@@ -720,7 +729,8 @@ function vCuentas() {
       </div>`;
     }).join("")}</div>` : `<p class="muted">Todavía no hay fondeadores ni comisiones. Para agregarlos, abre un préstamo en la pestaña Préstamos y entra a "Fondeo y comisiones".</p>`}
   </div>
-  <div class="card"><h2>Entregas del mes</h2><div class="list">${entMes.length ? entMes.map((e) => `<div class="item"><div class="item-top"><b>${esc(persName(e))}</b><span>${mxn2(e.monto)}</span></div><div class="item-bot"><span>${fcorta(new Date(e.fecha + "T12:00:00"))}${e.nota ? " · " + esc(e.nota) : ""}</span><button class="link del" type="button" data-entrm="${e.id}">Borrar</button></div></div>`).join("") : `<p class="muted">Sin entregas registradas este mes.</p>`}</div></div>
+  <div class="card"><h2>Entregas del mes</h2><div class="list">${entMes.length ? entMes.map((e) => `<div class="item"><div class="item-top"><b>${esc(persName(e))}</b><span>${mxn2(e.monto)}</span></div><div class="item-bot"><span>${fcorta(new Date(e.fecha + "T12:00:00"))}${e.nota ? " · " + esc(e.nota) : ""}</span><span><button class="link" type="button" data-ented="${e.id}">${ENTEDIT === e.id ? "Cancelar" : "Editar"}</button> <button class="link del" type="button" data-entrm="${e.id}">Borrar</button></span></div>
+    ${ENTEDIT === e.id ? `<form class="row" data-entedf="${e.id}" novalidate style="margin-top:6px"><label>Monto<input name="m" inputmode="decimal" value="${e.monto}"></label><label>Fecha<input name="f" type="date" value="${e.fecha}"></label><label>Nota<input name="n" value="${esc(e.nota || "")}"></label><button class="btn sm primary" type="submit">Guardar</button></form>` : ""}</div>`).join("") : `<p class="muted">Sin entregas registradas este mes.</p>`}</div></div>
   <div class="card"><h2>Pagos del mes por préstamo</h2><div class="list">${LM.length ? LM.sort((a, b) => (a.fecha < b.fecha ? 1 : -1)).map((r) => `<div class="item owned" style="--own:${ownerColor(ownerOf(r.p))}"><div class="item-top"><b>${esc(r.p.cliente)}</b><span>${mxn2(r.monto)}</span></div>
       <div class="item-mid">${fcorta(new Date(r.fecha + "T12:00:00"))} · Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</div>
       <div class="item-bot"><span>${r.partes.map((q) => esc(persName(q.x)) + " " + mxn2(q.total)).join(" · ")}${r.partes.length ? " · " : ""}Para ti ${mxn2(r.paraMi)}</span></div></div>`).join("") : `<p class="muted">Sin pagos este mes.</p>`}</div></div>`;
@@ -732,6 +742,12 @@ function vCuentas() {
     const o = personas[f.dataset.entf], mo = num(f.querySelector("[name=m]").value); if (!o || !mo) return;
     CU_OPEN = "";
     await addDoc(collection(db, "entregas"), { uid: o.x.uid || "", nombre: o.x.nombre || persName(o.x), monto: mo, fecha: f.querySelector("[name=f]").value || today(), nota: f.querySelector("[name=n]").value.trim(), reg: new Date().toISOString() });
+  }));
+  $("panel").querySelectorAll("[data-ented]").forEach((b) => (b.onclick = () => { ENTEDIT = ENTEDIT === b.dataset.ented ? "" : b.dataset.ented; vCuentas(); }));
+  $("panel").querySelectorAll("form[data-entedf]").forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault(); const mo = num(f.querySelector("[name=m]").value); if (!mo) return;
+    const id = f.dataset.entedf; ENTEDIT = "";
+    await updateDoc(doc(db, "entregas", id), { monto: mo, fecha: f.querySelector("[name=f]").value || today(), nota: f.querySelector("[name=n]").value.trim() });
   }));
   $("panel").querySelectorAll("[data-entrm]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "¿Borrar?"; return; } deleteDoc(doc(db, "entregas", b.dataset.entrm)); }));
 }
@@ -780,10 +796,33 @@ function loanItem0(p) {
       ${isAdmin() ? repartoBox(p) : ""}` : ""}
   </div>`;
 }
+let PEDIT = "";
+function payForm(p, i) {
+  const x = (p.pagos || [])[i]; if (!x) return "";
+  return `<form class="edit" data-payedf="${p.id}:${i}" novalidate><h3>Corregir pago de ${esc(p.cliente)}</h3>
+    <div class="row"><label>Monto<input name="m" inputmode="decimal" value="${x.monto}"></label><label>Fecha en que pagó<input name="f" type="date" value="${x.fecha}"></label></div>
+    ${p.tipo === "interes" ? `<label>Concepto<select name="t"><option value="interes">Pago de interés</option><option value="capital"${x.tipo === "capital" ? " selected" : ""}>Abono a capital</option></select></label>` : ""}
+    <label>Nota (opcional)<input name="n" value="${esc(x.nota || "")}"></label>
+    <div class="actions"><button class="btn sm primary" type="submit">Guardar</button><button class="btn sm" type="button" data-payed="${p.id}:${i}">Cancelar</button></div></form>`;
+}
+function bindPayEdit(rerender) {
+  const P = $("panel");
+  P.querySelectorAll("[data-payed]").forEach((b) => (b.onclick = () => { PEDIT = PEDIT === b.dataset.payed ? "" : b.dataset.payed; rerender(); }));
+  P.querySelectorAll("form[data-payedf]").forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault();
+    const [id, i] = f.dataset.payedf.split(":"), p = PRES.find((x) => x.id === id), m = num(f.querySelector("[name=m]").value);
+    if (!p || !m) return;
+    const pagos = (p.pagos || []).slice(), x = { ...pagos[i], monto: m, fecha: f.querySelector("[name=f]").value || pagos[i].fecha, editado: new Date().toISOString(), editPor: ME.uid };
+    const t = f.querySelector("[name=t]"); if (t) { if (t.value === "capital") x.tipo = "capital"; else delete x.tipo; }
+    const n = f.querySelector("[name=n]").value.trim(); if (n) x.nota = n; else delete x.nota;
+    pagos[Number(i)] = x; PEDIT = "";
+    await updateDoc(doc(db, "prestamos", id), { pagos });
+  }));
+}
 function schedule(p, a, edit) {
   const pagos = (p.pagos || []).map((x, i) => ({ ...x, i })).reverse();
-  return `<details><summary>Corrida y pagos</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>${p.tipo === "interes" ? `<p class="note">Solo interés: cada mes se paga el interés sobre el capital pendiente. Los abonos a capital bajan el interés de los meses siguientes.</p>` : ""}
-  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th>${edit ? "<th></th>" : ""}</tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td>${edit ? `<td><button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>` : ""}</details>`;
+  return `<details${edit && PEDIT.startsWith(p.id + ":") ? " open" : ""}><summary>Corrida y pagos</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>${p.tipo === "interes" ? `<p class="note">Solo interés: cada mes se paga el interés sobre el capital pendiente. Los abonos a capital bajan el interés de los meses siguientes.</p>` : ""}
+  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th>${edit ? "<th></th>" : ""}</tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td>${edit ? `<td><button class="link" type="button" data-payed="${p.id}:${x.i}">Editar</button> <button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>${edit && PEDIT.startsWith(p.id + ":") ? payForm(p, Number(PEDIT.split(":")[1])) : ""}` : ""}</details>`;
 }
 
 /* ---------- Mis préstamos (cliente) ---------- */
@@ -1184,7 +1223,8 @@ function pagoRow(r) {
     <div class="item-top"><b>${esc(p.cliente)}</b><span><b>${mxn2(r.monto)}</b></span></div>
     <div class="item-mid">Pagó el ${fcorta(new Date(r.fecha + "T12:00:00"))}${r.debia ? ` · Debía pagarse el ${fcorta(new Date(r.debia + "T12:00:00"))} (${cuotaLbl(p, r.n, avance(p).total)})` : r.tipo === "capital" ? " · Abono a capital" : ""}${r.nota ? " · " + esc(r.nota) : ""}
       ${r.debia ? (r.tarde > 0 ? ` <span class="pill warn">${r.tarde} ${r.tarde === 1 ? "día" : "días"} tarde</span>` : ` <span class="pill ok">A tiempo</span>`) : ""}</div>
-    <div class="item-bot"><span>Registrado ${r.reg ? "el " + fhora(r.reg) : ""}${quien ? " por " + esc(quien) : ""}</span><span>Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</span></div>
+    <div class="item-bot"><span>Registrado ${r.reg ? "el " + fhora(r.reg) : ""}${quien ? " por " + esc(quien) : ""}${r.editado ? " · Corregido el " + fhora(r.editado) : ""}</span><span>Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</span><button class="link" type="button" data-payed="${p.id}:${r.i}">${PEDIT === p.id + ":" + r.i ? "Cerrar" : "Corregir"}</button></div>
+    ${PEDIT === p.id + ":" + r.i ? payForm(p, r.i) : ""}
   </div>`;
 }
 function vAgenda() {
@@ -1240,4 +1280,5 @@ function vAgenda() {
   $("panel").querySelectorAll("[data-day]").forEach((b) => (b.onclick = () => { AG_DAY = AG_DAY === b.dataset.day ? "" : b.dataset.day; vAgenda(); }));
   $("m-prev").onclick = () => { AG_MONTH = new Date(y, m - 1, 1); AG_DAY = ""; vAgenda(); };
   $("m-next").onclick = () => { AG_MONTH = new Date(y, m + 1, 1); AG_DAY = ""; vAgenda(); };
+  bindPayEdit(vAgenda);
 }
