@@ -34,7 +34,10 @@
    "SUVs",
    "Familiares",
    "Lujo"
-  ]
+  ],
+  "portada": true,
+  "nombre": "GMC Yukon",
+  "version": "Denali XL"
  },
  {
   "title": "Mercedes-AMG GLE 63 4MATIC+ 2022",
@@ -81,7 +84,12 @@
    "SUVs",
    "Familiares",
    "Lujo"
-  ]
+  ],
+  "transmision": "Automática de 9 velocidades",
+  "combustible": "Gasolina con sistema híbrido ligero de 48V",
+  "portada": false,
+  "nombre": "Mercedes-AMG GLE 63",
+  "version": "4MATIC+"
  },
  {
   "title": "Porsche Cayenne Coupé 2020",
@@ -120,7 +128,10 @@
   "categorias": [
    "SUVs",
    "Lujo"
-  ]
+  ],
+  "portada": true,
+  "nombre": "Porsche Cayenne",
+  "version": "Coupé"
  },
  {
   "title": "Chevrolet Suburban RST 2023",
@@ -157,7 +168,10 @@
    "SUVs",
    "Familiares",
    "Lujo"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Chevrolet Suburban",
+  "version": "RST"
  },
  {
   "title": "Porsche Macan S 2020",
@@ -194,7 +208,11 @@
    "SUVs",
    "Familiares",
    "Lujo"
-  ]
+  ],
+  "transmision": "Automática PDK",
+  "portada": true,
+  "nombre": "Porsche Macan",
+  "version": "S"
  },
  {
   "title": "Range Rover Sport HSE Dynamic 2022",
@@ -228,7 +246,11 @@
    "SUVs",
    "Familiares",
    "Lujo"
-  ]
+  ],
+  "transmision": "Automática",
+  "portada": true,
+  "nombre": "Range Rover Sport",
+  "version": "HSE Dynamic"
  },
  {
   "title": "RAM Limited 2021",
@@ -264,7 +286,10 @@
    "Trabajo",
    "Todo terreno",
    "Lujo"
-  ]
+  ],
+  "portada": true,
+  "nombre": "RAM 1500",
+  "version": "Limited"
  },
  {
   "title": "Mercedes-Benz A35 AMG 2024",
@@ -279,7 +304,8 @@
   "disponible": false,
   "destacado": true,
   "orden": 6,
-  "galeria": []
+  "galeria": [],
+  "portada": false
  },
  {
   "title": "Jeep Wrangler Sahara 2023",
@@ -314,7 +340,11 @@
   "categorias": [
    "SUVs",
    "Todo terreno"
-  ]
+  ],
+  "transmision": "Automática de 8 velocidades",
+  "portada": true,
+  "nombre": "Jeep Wrangler",
+  "version": "Sahara"
  },
  {
   "title": "Volkswagen Teramont Cross Sport 2022",
@@ -348,7 +378,11 @@
   "categorias": [
    "SUVs",
    "Familiares"
-  ]
+  ],
+  "transmision": "Automática",
+  "portada": false,
+  "nombre": "Volkswagen Teramont",
+  "version": "Cross Sport"
  },
  {
   "title": "Cupra Formentor VZ 2023",
@@ -381,7 +415,10 @@
   "categorias": [
    "SUVs",
    "Familiares"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Cupra Formentor",
+  "version": "VZ"
  },
  {
   "title": "Tesla Model S 75D 2018",
@@ -414,7 +451,11 @@
    "Sedanes",
    "Eléctricos",
    "Lujo"
-  ]
+  ],
+  "combustible": "Eléctrico",
+  "portada": true,
+  "nombre": "Tesla Model S",
+  "version": "75D"
  },
  {
   "title": "Mercedes-Benz E400 4MATIC 2019",
@@ -451,7 +492,10 @@
   "categorias": [
    "Sedanes",
    "Lujo"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Mercedes-Benz E400",
+  "version": "4MATIC"
  },
  {
   "title": "Honda Odyssey Touring 2019",
@@ -483,7 +527,10 @@
   "descripcion": "<p>La minivan ideal para quien busca comodidad, seguridad y espacio sin sacrificar equipamiento. Versión Touring, la más equipada, con 70,000 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Versión Touring, la más equipada</li><li>Vestiduras en piel</li><li>Amplio espacio para toda la familia</li><li>Gran comodidad para viajes largos y uso diario</li></ul><h4>Estado</h4><ul><li>70,000 km</li><li>Excelente estado, lista para disfrutarse</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Familiares"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Honda Odyssey",
+  "version": "Touring"
  },
  {
   "title": "Suzuki Jimny Turbo 2021",
@@ -517,7 +564,10 @@
   "categorias": [
    "SUVs",
    "Todo terreno"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Suzuki Jimny",
+  "version": "Turbo (kit)"
  },
  {
   "title": "Audi Q5 2018",
@@ -549,7 +599,10 @@
   "categorias": [
    "SUVs",
    "Familiares"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Audi Q5",
+  "version": ""
  },
  {
   "title": "Audi Q3 S line 2020",
@@ -586,7 +639,10 @@
   "categorias": [
    "SUVs",
    "Familiares"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Audi Q3",
+  "version": "S line"
  },
  {
   "title": "Volkswagen Amarok TDI 2018",
@@ -601,7 +657,8 @@
   "disponible": false,
   "destacado": false,
   "orden": 13,
-  "galeria": []
+  "galeria": [],
+  "portada": false
  },
  {
   "title": "Peugeot 2008 Allure Pack 2024",
@@ -638,7 +695,11 @@
   "categorias": [
    "SUVs",
    "Familiares"
-  ]
+  ],
+  "transmision": "Automática de 6 velocidades",
+  "portada": false,
+  "nombre": "Peugeot 2008",
+  "version": "Allure Pack"
  },
  {
   "title": "Can-Am Spyder RT 2018",
@@ -671,7 +732,10 @@
   "descripcion": "<p>La Spyder de turismo de Can-Am, pensada para viajar cómodo y con estilo. Edición en negro y dorado, con 27,000 km y servicios en agencia.</p><h4>Confort</h4><ul><li>Asiento de copiloto con calefacción</li><li>Respaldo para piloto y copiloto</li><li>Parabrisas alto</li><li>Maletas laterales y baúl trasero</li></ul><h4>Tecnología</h4><ul><li>Sistema de audio BRP con bocinas</li><li>Conexión Bluetooth</li><li>Tablero digital a color</li></ul><h4>Historial</h4><ul><li>27,000 km</li><li>Servicios en agencia</li></ul><p>Enganche desde $115,500. Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Motos"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Can-Am Spyder",
+  "version": "RT"
  },
  {
   "title": "Suzuki Jimny Automático 2021",
@@ -709,7 +773,11 @@
   "categorias": [
    "SUVs",
    "Todo terreno"
-  ]
+  ],
+  "transmision": "Automática",
+  "portada": false,
+  "nombre": "Suzuki Jimny",
+  "version": "Automático"
  },
  {
   "title": "Mercedes-Benz C200 Exclusive 2018",
@@ -742,7 +810,10 @@
   "descripcion": "<p>Elegancia, confort y presencia en uno de los sedanes más representativos de Mercedes-Benz. Versión Exclusive con factura original.</p><h4>Lo más destacado</h4><ul><li>Versión Exclusive</li><li>Interiores premium</li><li>Excelente equilibrio entre confort y desempeño</li><li>Diseño elegante y sofisticado</li></ul><h4>Documentación</h4><ul><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Sedanes"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Mercedes-Benz C200",
+  "version": "Exclusive"
  },
  {
   "title": "Mercedes-Benz CLA 250 Sport AMG 2018",
@@ -778,7 +849,10 @@
   "descripcion": "<p>Diseño deportivo, elegancia y el carácter de Mercedes-Benz en un sedán que sigue robando miradas. Con paquete Sport AMG, 99,600 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Paquete Sport AMG</li><li>Interior deportivo premium</li><li>Excelente combinación de desempeño y confort</li></ul><h4>Estado</h4><ul><li>99,600 km</li><li>Excelente estado</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Sedanes"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Mercedes-Benz CLA 250",
+  "version": "Sport AMG"
  },
  {
   "title": "Toyota Sequoia Limited 2013",
@@ -811,7 +885,11 @@
   "categorias": [
    "SUVs",
    "Familiares"
-  ]
+  ],
+  "transmision": "Automática",
+  "portada": false,
+  "nombre": "Toyota Sequoia",
+  "version": "Limited"
  },
  {
   "title": "Can-Am Spyder F3 2018",
@@ -838,7 +916,10 @@
   "precioAnterior": 290000,
   "categorias": [
    "Motos"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Can-Am Spyder",
+  "version": "F3"
  },
  {
   "title": "RAM ProMaster 2024",
@@ -872,7 +953,11 @@
   "precioAnterior": 280000,
   "categorias": [
    "Trabajo"
-  ]
+  ],
+  "transmision": "Manual",
+  "portada": false,
+  "nombre": "RAM ProMaster",
+  "version": ""
  },
  {
   "title": "Ford Transit Courier 2022",
@@ -906,7 +991,11 @@
   "descripcion": "<p>Van de carga compacta, ágil y económica, ideal para repartos en ciudad. De un solo dueño, con factura original y en excelente estado.</p><h4>Para trabajar</h4><ul><li>Área de carga con piso protegido y paneles de madera</li><li>Puertas traseras de doble hoja</li><li>Puerta lateral corrediza</li><li>Rejilla divisoria entre cabina y carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Radio con Bluetooth y entrada auxiliar</li><li>Transmisión manual de 6 velocidades</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>24,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Trabajo"
-  ]
+  ],
+  "transmision": "Manual de 6 velocidades",
+  "portada": false,
+  "nombre": "Ford Transit",
+  "version": "Courier"
  },
  {
   "title": "Can-Am Ryker 2023",
@@ -934,7 +1023,10 @@
   "descripcion": "<p>La forma más divertida de rodar en tres ruedas. Una Ryker de un solo dueño, con 10,000 km, factura original y varios extras que la hacen lista para viajar.</p><h4>Extras</h4><ul><li>Baúl trasero GIVI</li><li>Parabrisas alto</li><li>Faros auxiliares LED</li><li>Espejos en los extremos del manubrio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>10,000 km</li><li>Factura original</li></ul><p>Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Motos"
-  ]
+  ],
+  "portada": false,
+  "nombre": "Can-Am Ryker",
+  "version": ""
  },
  {
   "title": "Ford Lobo Limited Platinum 75 Aniversario 2023",
@@ -972,7 +1064,11 @@
    "Trabajo",
    "Todo terreno",
    "Lujo"
-  ]
+  ],
+  "combustible": "Híbrido (gasolina y eléctrico)",
+  "portada": true,
+  "nombre": "Ford Lobo",
+  "version": "Limited Platinum 75 Aniversario · Híbrida"
  },
  {
   "title": "BMW F 900 GS 2024",
@@ -1001,6 +1097,9 @@
   "descripcion": "<p>La aventura comienza donde termina el camino. No todas las F 900 GS son iguales: esta unidad fue equipada con más de $70,000 en accesorios premium, lista para viajar desde el primer día. Modelo 2024 con 9,000 km, un solo dueño y factura original. Seminueva certificada por Entre Amigos.</p><h4>Protección</h4><ul><li>Defensas con protector</li><li>Skid plate</li><li>Protector de faro</li><li>Handguards</li></ul><h4>Confort y manejo</h4><ul><li>Cristal alto</li><li>Alzas de manubrio</li><li>Extensión de pata lateral</li><li>Parador central</li><li>Espejos BMW Option 719</li></ul><h4>Equipaje</h4><ul><li>Top case</li><li>Maletas laterales</li><li>Tank bag</li></ul><h4>Tecnología e iluminación</h4><ul><li>Pantalla Carpuride con Apple CarPlay y Android Auto</li><li>Dos pares de faros LED auxiliares</li><li>Estrobo trasero</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>9,000 km</li><li>Factura original</li><li>Servicios realizados en tiempo y forma</li></ul><p>Recibimos tu vehículo a cuenta y trabajamos con los principales bancos y financieras del país. Agenda tu cita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Motos"
-  ]
+  ],
+  "portada": false,
+  "nombre": "BMW F 900 GS",
+  "version": ""
  }
 ]
