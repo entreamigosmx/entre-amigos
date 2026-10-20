@@ -275,10 +275,10 @@
   "descripcion": "<p>Un Wrangler Sahara realmente impecable: totalmente original, sin modificaciones y con excelente historial. Ideal para quien busca un Jeep bien cuidado, con 50,000 km y de un solo dueño.</p><h4>Motor y tracción</h4><ul><li>Motor 2.0L Turbo</li><li>270 hp y 295 lb-pie de torque</li><li>Transmisión automática de 8 velocidades</li><li>Tracción 4x4</li></ul><h4>Tecnología y confort</h4><ul><li>Pantalla Uconnect con Apple CarPlay y Android Auto</li><li>Cámara de reversa</li><li>Encendido por botón</li><li>Control crucero</li><li>Rines de aluminio de 18 pulgadas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Todos sus servicios de agencia</li><li>50,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu cita para conocerlo en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
-  "title": "Volkswagen Cross Sport 2022",
+  "title": "Volkswagen Teramont Cross Sport 2022",
   "slug": "volkswagen-cross-sport-2022",
   "marca": "Volkswagen",
-  "modelo": "Cross Sport",
+  "modelo": "Teramont Cross Sport",
   "anio": 2022,
   "precio": 675000,
   "precioEspecial": false,
@@ -286,7 +286,23 @@
   "disponible": true,
   "destacado": false,
   "orden": 7,
-  "galeria": []
+  "galeria": [
+   "fotos/volkswagen-cross-sport-2022/01.jpg",
+   "fotos/volkswagen-cross-sport-2022/02.jpg",
+   "fotos/volkswagen-cross-sport-2022/03.jpg",
+   "fotos/volkswagen-cross-sport-2022/04.jpg",
+   "fotos/volkswagen-cross-sport-2022/05.jpg",
+   "fotos/volkswagen-cross-sport-2022/06.jpg",
+   "fotos/volkswagen-cross-sport-2022/07.jpg",
+   "fotos/volkswagen-cross-sport-2022/08.jpg",
+   "fotos/volkswagen-cross-sport-2022/09.jpg",
+   "fotos/volkswagen-cross-sport-2022/10.jpg",
+   "fotos/volkswagen-cross-sport-2022/11.jpg",
+   "fotos/volkswagen-cross-sport-2022/12.jpg"
+  ],
+  "foto": "fotos/volkswagen-cross-sport-2022/01.jpg",
+  "kilometraje": 54000,
+  "descripcion": "<p>SUV de estilo coupé con presencia imponente, motor V6 y la imagen deportiva del paquete R-Line. De un solo dueño, con 54,000 km. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor V6</li><li>Tracción integral 4MOTION con selector de modos de manejo</li><li>Transmisión automática</li></ul><h4>Interior y tecnología</h4><ul><li>Paquete R-Line</li><li>Asientos en piel con ajuste eléctrico</li><li>Techo panorámico</li><li>Tablero digital y pantalla táctil</li><li>Sistema de sonido Fender</li><li>Clima automático</li></ul><h4>Exterior</h4><ul><li>Rines de 21 pulgadas</li><li>Faros LED</li><li>Cámara frontal y sensores de estacionamiento</li><li>Gancho de arrastre</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>54,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Cupra Formentor VZ 2023",
