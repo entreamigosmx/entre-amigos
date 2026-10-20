@@ -1,8 +1,6 @@
 name: Importar fotos de Wix
 on:
   workflow_dispatch:
-  push:
-    paths: [".github/workflows/importar-wix.yml", "tools/importar_wix.py"]
 permissions:
   contents: write
 jobs:
