@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function admin() {
+      return signed() && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in ['jesusreynosoalfaro@gmail.com'];
+    }
+    function myRol() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol; }
+    function team() {
+      return admin() || (signed() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) && myRol() == 'equipo');
+    }
+
+    match /usuarios/{uid} {
+      allow read: if admin() || (signed() && request.auth.uid == uid);
+      allow create: if signed() && request.auth.uid == uid
+        && (request.resource.data.rol == 'pendiente' || (admin() && request.resource.data.rol == 'admin'));
+      allow update: if admin() || (signed() && request.auth.uid == uid && request.resource.data.rol == resource.data.rol);
+      allow delete: if admin();
+    }
+    match /config/{d} {
+      allow read: if team();
+      allow write: if admin();
+    }
+    match /cotizaciones/{id} {
+      allow read: if admin() || (team() && resource.data.por == request.auth.uid);
+      allow create: if team() && request.resource.data.por == request.auth.uid;
+      allow update, delete: if admin();
+    }
+    match /prestamos/{id} {
+      allow read: if admin() || (signed() && resource.data.clienteUid == request.auth.uid);
+      allow write: if admin();
+    }
+  }
+}
