@@ -671,14 +671,22 @@
   "marca": "Can-Am",
   "modelo": "Spyder F3",
   "anio": 2018,
-  "precio": 270000,
-  "precioAnterior": 290000,
-  "precioEspecial": true,
+  "precio": 290000,
+  "precioEspecial": false,
   "categoria": "Motos",
   "disponible": true,
   "destacado": false,
   "orden": 18,
-  "galeria": []
+  "galeria": [
+   "fotos/can-am-spyder-f3-2018/01.jpg",
+   "fotos/can-am-spyder-f3-2018/02.jpg",
+   "fotos/can-am-spyder-f3-2018/03.jpg",
+   "fotos/can-am-spyder-f3-2018/04.jpg",
+   "fotos/can-am-spyder-f3-2018/05.jpg"
+  ],
+  "foto": "fotos/can-am-spyder-f3-2018/01.jpg",
+  "kilometraje": 23000,
+  "descripcion": "<p>Estilo, comodidad y la emoción de rodar en tres ruedas. Una Spyder F3 lista para carretera, con 23,000 km, sin adeudos y servicios al corriente en agencia.</p><h4>Equipamiento</h4><ul><li>Maletas laterales</li><li>Respaldo para pasajero</li><li>Parabrisas alto</li><li>Asiento para dos personas</li></ul><h4>Historial</h4><ul><li>23,000 km</li><li>Servicios al corriente en agencia</li><li>Sin adeudos</li></ul><p>Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "RAM ProMaster 2024",
