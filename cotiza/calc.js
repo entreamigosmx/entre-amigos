@@ -114,3 +114,35 @@ export function vencido(p, a, hoyISO) {
   const debido = a.corrida.filas.filter((f) => fechaPago(p.inicio, f.n, p.tipo).toISOString().slice(0, 10) < hoy).reduce((s, f) => s + f.pago, 0);
   return Math.max(0, r2(debido - a.pagado));
 }
+
+// Desglose de cada pago registrado: qué cuota cubrió (fecha en que debía pagarse),
+// cuánto fue capital y cuánto interés. Sirve para el historial y el reparto.
+export function desglosePagos(p) {
+  const pagos = (p.pagos || []).map((x, i) => ({ ...x, i })).sort((a, b) => (a.fecha === b.fecha ? ((a.reg || "") < (b.reg || "") ? -1 : 1) : a.fecha < b.fecha ? -1 : 1));
+  const iso = (d) => (d ? d.toISOString().slice(0, 10) : null);
+  let filas;
+  if (p.tipo === "interes") {
+    const a = avanceInteres(p);
+    filas = a.corrida.filas.map((f) => ({ n: f.n, pago: f.pago, interes: f.pago, fecha: iso(f.fecha) }));
+  } else {
+    const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa, p.pagoFijo) : p.tipo === "capfijo" ? corridaCapFijo(p.monto, p.tasa, p.abono) : corridaMensual(p.monto, p.tasa, p.plazo, p.pagoFijo);
+    const fr = c.total ? c.intereses / c.total : 0;
+    filas = c.filas.map((f) => ({ n: f.n, pago: f.pago, interes: f.interes ?? r2(f.pago * fr), fecha: iso(fechaPago(p.inicio, f.n, p.tipo)) }));
+  }
+  const rest = filas.map((f) => f.pago);
+  return pagos.map((x) => {
+    const out = { ...x, capital: 0, interes: 0, debia: null, n: null };
+    if (p.tipo === "interes" && x.tipo === "capital") { out.capital = x.monto; return out; }
+    let m = x.monto || 0;
+    for (let k = 0; k < filas.length && m > 0.005; k++) {
+      if (rest[k] <= 0.005) continue;
+      if (out.n === null) { out.n = filas[k].n; out.debia = filas[k].fecha; }
+      const take = Math.min(m, rest[k]);
+      const int = filas[k].pago ? take * (filas[k].interes / filas[k].pago) : 0;
+      out.interes += int; out.capital += take - int; rest[k] -= take; m -= take;
+    }
+    if (m > 0.005) { if (p.tipo === "interes") out.interes += m; else out.capital += m; }
+    out.capital = r2(out.capital); out.interes = r2(out.interes);
+    return out;
+  });
+}

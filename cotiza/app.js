@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido } from "./calc.js?v=5";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido, desglosePagos } from "./calc.js?v=6";
 
 const app = initializeApp({
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -150,11 +150,11 @@ onAuthStateChanged(auth, async (u) => {
 /* ---------------- App ---------------- */
 let TAB = "";
 const TABS = () => isAdmin()
-  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["personas", "Personas"], ["tasas", "Tasas"]]
+  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["cuentas", "Cuentas"], ["personas", "Personas"], ["tasas", "Tasas"]]
   : isTeam() ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"], ["prestamos", "Mis clientes"]]
   : [["mis", "Mis préstamos"]];
 
-let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {};
+let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {}, REP = {}, ENT = [];
 function startApp() {
   show("v-app");
   if (isTeam()) unsubs.push(onSnapshot(doc(db, "config", "tasas"), (s) => { CFG = s.data() || {}; if (TAB === "cotizar" && !touched) applyCfg(); if (TAB === "tasas") draw(); }, () => {}));
@@ -174,6 +174,10 @@ function startApp() {
     listenP("uid", query(collection(db, "prestamos"), where("clienteUid", "==", ME.uid)));
     unsubs.push(onSnapshot(query(collection(db, "cotizaciones"), where("aceptadoPor", "==", ME.uid)), (s) => { MYCOTS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "mis") cotBox(); }, () => {}));
     if (ME.emailVerified && ME.email) listenP("mail", query(collection(db, "prestamos"), where("clienteEmail", "==", ME.email.toLowerCase())));
+  }
+  if (isAdmin()) {
+    unsubs.push(onSnapshot(collection(db, "repartos"), (s) => { REP = {}; s.docs.forEach((d) => (REP[d.id] = d.data())); if (TAB === "cuentas" || TAB === "prestamos") draw(); }, () => {}));
+    unsubs.push(onSnapshot(collection(db, "entregas"), (s) => { ENT = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); }, () => {}));
   }
   if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos" || TAB === "agenda") draw(); drawTabs(); }, () => {}));
   go(TABS()[0][0]);
@@ -203,8 +207,40 @@ function drawNotice() {
   $("n-copy").onclick = () => navigator.clipboard?.writeText(n.msg).catch(() => {});
 }
 const PORTAL = () => location.origin + location.pathname;
-function draw() { const f = { agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
+function draw() { const f = { agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, cuentas: vCuentas, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
 const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
+
+/* ---------- Clientes que ya tengo (para no volver a capturarlos) ---------- */
+function clientesConocidos() {
+  const m = new Map();
+  const add = (nombre, tel, email, uid) => {
+    nombre = (nombre || "").trim(); if (!nombre) return;
+    const t = tel10(tel), k = t.length === 10 ? t : "n:" + nombre.toLowerCase();
+    const o = m.get(k) || {};
+    m.set(k, { nombre: o.nombre || nombre, telefono: o.telefono || (t.length === 10 ? t : ""), email: o.email || email || "", uid: o.uid || uid || "" });
+  };
+  PRES.forEach((p) => add(p.cliente, p.telefono, p.clienteEmail, p.clienteUid));
+  COTS.forEach((c) => add(c.cliente || c.aceptadoNombre, c.telefono, c.aceptadoEmail, c.aceptadoPor));
+  if (isAdmin()) USERS.filter((u) => u.rol === "cliente").forEach((u) => add(u.nombre, u.telefono, u.email, u.uid));
+  return [...m.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+}
+// Selector "Cliente que ya tienes": llena nombre, WhatsApp y correo del formulario.
+function pickCliente(pre) {
+  const L = clientesConocidos(); if (!L.length) return "";
+  return `<label for="${pre}-pick">Cliente que ya tienes<select id="${pre}-pick" data-pick="${pre}"><option value="">Cliente nuevo</option>${L.map((c, i) => `<option value="${i}">${esc(c.nombre)}${c.telefono ? " · " + c.telefono : ""}</option>`).join("")}</select></label>`;
+}
+function bindPick(pre, form) {
+  const sel = $(pre + "-pick"); if (!sel) return;
+  const L = clientesConocidos();
+  sel.onchange = () => {
+    const c = L[sel.value]; form.dataset.uid = c?.uid || "";
+    if (!c) return;
+    $(pre + "-nom").value = c.nombre; if ($(pre + "-tel")) $(pre + "-tel").value = c.telefono || "";
+    if ($(pre + "-mail")) $(pre + "-mail").value = c.email || "";
+    if ($(pre + "-uid") && [...$(pre + "-uid").options].some((o) => o.value === c.uid)) $(pre + "-uid").value = c.uid;
+    form.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+}
 
 /* ---------- Cotizar ---------- */
 let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null;
@@ -215,6 +251,7 @@ function vCotizar() {
   <div class="card">
     <div class="seg"><button type="button" data-m="garantia" aria-pressed="${MODE === "garantia"}">Con garantía</button><button type="button" data-m="semanal" aria-pressed="${MODE === "semanal"}">Semanal con aval</button><button type="button" data-m="auto" aria-pressed="false">Auto del inventario</button></div>
     <form id="fq" novalidate>
+      ${pickCliente("q")}
       <div class="row"><label for="q-nom">Cliente<input id="q-nom" autocomplete="off" placeholder="Nombre del cliente"></label>
       <label for="q-tel">WhatsApp del cliente<input id="q-tel" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label></div>
       <div class="row"><label for="q-monto">Monto a prestar (MXN)<input id="q-monto" inputmode="numeric" value="${MODE === "garantia" ? "100,000" : "10,000"}"></label>
@@ -246,6 +283,7 @@ function vCotizar() {
   $("fq").addEventListener("input", (e) => { if (["q-tasa", "q-fac", "q-sem"].includes(e.target.id)) touched = true; if (e.target.id === "q-plazo") e.target.dataset.t = "1"; calc(); });
   $("fq").addEventListener("change", (e) => { if (e.target.id === "q-gar" || e.target.id === "q-plazo") { if (e.target.id === "q-gar") { $("q-desc").placeholder = { auto: "Ej. Jetta 2019", reloj: "Ej. Rolex Submariner", oro: "Ej. Esclava 14k, 30 g", monedas: "Ej. 5 centenarios", otro: "Describe la prenda", ff: "Garantía acordada (opcional)" }[e.target.value]; touched = false; applyCfg(); } } calc(); });
   $("fq").addEventListener("submit", (e) => e.preventDefault());
+  bindPick("q", $("fq"));
   $("b-wa").addEventListener("click", (e) => { if (!LAST) { e.preventDefault(); return; } saveCot(); });
   $("b-copy").onclick = () => {
     if (!LAST) return; saveCot();
@@ -368,6 +406,7 @@ function vPrestamos() {
   <div class="card"><details id="ex-d"${EXOPEN ? " open" : ""}><summary>Agregar cliente con préstamo que ya tiene</summary>
     <form id="fe" novalidate style="margin-top:12px">
       <p class="note" style="margin:0 0 10px">Para clientes de antes: registras lo que te debe hoy y cómo te paga. Al guardar te aparece el mensaje para invitarlo por WhatsApp a ver su préstamo en línea.</p>
+      ${pickCliente("e")}
       <div class="row"><label for="e-nom">Cliente<input id="e-nom" placeholder="Nombre completo"></label>
       <label for="e-tel">WhatsApp<input id="e-tel" inputmode="tel" placeholder="33 1234 5678"></label></div>
       ${isAdmin() && equipo.length ? `<label for="e-own">¿De quién es el cliente?<select id="e-own"><option value="${ME.uid}">Mío</option>${equipo.map((u) => `<option value="${u.uid}">${esc(u.nombre)}</option>`).join("")}</select></label>` : ""}
@@ -391,6 +430,7 @@ function vPrestamos() {
     <form id="fp" novalidate style="margin-top:12px">
       <div class="seg"><button type="button" data-pt="garantia" aria-pressed="${(d.tipo || "garantia") === "garantia"}">Con garantía</button><button type="button" data-pt="semanal" aria-pressed="${d.tipo === "semanal"}">Semanal</button><button type="button" data-pt="interes" aria-pressed="false">Solo interés</button></div>
       <input type="hidden" id="p-tipo" value="${d.tipo || "garantia"}">
+      ${DRAFT ? "" : pickCliente("p")}
       <div class="row"><label for="p-nom">Cliente<input id="p-nom" value="${esc(d.cliente || "")}" placeholder="Nombre"></label>
       <label for="p-tel">WhatsApp<input id="p-tel" inputmode="tel" value="${esc(d.telefono || "")}" placeholder="33 1234 5678"></label></div>
       <label for="p-mail">Correo del cliente (con este correo verá su avance al crear su cuenta)<input id="p-mail" type="email" inputmode="email" value="${esc(d.email || "")}" placeholder="cliente@correo.com"></label>
@@ -413,6 +453,7 @@ function vPrestamos() {
   ${liq.length ? `<div class="card"><details><summary>Liquidados (${liq.length})</summary><div class="list" style="margin-top:12px">${liq.map(loanItem).join("")}</div></details></div>` : ""}`;
   DRAFT_COT = d.cotId || ""; DRAFT = null;
   exForm();
+  bindPick("p", $("fp"));
   $("panel").querySelectorAll("[data-pt]").forEach((b) => (b.onclick = () => {
     const t = b.dataset.pt; $("p-tipo").value = t;
     $("panel").querySelectorAll("[data-pt]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -428,7 +469,7 @@ function vPrestamos() {
     e.preventDefault();
     const tipo = $("p-tipo").value, monto = num($("p-monto").value), tasa = num($("p-tasa").value), plazo = parseInt($("p-plazo").value, 10) || 0;
     if (!$("p-nom").value.trim() || !monto || (!tasa && !num($("p-fijo").value)) || (!plazo && tipo !== "interes")) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, plazo y la tasa (o el pago acordado)."; return; }
-    const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
+    const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || $("fp").dataset.uid || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
       por: ME.uid, cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
     const fijo = num($("p-fijo").value); if (fijo) p.pagoFijo = fijo;
     try {
@@ -442,7 +483,7 @@ function vPrestamos() {
     e.preventDefault();
     const m = num(f.querySelector("[name=m]").value), fe = f.querySelector("[name=f]").value || today(), t = f.querySelector("[name=t]")?.value;
     if (!m) return;
-    const pg = { monto: m, fecha: fe, reg: new Date().toISOString() }; if (t === "capital") pg.tipo = "capital";
+    const pg = { monto: m, fecha: fe, reg: new Date().toISOString(), regPor: ME.uid }; if (t === "capital") pg.tipo = "capital";
     await updateDoc(doc(db, "prestamos", f.dataset.pay), { pagos: arrayUnion(pg) });
   }));
   editHandlers();
@@ -464,6 +505,7 @@ const EX_HELP = {
 const EX_FIELDS = { interes: ["saldo", "tasa", "gar"], capfijo: ["saldo", "tasa", "abono", "gar"], garantia: ["saldo", "tasa", "pago", "n", "gar"], semanal: ["pago", "n"] };
 function exForm() {
   const f = $("fe"); if (!f) return;
+  bindPick("e", f);
   $("ex-d").ontoggle = () => (EXOPEN = $("ex-d").open);
   const money = (id) => $(id).addEventListener("input", (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; });
   ["e-saldo", "e-abono"].forEach(money);
@@ -503,7 +545,7 @@ function exForm() {
     e.preventDefault();
     const p = build(), nom = $("e-nom").value.trim();
     if (!nom || !p || !p.inicio) { $("e-err").hidden = false; $("e-err").textContent = "Completa el nombre, la fecha del próximo pago y los datos de cómo te paga."; return; }
-    Object.assign(p, { cliente: nom, telefono: tel10($("e-tel").value), clienteUid: "", clienteEmail: $("e-mail").value.trim().toLowerCase(),
+    Object.assign(p, { cliente: nom, telefono: tel10($("e-tel").value), clienteUid: f.dataset.uid || "", clienteEmail: $("e-mail").value.trim().toLowerCase(),
       por: $("e-own")?.value || ME.uid, cotId: "", garantia: EXMODO === "semanal" ? "" : $("e-gar").value, desc: EXMODO === "semanal" ? "" : $("e-desc").value.trim(),
       existente: true, creado: new Date().toISOString() });
     if (!p.plazo) delete p.plazo;
@@ -541,7 +583,8 @@ function editHandlers() {
   const P = $("panel");
   const twice = (b, txt, fn) => (b.onclick = async () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = txt; return; } b.disabled = true; try { await fn(); } catch (e) { b.disabled = false; b.textContent = "No se pudo. Revisa tu conexión"; } });
   P.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => { EDIT = EDIT === b.dataset.edit ? "" : b.dataset.edit; vPrestamos(); }));
-  P.querySelectorAll("[data-delp]").forEach((b) => twice(b, "Toca otra vez para borrarlo con todos sus pagos", async () => { await deleteDoc(doc(db, "prestamos", b.dataset.delp)); OPEN = ""; EDIT = ""; }));
+  P.querySelectorAll("[data-delp]").forEach((b) => twice(b, "Toca otra vez para borrarlo con todos sus pagos", async () => { await deleteDoc(doc(db, "prestamos", b.dataset.delp)); deleteDoc(doc(db, "repartos", b.dataset.delp)).catch(() => {}); OPEN = ""; EDIT = ""; }));
+  repartoHandlers(twice);
   P.querySelectorAll("[data-rmpay]").forEach((b) => twice(b, "¿Quitar?", async () => {
     const [id, i] = b.dataset.rmpay.split(":"), p = PRES.find((x) => x.id === id);
     await updateDoc(doc(db, "prestamos", id), { pagos: (p.pagos || []).filter((_, k) => k !== Number(i)) });
@@ -569,6 +612,128 @@ function editHandlers() {
       catch (er) { err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
     };
   });
+}
+/* ---------- Fondeo y comisiones ---------- */
+const PAPEL = { fondeo: "Fondeó el dinero", comision: "Comisión" };
+const BASE = { puntos: "puntos de interés al mes", pct: "% del interés cobrado", fijo: "fijo por pago" };
+const persKey = (x) => x.uid || "n:" + (x.nombre || "").trim().toLowerCase();
+const persName = (x) => (x.uid ? (x.uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === x.uid)?.nombre || x.nombre || "Colaborador") : x.nombre);
+function parteDe(r, x) {
+  const p = r.p; let int = 0;
+  if (x.base === "puntos") int = p.tipo !== "semanal" && p.tasa ? (r.interes * x.valor) / p.tasa : 0;
+  else if (x.base === "pct") int = (r.interes * x.valor) / 100;
+  else if (x.base === "fijo") int = r.interes > 0.005 ? x.valor : 0;
+  int = Math.round(int * 100) / 100;
+  const cap = x.capital ? r.capital : 0;
+  return { int, cap, total: Math.round((int + cap) * 100) / 100 };
+}
+function repTxt(p, x) {
+  const v = x.base === "fijo" ? mxn(x.valor) + " " + BASE.fijo : x.base === "puntos" ? x.valor + "% de " + p.tasa + "% al mes" : x.valor + BASE.pct;
+  return `${esc(persName(x))} · ${PAPEL[x.papel]} · ${v}${x.capital ? " · recibe el capital" : ""}`;
+}
+let REPOPEN = "";
+function repartoBox(p) {
+  const L = REP[p.id]?.participantes || [], eq = USERS.filter((u) => u.rol === "equipo");
+  const intShare = L.filter((x) => x.base !== "fijo").reduce((s, x) => s + (x.base === "puntos" ? (p.tasa ? (x.valor / p.tasa) * 100 : 0) : x.valor), 0);
+  return `<details class="rep" data-repd="${p.id}"${REPOPEN === p.id ? " open" : ""}><summary>Fondeo y comisiones${L.length ? " (" + L.length + ")" : ""}</summary>
+    <div class="list" style="margin-top:8px">${L.length ? L.map((x, i) => `<div class="item"><div class="item-top"><span>${repTxt(p, x)}</span><button class="link del" type="button" data-reprm="${p.id}:${i}">Quitar</button></div></div>`).join("") : `<p class="muted">Sin reparto. Todo el interés de este préstamo es para ti.</p>`}</div>
+    ${L.length && intShare ? `<p class="note">Del interés que pague el cliente: ${Math.round(intShare)}% se reparte y ${Math.max(0, Math.round(100 - intShare))}% queda para ti${L.some((x) => x.base === "fijo") ? " (antes de los pagos fijos)" : ""}.</p>` : ""}
+    <form class="edit" data-repf="${p.id}" novalidate>
+      <div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${eq.map((u) => `<option value="${u.uid}">${esc(u.nombre)}</option>`).join("")}</select></label>
+      <label data-rn>Nombre<input name="nombre" placeholder="Ej. Mamá"></label></div>
+      <div class="row"><label>Papel<select name="papel"><option value="fondeo">Fondeó el dinero</option><option value="comision">Comisión</option></select></label>
+      <label>Cómo se calcula<select name="base">${p.tipo !== "semanal" ? `<option value="puntos">Le pago X% al mes (de los ${p.tasa}% que cobro)</option>` : ""}<option value="pct">% del interés que cobro</option><option value="fijo">Monto fijo por cada pago</option></select></label></div>
+      <div class="row"><label><span data-vl>Valor</span><input name="valor" inputmode="decimal" placeholder="Ej. 3"></label>
+      <label class="chk"><input type="checkbox" name="capital" checked> Se le regresa el capital que pague el cliente</label></div>
+      <p class="err" hidden></p>
+      <button class="btn sm primary" type="submit">Agregar al reparto</button>
+    </form></details>`;
+}
+function repartoHandlers(twice) {
+  const P = $("panel");
+  P.querySelectorAll("details[data-repd]").forEach((d) => (d.ontoggle = () => { if (d.open) REPOPEN = d.dataset.repd; else if (REPOPEN === d.dataset.repd) REPOPEN = ""; }));
+  P.querySelectorAll("[data-reprm]").forEach((b) => twice(b, "¿Quitar?", async () => {
+    const [id, i] = b.dataset.reprm.split(":"); const L = (REP[id]?.participantes || []).filter((_, k) => k !== Number(i));
+    await setDoc(doc(db, "repartos", id), { participantes: L });
+  }));
+  P.querySelectorAll("form[data-repf]").forEach((f) => {
+    const g = (n) => f.querySelector(`[name=${n}]`);
+    const sync = () => {
+      f.querySelector("[data-rn]").hidden = !!g("uid").value;
+      const b = g("base").value;
+      f.querySelector("[data-vl]").textContent = b === "puntos" ? "Le pago (% al mes)" : b === "pct" ? "Porcentaje del interés" : "Monto por pago";
+      g("valor").placeholder = b === "puntos" ? "Ej. 3" : b === "pct" ? "Ej. 25" : "Ej. 500";
+    };
+    g("uid").onchange = sync; g("base").onchange = sync;
+    g("papel").onchange = () => { g("capital").checked = g("papel").value === "fondeo"; };
+    sync();
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const id = f.dataset.repf, uid = g("uid").value, nombre = uid ? USERS.find((u) => u.uid === uid)?.nombre || "" : g("nombre").value.trim(), valor = num(g("valor").value);
+      const err = f.querySelector(".err");
+      if (!nombre || !valor) { err.hidden = false; err.textContent = "Escribe el nombre y el valor."; return; }
+      const x = { uid, nombre, papel: g("papel").value, base: g("base").value, valor, capital: g("capital").checked };
+      REPOPEN = id;
+      try { await setDoc(doc(db, "repartos", id), { participantes: [...(REP[id]?.participantes || []), x] }); }
+      catch (er) { err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
+    };
+  });
+}
+
+/* ---------- Cuentas (admin) ---------- */
+let CU_MONTH = null, CU_OPEN = "";
+function movimientos() {
+  // Para cada pago, cuánto le toca a cada persona del reparto.
+  const L = ledger(PRES), por = {};
+  L.forEach((r) => {
+    r.partes = (REP[r.p.id]?.participantes || []).map((x) => ({ x, ...parteDe(r, x) }));
+    r.paraMi = Math.round((r.interes - r.partes.reduce((s, q) => s + q.int, 0)) * 100) / 100;
+  });
+  return L;
+}
+function vCuentas() {
+  const base = CU_MONTH || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const y = base.getFullYear(), m = base.getMonth(), mes = iso(base).slice(0, 7);
+  const L = movimientos(), LM = L.filter((r) => r.fecha.startsWith(mes));
+  const sum = (l, f) => Math.round(l.reduce((s, r) => s + f(r), 0) * 100) / 100;
+  const personas = {};
+  const addP = (x, k, v) => { const key = persKey(x); personas[key] = personas[key] || { x, mesInt: 0, mesCap: 0, totInt: 0, totCap: 0, entregado: 0, entMes: 0 }; personas[key][k] += v; };
+  L.forEach((r) => r.partes.forEach((q) => { addP(q.x, "totInt", q.int); addP(q.x, "totCap", q.cap); if (r.fecha.startsWith(mes)) { addP(q.x, "mesInt", q.int); addP(q.x, "mesCap", q.cap); } }));
+  ENT.forEach((e) => { addP(e, "entregado", e.monto || 0); if ((e.fecha || "").startsWith(mes)) addP(e, "entMes", e.monto || 0); });
+  const PL = Object.entries(personas).sort((a, b) => persName(a[1].x).localeCompare(persName(b[1].x)));
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const entMes = ENT.filter((e) => (e.fecha || "").startsWith(mes)).sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  $("panel").innerHTML = `
+  <div class="card">
+    <div class="head"><h2>Cuentas</h2><div class="actions"><button class="btn sm" type="button" id="cu-prev" aria-label="Mes anterior">‹</button><b style="align-self:center;min-width:120px;text-align:center">${base.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</b><button class="btn sm" type="button" id="cu-next" aria-label="Mes siguiente">›</button></div></div>
+    <div class="facts"><div><span>Entró</span><b>${mxn2(sum(LM, (r) => r.monto))}</b></div><div><span>Capital</span><b>${mxn2(sum(LM, (r) => r.capital))}</b></div><div><span>Interés</span><b>${mxn2(sum(LM, (r) => r.interes))}</b></div></div>
+    <div class="facts"><div><span>Para fondeadores y comisiones</span><b>${mxn2(sum(LM, (r) => r.partes.reduce((s, q) => s + q.total, 0)))}</b></div><div><span>Entregado este mes</span><b>${mxn2(sum(entMes, (e) => e.monto || 0))}</b></div><div><span>Tu ganancia (interés)</span><b>${mxn2(sum(LM, (r) => r.paraMi))}</b></div></div>
+    <p class="note">El capital que entra de un préstamo fondeado por otra persona se le regresa a esa persona. Tu ganancia es el interés que queda después de fondeos y comisiones.</p>
+  </div>
+  <div class="card"><h2>Por persona</h2>
+    ${PL.length ? `<div class="list">${PL.map(([k, o]) => {
+      const gen = r2(o.totInt + o.totCap), pend = r2(gen - o.entregado);
+      return `<div class="item"><div class="item-top"><b>${esc(persName(o.x))}</b><span>${pend > 0.5 ? `Le debes <b>${mxn2(pend)}</b>` : `<span class="pill ok">Al corriente</span>`}</span></div>
+        <div class="item-mid">Este mes le toca ${mxn2(r2(o.mesInt + o.mesCap))}${o.mesCap ? ` (${mxn2(o.mesInt)} interés + ${mxn2(o.mesCap)} capital)` : ""} · Entregado este mes ${mxn2(o.entMes)}</div>
+        <div class="item-bot"><span>Total generado ${mxn2(gen)} · Total entregado ${mxn2(o.entregado)}</span><button class="link" type="button" data-cuent="${esc(k)}">${CU_OPEN === k ? "Cerrar" : "Registrar entrega"}</button></div>
+        ${CU_OPEN === k ? `<form class="row" data-entf="${esc(k)}" novalidate style="margin-top:6px"><label>Monto entregado<input name="m" inputmode="decimal" value="${pend > 0 ? pend : ""}"></label><label>Fecha<input name="f" type="date" value="${today()}"></label><label>Nota (opcional)<input name="n" placeholder="Ej. Transferencia"></label><button class="btn sm primary" type="submit">Guardar entrega</button></form>` : ""}
+      </div>`;
+    }).join("")}</div>` : `<p class="muted">Todavía no hay fondeadores ni comisiones. Para agregarlos, abre un préstamo en la pestaña Préstamos y entra a "Fondeo y comisiones".</p>`}
+  </div>
+  <div class="card"><h2>Entregas del mes</h2><div class="list">${entMes.length ? entMes.map((e) => `<div class="item"><div class="item-top"><b>${esc(persName(e))}</b><span>${mxn2(e.monto)}</span></div><div class="item-bot"><span>${fcorta(new Date(e.fecha + "T12:00:00"))}${e.nota ? " · " + esc(e.nota) : ""}</span><button class="link del" type="button" data-entrm="${e.id}">Borrar</button></div></div>`).join("") : `<p class="muted">Sin entregas registradas este mes.</p>`}</div></div>
+  <div class="card"><h2>Pagos del mes por préstamo</h2><div class="list">${LM.length ? LM.sort((a, b) => (a.fecha < b.fecha ? 1 : -1)).map((r) => `<div class="item owned" style="--own:${ownerColor(ownerOf(r.p))}"><div class="item-top"><b>${esc(r.p.cliente)}</b><span>${mxn2(r.monto)}</span></div>
+      <div class="item-mid">${fcorta(new Date(r.fecha + "T12:00:00"))} · Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</div>
+      <div class="item-bot"><span>${r.partes.map((q) => esc(persName(q.x)) + " " + mxn2(q.total)).join(" · ")}${r.partes.length ? " · " : ""}Para ti ${mxn2(r.paraMi)}</span></div></div>`).join("") : `<p class="muted">Sin pagos este mes.</p>`}</div></div>`;
+  $("cu-prev").onclick = () => { CU_MONTH = new Date(y, m - 1, 1); vCuentas(); };
+  $("cu-next").onclick = () => { CU_MONTH = new Date(y, m + 1, 1); vCuentas(); };
+  $("panel").querySelectorAll("[data-cuent]").forEach((b) => (b.onclick = () => { CU_OPEN = CU_OPEN === b.dataset.cuent ? "" : b.dataset.cuent; vCuentas(); }));
+  $("panel").querySelectorAll("form[data-entf]").forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault();
+    const o = personas[f.dataset.entf], mo = num(f.querySelector("[name=m]").value); if (!o || !mo) return;
+    CU_OPEN = "";
+    await addDoc(collection(db, "entregas"), { uid: o.x.uid || "", nombre: o.x.nombre || persName(o.x), monto: mo, fecha: f.querySelector("[name=f]").value || today(), nota: f.querySelector("[name=n]").value.trim(), reg: new Date().toISOString() });
+  }));
+  $("panel").querySelectorAll("[data-entrm]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "¿Borrar?"; return; } deleteDoc(doc(db, "entregas", b.dataset.entrm)); }));
 }
 const cuotaLbl = (p, n, total) => (p.tipo === "interes" ? "Interés del mes " + n : (p.tipo === "semanal" ? "Semana " : "Mes ") + n + " de " + total);
 const invLink = (id) => PORTAL() + "?nueva&inv=" + id;
@@ -611,7 +776,8 @@ function loanItem0(p) {
       <label${isAdmin() ? "" : " hidden"}>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
       ${schedule(p, a, true)}
       <div class="actions" style="margin-top:6px"><button class="btn sm" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button>${isAdmin() ? `<button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button>` : ""}</div>
-      ${EDIT === p.id ? editForm(p) : ""}` : ""}
+      ${EDIT === p.id ? editForm(p) : ""}
+      ${isAdmin() ? repartoBox(p) : ""}` : ""}
   </div>`;
 }
 function schedule(p, a, edit) {
@@ -1007,26 +1173,41 @@ function cuotaRow(c, showDate) {
     <form data-otrof="${key}" class="row" hidden novalidate style="margin-top:6px"><label>Monto recibido<input name="m" inputmode="decimal" value="${c.debe}"></label><button class="btn sm primary" type="submit">Registrar</button></form>`}
   </div>`;
 }
+// Todos los pagos registrados con su desglose (qué cuota cubrieron, capital e interés).
+function ledger(list) {
+  return (list || visibles()).flatMap((p) => desglosePagos(p).map((r) => ({ ...r, p, tarde: r.debia && r.fecha > r.debia ? Math.round((new Date(r.fecha + "T12:00:00") - new Date(r.debia + "T12:00:00")) / 864e5) : 0 })));
+}
+const fhora = (s) => { if (!s) return ""; const d = new Date(s); return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }); };
+function pagoRow(r) {
+  const p = r.p, quien = r.regPor ? nameOf(r.regPor) : "";
+  return `<div class="item owned" style="--own:${ownerColor(ownerOf(p))}">
+    <div class="item-top"><b>${esc(p.cliente)}</b><span><b>${mxn2(r.monto)}</b></span></div>
+    <div class="item-mid">Pagó el ${fcorta(new Date(r.fecha + "T12:00:00"))}${r.debia ? ` · Debía pagarse el ${fcorta(new Date(r.debia + "T12:00:00"))} (${cuotaLbl(p, r.n, avance(p).total)})` : r.tipo === "capital" ? " · Abono a capital" : ""}${r.nota ? " · " + esc(r.nota) : ""}
+      ${r.debia ? (r.tarde > 0 ? ` <span class="pill warn">${r.tarde} ${r.tarde === 1 ? "día" : "días"} tarde</span>` : ` <span class="pill ok">A tiempo</span>`) : ""}</div>
+    <div class="item-bot"><span>Registrado ${r.reg ? "el " + fhora(r.reg) : ""}${quien ? " por " + esc(quien) : ""}</span><span>Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</span></div>
+  </div>`;
+}
 function vAgenda() {
   const all = cuotas(), hoy = today();
   const en7 = iso(new Date(Date.now() + 7 * 864e5));
   const atr = all.filter((c) => c.atrasada).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
   const deHoy = all.filter((c) => c.fecha === hoy);
   const prox = all.filter((c) => !c.pagada && c.fecha > hoy && c.fecha <= en7).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
-  const recientes = [];
-  visibles().forEach((p) => (p.pagos || []).forEach((x) => { if (x.fecha >= iso(new Date(Date.now() - 7 * 864e5))) recientes.push({ p, ...x }); }));
-  recientes.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  const LED = ledger();
   const sum = (l, k) => l.reduce((s, c) => s + (c[k] || 0), 0);
   // calendario del mes
   const base = AG_MONTH || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const y = base.getFullYear(), m = base.getMonth(), first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
   const off = (first.getDay() + 6) % 7; // lunes primero
-  const byDay = {}; all.forEach((c) => { if (c.fecha.startsWith(iso(first).slice(0, 7))) (byDay[c.fecha] = byDay[c.fecha] || []).push(c); });
+  const mes = iso(first).slice(0, 7);
+  const byDay = {}; all.forEach((c) => { if (c.fecha.startsWith(mes)) (byDay[c.fecha] = byDay[c.fecha] || []).push(c); });
+  const rcv = {}; LED.forEach((r) => { if (r.fecha.startsWith(mes)) (rcv[r.fecha] = rcv[r.fecha] || []).push(r); });
+  const delMes = LED.filter((r) => r.fecha.startsWith(mes)).sort((a, b) => (a.fecha === b.fecha ? ((a.reg || "") < (b.reg || "") ? 1 : -1) : a.fecha < b.fecha ? 1 : -1));
   let cells = ""; for (let i = 0; i < off; i++) cells += `<span></span>`;
   for (let d = 1; d <= days; d++) {
     const k = iso(new Date(y, m, d)), l = byDay[k] || [];
     const cls = !l.length ? "" : l.some((c) => c.atrasada) ? "late" : l.every((c) => c.pagada) ? "paid" : "due";
-    cells += `<button type="button" class="day ${cls}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}">${d}${l.length ? `<i>${l.length}</i><u>${[...new Set(l.map((c) => ownerOf(c.p)))].slice(0, 4).map((o) => `<b style="background:${ownerColor(o)}"></b>`).join("")}</u>` : ""}</button>`;
+    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}">${d}${l.length ? `<i>${l.length}</i><u>${[...new Set(l.map((c) => ownerOf(c.p)))].slice(0, 4).map((o) => `<b style="background:${ownerColor(o)}"></b>`).join("")}</u>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   $("panel").innerHTML = `
@@ -1041,12 +1222,17 @@ function vAgenda() {
   <div class="card">
     <div class="head"><h2>Calendario</h2><div class="actions"><button class="btn sm" type="button" id="m-prev" aria-label="Mes anterior">‹</button><b style="align-self:center;min-width:120px;text-align:center">${first.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</b><button class="btn sm" type="button" id="m-next" aria-label="Mes siguiente">›</button></div></div>
     <div class="cal"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>${cells}</div>
-    <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado</p>
-    ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3><div class="list">${sel.length ? sel.map((c) => cuotaRow(c, false)).join("") : `<p class="muted">Sin pagos ese día.</p>`}</div>` : `<p class="muted">Toca un día para ver quién paga.</p>`}
+    <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día</p>
+    ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3>
+      ${sel.length ? `<p class="lbl">Pagos que tocaban ese día</p><div class="list">${sel.map((c) => cuotaRow(c, false)).join("")}</div>` : ""}
+      ${(rcv[AG_DAY] || []).length ? `<p class="lbl">Pagos recibidos ese día</p><div class="list">${rcv[AG_DAY].map(pagoRow).join("")}</div>` : ""}
+      ${!sel.length && !(rcv[AG_DAY] || []).length ? `<p class="muted">Sin movimientos ese día.</p>` : ""}` : `<p class="muted">Toca un día para ver qué pagos tocaban y cuáles se recibieron.</p>`}
   </div>
-  <div class="card"><h2>Pagos recibidos (últimos 7 días)</h2><div class="list">${recientes.length ? recientes.map((r) => `<div class="item"><div class="item-top"><b>${esc(r.p.cliente)}</b><span>${fcorta(new Date(r.fecha + "T12:00:00"))}</span></div><div class="item-mid">${mxn2(r.monto)}</div></div>`).join("") : `<p class="muted">Sin pagos registrados esta semana.</p>`}</div></div>`;
+  <div class="card"><div class="head"><h2>Pagos recibidos en ${first.toLocaleDateString("es-MX", { month: "long" })}</h2></div>
+    <div class="stats"><span class="stat">Total <b>${mxn2(sum(delMes, "monto"))}</b></span><span class="stat">Capital <b>${mxn2(sum(delMes, "capital"))}</b></span><span class="stat">Interés <b>${mxn2(sum(delMes, "interes"))}</b></span><span class="stat"><b>${delMes.filter((r) => r.tarde > 0).length}</b> pagaron tarde</span></div>
+    <div class="list">${delMes.length ? delMes.map(pagoRow).join("") : `<p class="muted">Sin pagos registrados este mes.</p>`}</div></div>`;
   const find = (key) => { const [id, n] = key.split(":"); return all.find((c) => c.p.id === id && c.n === Number(n)); };
-  const pay = (c, m) => updateDoc(doc(db, "prestamos", c.p.id), { pagos: arrayUnion({ monto: m, fecha: today(), reg: new Date().toISOString() }) });
+  const pay = (c, m) => updateDoc(doc(db, "prestamos", c.p.id), { pagos: arrayUnion({ monto: m, fecha: today(), reg: new Date().toISOString(), regPor: ME.uid }) });
   $("panel").querySelectorAll("[data-pago]").forEach((b) => (b.onclick = () => { b.disabled = true; pay(find(b.dataset.pago), find(b.dataset.pago).debe); }));
   $("panel").querySelectorAll("[data-otro]").forEach((b) => (b.onclick = () => { const f = $("panel").querySelector(`[data-otrof="${b.dataset.otro}"]`); f.hidden = !f.hidden; }));
   $("panel").querySelectorAll("form[data-otrof]").forEach((f) => f.addEventListener("submit", (e) => { e.preventDefault(); const m = num(f.querySelector("[name=m]").value); if (m) pay(find(f.dataset.otrof), m); }));
