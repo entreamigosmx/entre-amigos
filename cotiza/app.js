@@ -445,6 +445,7 @@ function vPrestamos() {
     const pg = { monto: m, fecha: fe, reg: new Date().toISOString() }; if (t === "capital") pg.tipo = "capital";
     await updateDoc(doc(db, "prestamos", f.dataset.pay), { pagos: arrayUnion(pg) });
   }));
+  editHandlers();
   $("panel").querySelectorAll("[data-undo]").forEach((b) => (b.onclick = async () => {
     const p = PRES.find((x) => x.id === b.dataset.undo); if (!p?.pagos?.length) return;
     if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para borrar el último pago"; return; }
@@ -514,6 +515,61 @@ function exForm() {
     } catch (er) { btn.disabled = false; $("e-err").hidden = false; $("e-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
   });
 }
+let EDIT = "";
+const ED_FIELDS = { interes: ["monto", "tasa", "gar"], capfijo: ["monto", "tasa", "abono", "gar"], garantia: ["monto", "tasa", "plazo", "fijo", "gar"], semanal: ["monto", "tasa", "plazo", "fijo"] };
+function editForm(p) {
+  const t = p.tipo || "garantia", eq = USERS.filter((u) => u.rol === "equipo"), f = (k) => (ED_FIELDS[t].includes(k) ? "" : " hidden");
+  const money = (v) => (v || v === 0 ? Number(v).toLocaleString("es-MX") : "");
+  return `<form class="edit" data-edf="${p.id}" novalidate>
+    <h3>Editar préstamo</h3>
+    <div class="row"><label>Cliente<input name="cliente" value="${esc(p.cliente || "")}"></label><label>WhatsApp<input name="telefono" inputmode="tel" value="${esc(p.telefono || "")}"></label></div>
+    <div class="row"><label>Tipo<select name="tipo"><option value="interes"${t === "interes" ? " selected" : ""}>Solo interés</option><option value="capfijo"${t === "capfijo" ? " selected" : ""}>Interés + abono a capital</option><option value="garantia"${t === "garantia" ? " selected" : ""}>Pago fijo mensual</option><option value="semanal"${t === "semanal" ? " selected" : ""}>Semanal</option></select></label>
+    ${isAdmin() ? `<label>Cartera de<select name="por"><option value="${ME.uid}">Mía</option>${eq.map((u) => `<option value="${u.uid}"${u.uid === p.por ? " selected" : ""}>${esc(u.nombre)}</option>`).join("")}</select></label>` : ""}</div>
+    <div class="row"><label data-ef="monto">Monto (capital)<input name="monto" inputmode="decimal" value="${money(p.monto)}"></label>
+    <label data-ef="tasa"><span>${t === "semanal" ? "Pago por cada $1,000" : "Interés mensual (%)"}</span><input name="tasa" inputmode="decimal" value="${p.tasa ?? ""}"></label></div>
+    <div class="row"><label data-ef="plazo"${f("plazo")}><span>${t === "semanal" ? "Semanas" : "Meses"}</span><input name="plazo" inputmode="numeric" value="${p.plazo ?? ""}"></label>
+    <label data-ef="fijo"${f("fijo")}>Pago acordado (opcional)<input name="pagoFijo" inputmode="decimal" value="${p.pagoFijo ?? ""}"></label>
+    <label data-ef="abono"${f("abono")}>Abono a capital al mes<input name="abono" inputmode="decimal" value="${money(p.abono)}"></label></div>
+    <label>Fecha del primer pago<input name="inicio" type="date" value="${p.inicio || ""}"></label>
+    <div class="row" data-ef="gar"${f("gar")}><label>Garantía<select name="garantia"><option value="">Sin garantía</option>${Object.entries(GARANTIAS).map(([k, v]) => `<option value="${k}"${k === p.garantia ? " selected" : ""}>${v}</option>`).join("")}</select></label><label>Descripción<input name="desc" value="${esc(p.desc || "")}"></label></div>
+    <p class="note">Los pagos registrados se conservan. Si cambias la fecha del primer pago, cambia todo el calendario.</p>
+    <p class="err" hidden></p>
+    <div class="actions"><button class="btn primary" type="submit">Guardar cambios</button><button class="btn" type="button" data-edit="${p.id}">Cancelar</button></div>
+  </form>`;
+}
+function editHandlers() {
+  const P = $("panel");
+  const twice = (b, txt, fn) => (b.onclick = async () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = txt; return; } b.disabled = true; try { await fn(); } catch (e) { b.disabled = false; b.textContent = "No se pudo. Revisa tu conexión"; } });
+  P.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => { EDIT = EDIT === b.dataset.edit ? "" : b.dataset.edit; vPrestamos(); }));
+  P.querySelectorAll("[data-delp]").forEach((b) => twice(b, "Toca otra vez para borrarlo con todos sus pagos", async () => { await deleteDoc(doc(db, "prestamos", b.dataset.delp)); OPEN = ""; EDIT = ""; }));
+  P.querySelectorAll("[data-rmpay]").forEach((b) => twice(b, "¿Quitar?", async () => {
+    const [id, i] = b.dataset.rmpay.split(":"), p = PRES.find((x) => x.id === id);
+    await updateDoc(doc(db, "prestamos", id), { pagos: (p.pagos || []).filter((_, k) => k !== Number(i)) });
+  }));
+  P.querySelectorAll("form[data-edf]").forEach((f) => {
+    const sel = f.querySelector("[name=tipo]");
+    sel.onchange = () => {
+      const t = sel.value;
+      f.querySelectorAll("[data-ef]").forEach((el) => (el.hidden = !ED_FIELDS[t].includes(el.dataset.ef)));
+      f.querySelector("[data-ef=tasa] span").textContent = t === "semanal" ? "Pago por cada $1,000" : "Interés mensual (%)";
+      f.querySelector("[data-ef=plazo] span").textContent = t === "semanal" ? "Semanas" : "Meses";
+    };
+    f.onsubmit = async (e) => {
+      e.preventDefault();
+      const g = (n) => f.querySelector(`[name=${n}]`)?.value ?? "", t = g("tipo"), err = f.querySelector(".err");
+      const d = { cliente: g("cliente").trim(), telefono: tel10(g("telefono")), tipo: t, monto: num(g("monto")), tasa: num(g("tasa")), inicio: g("inicio"),
+        plazo: ED_FIELDS[t].includes("plazo") ? parseInt(g("plazo"), 10) || 0 : null,
+        pagoFijo: ED_FIELDS[t].includes("fijo") ? num(g("pagoFijo")) || null : null,
+        abono: t === "capfijo" ? num(g("abono")) : null,
+        garantia: ED_FIELDS[t].includes("gar") ? g("garantia") : "", desc: ED_FIELDS[t].includes("gar") ? g("desc").trim() : "" };
+      if (isAdmin() && g("por")) d.por = g("por");
+      const bad = !d.cliente || !d.monto || !d.inicio || (t === "capfijo" && !d.abono) || ((t === "garantia" || t === "semanal") && (!d.plazo || (!d.tasa && !d.pagoFijo))) || (t === "interes" && !d.tasa);
+      if (bad) { err.hidden = false; err.textContent = "Revisa los datos: falta el cliente, el monto, la fecha o los datos de cómo paga."; return; }
+      try { await updateDoc(doc(db, "prestamos", f.dataset.edf), d); EDIT = ""; vPrestamos(); }
+      catch (er) { err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
+    };
+  });
+}
 const cuotaLbl = (p, n, total) => (p.tipo === "interes" ? "Interés del mes " + n : (p.tipo === "semanal" ? "Semana " : "Mes ") + n + " de " + total);
 const invLink = (id) => PORTAL() + "?nueva&inv=" + id;
 function invMsg(p, id) {
@@ -553,13 +609,15 @@ function loanItem0(p) {
       </form>
       <label>Correo del cliente<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
       <label${isAdmin() ? "" : " hidden"}>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
-      ${schedule(p, a)}` : ""}
+      ${schedule(p, a, true)}
+      <div class="actions" style="margin-top:6px"><button class="btn sm" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button>${isAdmin() ? `<button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button>` : ""}</div>
+      ${EDIT === p.id ? editForm(p) : ""}` : ""}
   </div>`;
 }
-function schedule(p, a) {
-  const pagos = (p.pagos || []).slice().reverse();
+function schedule(p, a, edit) {
+  const pagos = (p.pagos || []).map((x, i) => ({ ...x, i })).reverse();
   return `<details><summary>Corrida y pagos</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>${p.tipo === "interes" ? `<p class="note">Solo interés: cada mes se paga el interés sobre el capital pendiente. Los abonos a capital bajan el interés de los meses siguientes.</p>` : ""}
-  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th></tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td></tr>`).join("")}</table></div>` : ""}</details>`;
+  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th>${edit ? "<th></th>" : ""}</tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td>${edit ? `<td><button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>` : ""}</details>`;
 }
 
 /* ---------- Mis préstamos (cliente) ---------- */

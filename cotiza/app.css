@@ -127,3 +127,5 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);borde
 #v-app{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 #v-app[hidden]{display:none}
 #notice:empty{display:none}
+.btn.danger{border-color:#ff8a80;color:#ff8a80;background:transparent}
+form.edit{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
