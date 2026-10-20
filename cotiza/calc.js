@@ -8,9 +8,9 @@ export const GARANTIAS = { auto: "Auto", reloj: "Reloj", oro: "Oro", monedas: "M
 export const GN = { auto: "tu auto", reloj: "tu reloj", oro: "tu oro", monedas: "tus monedas", otro: "tu prenda", ff: "lo acordado" };
 
 // Pagos mensuales fijos, interés sobre saldo.
-export function corridaMensual(monto, tasaMensualPct, meses) {
+export function corridaMensual(monto, tasaMensualPct, meses, pagoFijo) {
   const r = tasaMensualPct / 100;
-  let pago = r ? (monto * r) / (1 - Math.pow(1 + r, -meses)) : monto / meses;
+  let pago = pagoFijo || (r ? (monto * r) / (1 - Math.pow(1 + r, -meses)) : monto / meses);
   pago = Math.ceil(pago * 100) / 100;
   let saldo = monto, intereses = 0;
   const filas = [];
@@ -26,8 +26,8 @@ export function corridaMensual(monto, tasaMensualPct, meses) {
 }
 
 // Pagos semanales fijos: pago por cada $1,000.
-export function corridaSemanal(monto, semanas, porMil) {
-  const pago = r2((monto / 1000) * porMil);
+export function corridaSemanal(monto, semanas, porMil, pagoFijo) {
+  const pago = r2(pagoFijo || (monto / 1000) * porMil);
   const total = r2(pago * semanas);
   const filas = [];
   for (let i = 1; i <= semanas; i++) filas.push({ n: i, pago, saldo: r2(total - pago * i) });
@@ -48,7 +48,7 @@ export const fcorta = (d) => (d ? d.toLocaleDateString("es-MX", { day: "numeric"
 
 // Avance de un préstamo según los pagos registrados.
 export function avance(p) {
-  const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa) : corridaMensual(p.monto, p.tasa, p.plazo);
+  const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa, p.pagoFijo) : corridaMensual(p.monto, p.tasa, p.plazo, p.pagoFijo);
   const pagado = (p.pagos || []).reduce((s, x) => s + (x.monto || 0), 0);
   let cubiertos = 0, acum = 0;
   for (const f of c.filas) { if (acum + f.pago <= pagado + 0.5) { acum += f.pago; cubiertos++; } else break; }

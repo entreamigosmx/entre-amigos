@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance } from "./calc.js?v=2";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance } from "./calc.js?v=3";
 
 const app = initializeApp({
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -327,6 +327,12 @@ function vPrestamos() {
       <label for="p-ini">Fecha del primer pago<input id="p-ini" type="date" value="${d.inicio || plusDays(d.tipo === "semanal" ? 7 : 30)}"></label></div>
       <div class="row" id="p-gar-row"${d.tipo === "semanal" ? " hidden" : ""}><label for="p-gar">Garantía<select id="p-gar">${Object.entries(GARANTIAS).map(([k, v]) => `<option value="${k}"${k === d.garantia ? " selected" : ""}>${v}</option>`).join("")}</select></label>
       <label for="p-desc">Descripción<input id="p-desc" value="${esc(d.desc || "")}"></label></div>
+      <details id="p-act"><summary>Cliente con préstamo ya activo</summary>
+        <p class="note" style="margin:8px 0">Para registrar a tus clientes de antes: pon la fecha de su primer pago real (aunque sea pasada) y cuántos pagos ya te ha hecho.</p>
+        <div class="row"><label for="p-fijo">Pago acordado (si es distinto al calculado)<input id="p-fijo" inputmode="decimal" placeholder="Opcional"></label>
+        <label for="p-hechos">Pagos que ya hizo<input id="p-hechos" inputmode="numeric" placeholder="Ej. 5"></label></div>
+        <label for="p-ya">Monto total que ya pagó (opcional, si no fue exacto)<input id="p-ya" inputmode="decimal" placeholder="Se calcula con los pagos que ya hizo"></label>
+      </details>
       <p class="err" id="p-err" hidden></p>
       <button class="btn primary" type="submit">Guardar préstamo</button>
     </form></details></div>
@@ -349,9 +355,17 @@ function vPrestamos() {
   $("fp").addEventListener("submit", async (e) => {
     e.preventDefault();
     const tipo = $("p-tipo").value, monto = num($("p-monto").value), tasa = num($("p-tasa").value), plazo = parseInt($("p-plazo").value, 10) || 0;
-    if (!$("p-nom").value.trim() || !monto || !tasa || !plazo) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, tasa y plazo."; return; }
+    if (!$("p-nom").value.trim() || !monto || (!tasa && !num($("p-fijo").value)) || !plazo) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, plazo y la tasa (o el pago acordado)."; return; }
     const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
       cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
+    const fijo = num($("p-fijo").value); if (fijo) p.pagoFijo = fijo;
+    const hechos = parseInt($("p-hechos").value, 10) || 0, ya = num($("p-ya").value);
+    if (hechos || ya) {
+      const c = avance(p).corrida, k = Math.min(hechos, c.filas.length);
+      const monto = ya || Math.round(c.filas.slice(0, k).reduce((s, f) => s + f.pago, 0) * 100) / 100;
+      const f = k ? iso(fechaPago(p.inicio, k, tipo)) : today();
+      if (monto) p.pagos = [{ monto, fecha: f > today() ? today() : f, reg: new Date().toISOString(), nota: "Pagos anteriores" }];
+    }
     try { await addDoc(collection(db, "prestamos"), p); } catch (er) { $("p-err").hidden = false; $("p-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
   });
   $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { OPEN = OPEN === b.dataset.open ? "" : b.dataset.open; vPrestamos(); }));
@@ -369,6 +383,10 @@ function vPrestamos() {
   $("panel").querySelectorAll("select[data-link]").forEach((s) => (s.onchange = () => { const u = USERS.find((x) => x.uid === s.value); updateDoc(doc(db, "prestamos", s.dataset.link), u ? { clienteUid: s.value, clienteEmail: u.email || "" } : { clienteUid: "" }); }));
   $("panel").querySelectorAll("input[data-mail]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "prestamos", i.dataset.mail), { clienteEmail: i.value.trim().toLowerCase() })));
 }
+function invMsg(p) {
+  const link = location.origin + location.pathname + "?nueva";
+  return `Hola ${p.cliente}, ahora puedes consultar tu préstamo en línea: en qué pago vas, cuánto llevas pagado y cuándo es tu próximo pago.\n\nCrea tu cuenta aquí${p.clienteEmail ? " con el correo " + p.clienteEmail : " con tu correo"}:\n${link}\n\nTambién puedes subir ahí tus documentos. Cualquier duda, escríbenos.\n\nEntre Amigos`;
+}
 function loanItem(p) {
   const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
   const pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
@@ -380,7 +398,7 @@ function loanItem(p) {
     <div class="item-mid">${p.tipo === "semanal" ? "Semanal" : "Garantía " + (GARANTIAS[p.garantia] || "")}${p.desc ? " (" + esc(p.desc) + ")" : ""} · ${mxn(p.monto)} · pago ${mxn2(a.corrida.pago)}</div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
     <div class="item-bot"><span>Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}</span>${a.siguiente ? `<span>Próximo: ${mxn2(a.siguiente.monto)} ${a.siguiente.fecha ? "el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}</div>
-    <div class="item-bot"><button class="link" type="button" data-open="${p.id}">${open ? "Cerrar" : "Registrar pago y más"}</button>${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Ve su avance</span>` : p.clienteEmail ? `<span class="pill">Aún no crea cuenta</span>` : ""}</div>
+    <div class="item-bot"><button class="link" type="button" data-open="${p.id}">${open ? "Cerrar" : "Registrar pago y más"}</button>${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.telefono && !p.clienteUid && !USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<a href="${waTo(p.telefono, invMsg(p))}" target="_blank" rel="noopener">Invitar a ver su préstamo</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Ve su avance</span>` : p.clienteEmail ? `<span class="pill">Aún no crea cuenta</span>` : ""}</div>
     ${open ? `<form data-pay="${p.id}" class="row" novalidate style="margin-top:8px">
         <label>Monto del pago<input name="m" inputmode="decimal" value="${a.siguiente ? a.siguiente.monto : ""}"></label>
         <label>Fecha<input name="f" type="date" value="${today()}"></label>
