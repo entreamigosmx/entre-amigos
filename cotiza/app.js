@@ -39,6 +39,7 @@ function setSignup(v) {
   $("l-title").textContent = v ? "Crea tu cuenta" : "Entra a tu cuenta";
   $("l-sub").textContent = v ? "Te toma un minuto. Usa Google o tu correo." : "Usa tu cuenta de Google o tu correo.";
   $("l-nom-l").hidden = !v;
+  $("l-tipo-w").hidden = !v;
   $("b-login").textContent = v ? "Crear cuenta" : "Entrar";
   $("l-q").textContent = v ? "¿Ya tienes cuenta?" : "¿Primera vez?";
   $("b-swap").textContent = v ? "Entra aquí" : "Crea tu cuenta";
@@ -46,7 +47,12 @@ function setSignup(v) {
   $("l-err").hidden = true;
 }
 $("b-swap").onclick = () => setSignup(!signup);
-if (new URLSearchParams(location.search).has("nueva")) setSignup(true);
+let TIPO = "cliente";
+function setTipo(t) { TIPO = t; document.querySelectorAll("#l-tipo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tipo === t))); }
+document.querySelectorAll("#l-tipo button").forEach((b) => (b.onclick = () => setTipo(b.dataset.tipo)));
+const QS = new URLSearchParams(location.search);
+if (QS.has("nueva")) setSignup(true);
+if (QS.get("tipo") === "colaborador") setTipo("colaborador");
 
 const ERR = {
   "auth/invalid-email": "Revisa el correo, parece que tiene un error.",
@@ -103,7 +109,7 @@ async function ensureUser(u, nombre) {
   const ref = doc(db, "usuarios", u.uid);
   const s = await getDoc(ref);
   if (s.exists()) return s.data();
-  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", telefono: "", creado: new Date().toISOString() };
+  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : "", telefono: "", creado: new Date().toISOString() };
   await setDoc(ref, d);
   return d;
 }
@@ -115,7 +121,17 @@ onAuthStateChanged(auth, async (u) => {
   if (!u) { $("who").textContent = "Préstamos y cotizaciones"; show("v-login"); return; }
   show("v-load");
   try { USER = await ensureUser(u); } catch (e) { USER = { rol: "cliente", nombre: u.displayName || "" }; }
-  $("who").textContent = (USER.nombre || u.email) + (isAdmin() ? " · Administrador" : "");
+  $("who").textContent = (USER.nombre || u.email) + " · " + (isAdmin() ? "Administrador" : USER.rol === "equipo" ? "Colaborador" : "Cliente");
+  const espera = !isAdmin() && USER.rol === "cliente" && USER.solicita === "equipo";
+  if (espera) {
+    $("p-h").textContent = "Solicitud de colaborador";
+    $("p-txt").innerHTML = `Gracias, <b>${esc(USER.nombre || "")}</b>. Tu cuenta de colaborador está en revisión. En cuanto Entre Amigos la apruebe, esta pantalla cambia sola y podrás cotizar.`;
+    $("p-wa").textContent = "Avisar por WhatsApp";
+    $("p-wa").href = "https://wa.me/" + WA + "?text=" + encodeURIComponent("Hola, ya creé mi cuenta de colaborador en Entre Amigos con el correo " + (u.email || "") + ". ¿Me la apruebas?");
+    show("v-pend");
+    unsubs.push(onSnapshot(doc(db, "usuarios", u.uid), (s) => { const d = s.data(); if (d && (d.rol !== "cliente" || d.solicita !== "equipo")) location.reload(); }, () => {}));
+    return;
+  }
   if (!isAdmin() && !["equipo", "cliente"].includes(USER.rol)) {
     $("p-nom").textContent = USER.nombre || "";
     $("p-wa").href = "https://wa.me/" + WA + "?text=" + encodeURIComponent("Hola, mi cuenta de Entre Amigos (" + (u.email || "") + ") aparece inactiva. ¿Me ayudan?");
@@ -152,13 +168,13 @@ function startApp() {
 }
 const isNew = (u) => u.rol !== "admin" && u.creado && Date.now() - new Date(u.creado).getTime() < 3 * 864e5 && !u.visto;
 function drawTabs() {
-  const pend = USERS.filter(isNew).length;
+  const pend = USERS.filter((u) => isNew(u) || (u.rol === "cliente" && u.solicita === "equipo")).length;
   $("tabs").innerHTML = TABS().map(([k, t]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}${k === "personas" && pend ? " (" + pend + ")" : ""}</button>`).join("");
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
 function go(t) { TAB = t; drawTabs(); draw(); window.scrollTo(0, 0); }
 function draw() { const f = { cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
-const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Equipo");
+const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
 
 /* ---------- Cotizar ---------- */
 let MODE = "garantia", touched = false, LAST = null, lastKey = "";
@@ -397,27 +413,28 @@ function vMis() {
 }
 
 /* ---------- Personas (admin) ---------- */
-const ROL = { cliente: "Cliente", equipo: "Equipo (cotiza)", bloqueado: "Bloqueado" };
+const ROL = { cliente: "Cliente", equipo: "Colaborador (cotiza)", bloqueado: "Bloqueado" };
 function vPersonas() {
   const order = { pendiente: 0, equipo: 1, cliente: 2, bloqueado: 3, admin: 4 };
   USERS.filter(isNew).forEach((u) => updateDoc(doc(db, "usuarios", u.uid), { visto: true }).catch(() => {}));
   const list = USERS.filter((u) => u.rol !== "admin").sort((a, b) => (order[a.rol] ?? 9) - (order[b.rol] ?? 9) || (a.nombre || "").localeCompare(b.nombre || ""));
-  const link = location.origin + location.pathname + "?nueva";
+  const base = location.origin + location.pathname, link = base + "?nueva", linkC = base + "?nueva&tipo=colaborador";
   $("panel").innerHTML = `<div class="card">
     <h2>Invitar</h2>
-    <p class="muted">Manda este link a tus clientes o a tu equipo. Quien crea su cuenta entra como Cliente y solo ve sus préstamos. A tu equipo cámbialo aquí a "Equipo".</p>
-    <pre id="inv">${esc(link)}</pre>
-    <div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Crea tu cuenta de Entre Amigos aquí: " + link)}">Mandar por WhatsApp</a><button class="btn" type="button" id="b-inv">Copiar link</button></div>
-    <p class="toast" id="inv-t"></p>
+    <p class="muted">Al crear su cuenta cada persona elige si es cliente o colaborador. Los clientes entran directo y solo ven sus préstamos. Los colaboradores esperan a que tú los apruebes aquí.</p>
+    <div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Crea tu cuenta de cliente en Entre Amigos para ver tu préstamo: " + link)}">Invitar cliente</a>
+    <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Crea tu cuenta de colaborador en Entre Amigos para cotizar: " + linkC)}">Invitar colaborador</a></div>
+    <p class="note">Link para clientes: ${esc(link)}<br>Link para colaboradores: ${esc(linkC)}</p>
   </div>
   <div class="card"><h2>Personas</h2><div class="list">${list.length ? list.map((u) => `<div class="item">
     <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}</b><span>${esc(u.email)}</span></div>
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
-    ${isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
+    ${u.rol === "cliente" && u.solicita === "equipo" ? `<span class="pill warn">Quiere ser colaborador</span><button class="btn sm primary" type="button" data-ok="${u.uid}">Aprobar</button><button class="link" type="button" data-no="${u.uid}">Dejar como cliente</button>` : isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
     <input data-tel="${u.uid}" inputmode="tel" placeholder="WhatsApp" value="${esc(u.telefono || "")}" style="width:150px;font-size:14px;padding:6px 8px"></div></div>`).join("") : `<p class="muted">Todavía nadie ha creado cuenta. Manda el link de arriba.</p>`}</div>
-    <p class="note">Equipo: puede cotizar y ver sus propias cotizaciones. Cliente: ve solo sus préstamos y su avance.</p></div>`;
-  $("b-inv").onclick = () => navigator.clipboard?.writeText(link).then(() => ($("inv-t").textContent = "Link copiado."), () => {});
-  $("panel").querySelectorAll("select[data-rol]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "usuarios", s.dataset.rol), { rol: s.value })));
+    <p class="note">Colaborador: cotiza y ve solo sus propias cotizaciones. Cliente: ve solo sus préstamos y su avance.</p></div>`;
+  $("panel").querySelectorAll("select[data-rol]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "usuarios", s.dataset.rol), { rol: s.value, solicita: "" })));
+  $("panel").querySelectorAll("[data-ok]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.ok), { rol: "equipo", solicita: "" })));
+  $("panel").querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.no), { solicita: "" })));
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
 }
 
