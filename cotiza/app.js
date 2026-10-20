@@ -39,6 +39,7 @@ function setSignup(v) {
   $("l-title").textContent = v ? "Crea tu cuenta" : "Entra a tu cuenta";
   $("l-sub").textContent = v ? "Te toma un minuto. Usa Google o tu correo." : "Usa tu cuenta de Google o tu correo.";
   $("l-nom-l").hidden = !v;
+  $("l-tel-l").hidden = !v;
   $("l-tipo-w").hidden = !v;
   $("b-login").textContent = v ? "Crear cuenta" : "Entrar";
   $("l-q").textContent = v ? "¿Ya tienes cuenta?" : "¿Primera vez?";
@@ -75,7 +76,7 @@ $("f-login").addEventListener("submit", async (e) => {
   $("b-login").disabled = true;
   try {
     if (signup) {
-      PEND_NAME = nom;
+      PEND_NAME = nom; PEND_TEL = tel10($("l-tel").value);
       const c = await createUserWithEmailAndPassword(auth, mail, pass);
       await updateProfile(c.user, { displayName: nom });
       sendEmailVerification(c.user).catch(() => {});
@@ -102,7 +103,7 @@ $("b-forgot").onclick = async () => {
 $("b-out").onclick = () => signOut(auth);
 
 /* ---------------- Sesión ---------------- */
-let ME = null, USER = null, unsubs = [], PEND_NAME = "";
+let ME = null, USER = null, unsubs = [], PEND_NAME = "", PEND_TEL = "";
 const isAdmin = () => !!ME && ADMINS.includes((ME.email || "").toLowerCase());
 const isTeam = () => isAdmin() || USER?.rol === "equipo";
 
@@ -110,7 +111,7 @@ async function ensureUser(u, nombre) {
   const ref = doc(db, "usuarios", u.uid);
   const s = await getDoc(ref);
   if (s.exists()) return s.data();
-  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : "", telefono: "", creado: new Date().toISOString() };
+  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : "", telefono: PEND_TEL || "", creado: new Date().toISOString() };
   await setDoc(ref, d);
   return d;
 }
@@ -156,7 +157,7 @@ function startApp() {
   show("v-app");
   if (isTeam()) unsubs.push(onSnapshot(doc(db, "config", "tasas"), (s) => { CFG = s.data() || {}; if (TAB === "cotizar" && !touched) applyCfg(); if (TAB === "tasas") draw(); }, () => {}));
   const qc = isAdmin() ? collection(db, "cotizaciones") : isTeam() ? query(collection(db, "cotizaciones"), where("por", "==", ME.uid)) : null;
-  if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); }, () => {}));
+  if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); drawTabs(); }, () => {}));
   const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
   if (isAdmin()) listenP("all", collection(db, "prestamos"));
@@ -172,10 +173,28 @@ function startApp() {
 const isNew = (u) => u.rol !== "admin" && u.creado && Date.now() - new Date(u.creado).getTime() < 3 * 864e5 && !u.visto;
 function drawTabs() {
   const pend = USERS.filter((u) => isNew(u) || (u.rol === "cliente" && u.solicita === "equipo")).length;
-  $("tabs").innerHTML = TABS().map(([k, t]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}${k === "personas" && pend ? " (" + pend + ")" : ""}</button>`).join("");
+  const conf = COTS.filter((c) => c.aceptadoPor && !PRES.some((p) => p.cotId === c.id)).length;
+  $("tabs").innerHTML = TABS().map(([k, t]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}${k === "personas" && pend ? " (" + pend + ")" : ""}${k === "cotizaciones" && conf ? " (" + conf + ")" : ""}</button>`).join("");
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
 function go(t) { TAB = t; drawTabs(); draw(); window.scrollTo(0, 0); }
+let NOTICE = null;
+function notice(nombre, tel, msg, titulo) {
+  NOTICE = tel10(tel).length === 10 ? { nombre, tel, msg, titulo } : { nombre, tel: "", msg, titulo };
+  drawNotice(); window.scrollTo(0, 0);
+}
+function drawNotice() {
+  const n = NOTICE, box = $("notice"); if (!box) return;
+  if (!n) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="card notice"><h3>${esc(n.titulo)}</h3>
+    <p class="muted">${n.tel ? "Avísale a " + esc(n.nombre) + " por WhatsApp con un toque:" : esc(n.nombre) + " no tiene WhatsApp registrado. Copia el mensaje y mándaselo:"}</p>
+    <pre>${esc(n.msg)}</pre>
+    <div class="actions">${n.tel ? `<a class="btn primary" href="${waTo(n.tel, n.msg)}" target="_blank" rel="noopener" id="n-wa">Avisar por WhatsApp</a>` : ""}<button class="btn" type="button" id="n-copy">Copiar</button><button class="link" type="button" id="n-x">Cerrar</button></div></div>`;
+  $("n-x").onclick = () => { NOTICE = null; drawNotice(); };
+  $("n-wa") && $("n-wa").addEventListener("click", () => setTimeout(() => { NOTICE = null; drawNotice(); }, 800));
+  $("n-copy").onclick = () => navigator.clipboard?.writeText(n.msg).catch(() => {});
+}
+const PORTAL = () => location.origin + location.pathname;
 function draw() { const f = { agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
 const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
 
@@ -381,7 +400,11 @@ function vPrestamos() {
       const f = k ? iso(fechaPago(p.inicio, k, tipo)) : today();
       if (monto) p.pagos = [{ monto, fecha: f > today() ? today() : f, reg: new Date().toISOString(), nota: "Pagos anteriores" }];
     }
-    try { await addDoc(collection(db, "prestamos"), p); } catch (er) { $("p-err").hidden = false; $("p-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
+    try {
+      await addDoc(collection(db, "prestamos"), p);
+      const a = avance(p), sig = a.siguiente;
+      notice(p.cliente, p.telefono, `Hola ${p.cliente}, ya está listo tu préstamo por ${mxn(p.monto)}.${sig ? " Tu primer pago es de " + mxn2(sig.monto) + (sig.fecha ? " el " + fcorta(sig.fecha) : "") + "." : ""}\n\nPuedes ver tu préstamo, tus fechas de pago y subir tus documentos aquí:\n${PORTAL()}${p.clienteUid || p.clienteEmail ? "" : "?nueva"}\n\nEntre Amigos`, "Préstamo guardado");
+    } catch (er) { $("p-err").hidden = false; $("p-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
   });
   $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { OPEN = OPEN === b.dataset.open ? "" : b.dataset.open; vPrestamos(); }));
   $("panel").querySelectorAll("form[data-pay]").forEach((f) => f.addEventListener("submit", async (e) => {
@@ -405,6 +428,9 @@ function invMsg(p) {
   return `Hola ${p.cliente}, ahora puedes consultar tu préstamo en línea: en qué pago vas, cuánto llevas pagado y cuándo es tu próximo pago.\n\nCrea tu cuenta aquí${p.clienteEmail ? " con el correo " + p.clienteEmail : " con tu correo"}:\n${link}\n\nTambién puedes subir ahí tus documentos. Cualquier duda, escríbenos.\n\nEntre Amigos`;
 }
 function loanItem(p) {
+  return `<div class="owned" style="--own:${ownerColor(ownerOf(p))}">` + loanItem0(p) + "</div>";
+}
+function loanItem0(p) {
   const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
   const SI = p.tipo === "interes";
   const pct = SI ? Math.min(100, Math.round((a.capPagado / p.monto) * 100)) : Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
@@ -470,8 +496,10 @@ function vMis() {
     $("b-rev") && ($("b-rev").onclick = () => sendEmailVerification(auth.currentUser).then(() => ($("ver-t").textContent = "Correo reenviado."), () => ($("ver-t").textContent = "Espera un momento antes de reenviar.")));
   });
   setTimeout(cotBox);
+  setTimeout(() => { const f = $("my-tel"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const t = tel10($("my-tel-i").value); if (t.length !== 10) return; await updateDoc(doc(db, "usuarios", ME.uid), { telefono: t }); USER.telefono = t; vMis(); }; });
   setTimeout(() => docsCard($("docs-box"), ME.uid, false));
-  $("panel").innerHTML = ver + `<div id="cot-box" style="display:grid;gap:16px"></div><div id="docs-box"></div>` + (PRES.length ? PRES.map((p) => {
+  const telBox = USER.telefono ? "" : `<form class="card" id="my-tel" novalidate><h3>Agrega tu WhatsApp</h3><p class="muted">Para avisarte cuando tu préstamo esté listo o cuando revisemos tus documentos.</p><div class="row"><label for="my-tel-i">WhatsApp<input id="my-tel-i" type="tel" inputmode="tel" placeholder="33 1234 5678"></label><button class="btn primary" type="submit">Guardar</button></div></form>`;
+  $("panel").innerHTML = ver + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div><div id="docs-box"></div>` + (PRES.length ? PRES.map((p) => {
     const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
     if (p.tipo === "interes") return `<div class="card">
       <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : ""}</div>
@@ -517,7 +545,11 @@ function vPersonas() {
     ${DOCS_OPEN === u.uid ? `<div id="docs-${u.uid}"></div>` : ""}</div>`).join("") : `<p class="muted">Todavía nadie ha creado cuenta. Manda el link de arriba.</p>`}</div>
     <p class="note">Colaborador: cotiza y ve solo sus propias cotizaciones. Cliente: ve solo sus préstamos y su avance.</p></div>`;
   $("panel").querySelectorAll("select[data-rol]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "usuarios", s.dataset.rol), { rol: s.value, solicita: "" })));
-  $("panel").querySelectorAll("[data-ok]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.ok), { rol: "equipo", solicita: "" })));
+  $("panel").querySelectorAll("[data-ok]").forEach((b) => (b.onclick = async () => {
+    await updateDoc(doc(db, "usuarios", b.dataset.ok), { rol: "equipo", solicita: "" });
+    const u = USERS.find((x) => x.uid === b.dataset.ok) || {};
+    notice(u.nombre || "", u.telefono, `Hola ${u.nombre || ""}, ya aprobé tu cuenta de colaborador en Entre Amigos. Ya puedes cotizar y llevar a tus clientes aquí:\n${PORTAL()}\n\nCualquier duda me dices.`, "Colaborador aprobado");
+  }));
   $("panel").querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.no), { solicita: "" })));
   $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
   if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true);
@@ -706,8 +738,12 @@ function docsCard(box, uid, admin) {
     }));
     box.querySelectorAll("[data-see]").forEach((b) => (b.onclick = () => { SEE = SEE === b.dataset.see ? "" : b.dataset.see; render(); }));
     const setEst = (k, estado, nota) => Promise.all([updateDoc(doc(db, "expedientes", uid, "archivos", k), { estado, nota }), updateDoc(doc(db, "usuarios", uid), { ["docs." + k]: estado })]);
-    box.querySelectorAll("[data-ap]").forEach((b) => (b.onclick = () => setEst(b.dataset.ap, "aprobado", "")));
-    box.querySelectorAll("[data-rj]").forEach((b) => (b.onclick = () => setEst(b.dataset.rj, "rechazado", "Vuelve a subirlo, no se ve bien o no es válido.")));
+    const avisaDoc = (k, ok) => {
+      if (!admin) return; const u = USERS.find((x) => x.uid === uid) || {};
+      notice(u.nombre || "", u.telefono, ok ? `Hola ${u.nombre || ""}, ya revisamos tu ${DOCS[k]} y quedó aprobado. Gracias.\n\nEntre Amigos` : `Hola ${u.nombre || ""}, revisamos tu ${DOCS[k]} y necesitamos que lo subas de nuevo (no se ve bien o no es válido). Puedes hacerlo aquí:\n${PORTAL()}\n\nEntre Amigos`, ok ? "Documento aprobado" : "Documento rechazado");
+    };
+    box.querySelectorAll("[data-ap]").forEach((b) => (b.onclick = () => setEst(b.dataset.ap, "aprobado", "").then(() => avisaDoc(b.dataset.ap, true))));
+    box.querySelectorAll("[data-rj]").forEach((b) => (b.onclick = () => setEst(b.dataset.rj, "rechazado", "Vuelve a subirlo, no se ve bien o no es válido.").then(() => avisaDoc(b.dataset.rj, false))));
   };
   let SEE = "";
   docsUnsub = onSnapshot(collection(db, "expedientes", uid, "archivos"), (snap) => { FILES = {}; snap.docs.forEach((d) => (FILES[d.id] = d.data())); render(); }, () => { box.innerHTML = ""; });
@@ -739,6 +775,19 @@ function recMsg(c) {
   if (c.p.tipo === "interes") return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago de interés por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago de interés por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Tu capital pendiente es de ${mxn2(c.capital)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
   return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Llevas ${mxn2(c.pagado)} pagados y te restan ${mxn2(c.restante)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
 }
+const PAL = ["#b6e21f", "#4fc3f7", "#ff8a65", "#ba68c8", "#ffd54f", "#4db6ac", "#f06292", "#a1887f", "#90caf9", "#e57373"];
+function ownerColor(uid) {
+  if (!isAdmin()) return PAL[0];
+  if (uid === ME.uid) return PAL[0];
+  const team = USERS.filter((u) => u.rol === "equipo" || PRES.some((p) => ownerOf(p) === u.uid)).filter((u) => u.uid !== ME.uid).sort((a, b) => ((a.creado || "") < (b.creado || "") ? -1 : 1));
+  const i = team.findIndex((u) => u.uid === uid);
+  return PAL[1 + ((i < 0 ? team.length : i) % (PAL.length - 1))];
+}
+function legend() {
+  if (!isAdmin()) return "";
+  const ids = [...new Set(PRES.map(ownerOf))]; if (ids.length < 2) return "";
+  return `<p class="legend">${ids.map((i) => `<span><i style="background:${ownerColor(i)}"></i>${esc(i === ME.uid ? "Mis clientes" : nameOf(i))}</span>`).join("")}</p>`;
+}
 function colabLink(c) {
   const u = USERS.find((x) => x.uid === ownerOf(c.p));
   if (!u?.telefono) return `<span class="muted">Cobra: ${esc(u?.nombre || "colaborador")} (sin WhatsApp)</span>`;
@@ -748,7 +797,7 @@ function colabLink(c) {
 function cuotaRow(c, showDate) {
   const key = c.p.id + ":" + c.n;
   const st = c.pagada ? `<span class="pill ok">Pagó</span>` : c.atrasada ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
-  return `<div class="item">
+  return `<div class="item owned" style="--own:${ownerColor(ownerOf(c.p))}">
     <div class="item-top"><b>${esc(c.p.cliente)}</b><span>${st}</span></div>
     <div class="item-mid">${cuotaLbl(c.p, c.n, c.total)} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
     ${c.pagada ? "" : `<div class="item-bot">
@@ -780,12 +829,13 @@ function vAgenda() {
   for (let d = 1; d <= days; d++) {
     const k = iso(new Date(y, m, d)), l = byDay[k] || [];
     const cls = !l.length ? "" : l.some((c) => c.atrasada) ? "late" : l.every((c) => c.pagada) ? "paid" : "due";
-    cells += `<button type="button" class="day ${cls}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}">${d}${l.length ? `<i>${l.length}</i>` : ""}</button>`;
+    cells += `<button type="button" class="day ${cls}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}">${d}${l.length ? `<i>${l.length}</i><u>${[...new Set(l.map((c) => ownerOf(c.p)))].slice(0, 4).map((o) => `<b style="background:${ownerColor(o)}"></b>`).join("")}</u>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   $("panel").innerHTML = `
   <div class="card">
     <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
+    ${legend()}
     <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
   ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${atr.map((c) => cuotaRow(c, true)).join("")}</div></div>` : ""}

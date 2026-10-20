@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=3">
+<link rel="stylesheet" href="app.css?v=4">
 </head>
 <body>
 <div class="wrap">
@@ -37,6 +37,7 @@
     <div class="or"><span>o con tu correo</span></div>
     <form id="f-login" novalidate>
       <label for="l-nom" id="l-nom-l" hidden>Tu nombre<input id="l-nom" autocomplete="name" placeholder="Nombre y apellido"></label>
+      <label for="l-tel" id="l-tel-l" hidden>Tu WhatsApp (para avisarte)<input id="l-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label>
       <label for="l-mail">Correo<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com"></label>
       <label for="l-pass">Contraseña<input id="l-pass" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres"></label>
       <p class="err" id="l-err" hidden></p>
@@ -56,9 +57,10 @@
   <!-- App -->
   <section id="v-app" hidden>
     <nav class="tabs" id="tabs" role="tablist"></nav>
+    <div id="notice"></div>
     <div id="panel"></div>
   </section>
 </div>
-<script type="module" src="app.js?v=10"></script>
+<script type="module" src="app.js?v=11"></script>
 </body>
 </html>

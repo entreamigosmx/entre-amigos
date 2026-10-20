@@ -107,3 +107,14 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);borde
 .day.sel{background:var(--ink);color:var(--bg)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 10px;vertical-align:middle}
 .dot.due{background:var(--soft)}.dot.late{background:var(--warn)}.dot.paid{background:var(--lime)}
+
+/* colores por cartera */
+.owned{border-left:4px solid var(--own,transparent);padding-left:10px}
+.list>.owned:first-child .item,.list>.owned .item{border-top:0}
+.list>.owned+.owned{border-top:1px solid var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--soft);margin:0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.day u{position:absolute;top:4px;left:0;right:0;display:flex;justify-content:center;gap:2px;text-decoration:none}
+.day u b{width:6px;height:6px;border-radius:50%;display:block}
+.notice{border-color:var(--lime)}
