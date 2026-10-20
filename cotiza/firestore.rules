@@ -35,6 +35,12 @@ service cloud.firestore {
                  .hasOnly(['estado', 'aceptadoPor', 'aceptadoEmail', 'aceptadoNombre', 'aceptadoEn']));
       allow delete: if admin();
     }
+    match /expedientes/{uid}/archivos/{tipo} {
+      allow read: if admin() || (signed() && request.auth.uid == uid);
+      allow create, update: if (admin() || (signed() && request.auth.uid == uid && request.resource.data.estado == 'pendiente'))
+        && request.resource.data.data.size() < 1000000;
+      allow delete: if admin();
+    }
     match /prestamos/{id} {
       allow read: if admin()
         || (signed() && resource.data.clienteUid == request.auth.uid)

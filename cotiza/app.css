@@ -47,7 +47,7 @@ input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{ou
 .tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px;overflow-x:auto}
 .tabs button{flex:1 0 auto;font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
 .tabs button[aria-selected="true"]{background:var(--lime);color:var(--lime-ink)}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel-2);border-radius:10px;padding:4px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;background:var(--panel-2);border-radius:10px;padding:4px}
 .seg button{font:700 14px var(--display);letter-spacing:.05em;text-transform:uppercase;padding:9px;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .big{display:grid;gap:2px}

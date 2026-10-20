@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, onSnapshot, arrayUnion,
+  getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance } from "./calc.js?v=2";
 
@@ -182,9 +182,10 @@ const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid
 let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null;
 function vCotizar() {
   touched = false;
+  if (MODE === "auto") return vCotAuto();
   $("panel").innerHTML = `
   <div class="card">
-    <div class="seg"><button type="button" data-m="garantia" aria-pressed="${MODE === "garantia"}">Con garantía</button><button type="button" data-m="semanal" aria-pressed="${MODE === "semanal"}">Semanal con aval</button></div>
+    <div class="seg"><button type="button" data-m="garantia" aria-pressed="${MODE === "garantia"}">Con garantía</button><button type="button" data-m="semanal" aria-pressed="${MODE === "semanal"}">Semanal con aval</button><button type="button" data-m="auto" aria-pressed="false">Auto del inventario</button></div>
     <form id="fq" novalidate>
       <div class="row"><label for="q-nom">Cliente<input id="q-nom" autocomplete="off" placeholder="Nombre del cliente"></label>
       <label for="q-tel">WhatsApp del cliente<input id="q-tel" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label></div>
@@ -278,6 +279,7 @@ function saveCot() {
 const EST = { cotizado: "Cotizado", aceptado: "Aceptado", descartado: "Descartado" };
 let FILT = "";
 function detCot(r) {
+  if (r.tipo === "auto") return `Auto · ${esc(r.autoTitulo || "")} · enganche ${mxn(r.enganche)} · ${r.plazo} meses al ${r.tasa}% anual${r.banco ? " (" + esc(r.banco) + ")" : ""} · ${mxn2(r.pago)}/mes`;
   return r.tipo === "semanal" ? `Semanal · ${mxn(r.monto)} · ${r.plazo} pagos de ${mxn2(r.pago)}`
     : `Garantía ${GARANTIAS[r.garantia] || ""}${r.desc ? " (" + esc(r.desc) + ")" : ""} · ${mxn(r.monto)} · ${r.plazo} meses al ${r.tasa}% · ${mxn2(r.pago)}/mes`;
 }
@@ -294,7 +296,7 @@ function vCotizaciones() {
       return `<div class="item"><div class="item-top"><b>${esc(r.cliente || "Sin nombre")}</b><span>${f.toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${f.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span></div>
         <div class="item-mid">${detCot(r)}</div>
         ${r.aceptadoPor ? `<div class="item-bot"><span class="pill ok">Confirmada por el cliente</span><span>${esc(r.aceptadoNombre || "")} · ${esc(r.aceptadoEmail || "")}</span></div>` : ""}
-        <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span><button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`
+        <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`
           : `<span class="pill${est === "aceptado" ? " ok" : est === "descartado" ? " no" : ""}">${EST[est]}</span>`}
         ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
@@ -431,7 +433,8 @@ function vMis() {
     $("b-rev") && ($("b-rev").onclick = () => sendEmailVerification(auth.currentUser).then(() => ($("ver-t").textContent = "Correo reenviado."), () => ($("ver-t").textContent = "Espera un momento antes de reenviar.")));
   });
   setTimeout(cotBox);
-  $("panel").innerHTML = ver + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => {
+  setTimeout(() => docsCard($("docs-box"), ME.uid, false));
+  $("panel").innerHTML = ver + `<div id="cot-box" style="display:grid;gap:16px"></div><div id="docs-box"></div>` + (PRES.length ? PRES.map((p) => {
     const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes", pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
     return `<div class="card">
       <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : ""}</div>
@@ -463,11 +466,15 @@ function vPersonas() {
     <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}</b><span>${esc(u.email)}</span></div>
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
     ${u.rol === "cliente" && u.solicita === "equipo" ? `<span class="pill warn">Quiere ser colaborador</span><button class="btn sm primary" type="button" data-ok="${u.uid}">Aprobar</button><button class="link" type="button" data-no="${u.uid}">Dejar como cliente</button>` : isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
-    <input data-tel="${u.uid}" inputmode="tel" placeholder="WhatsApp" value="${esc(u.telefono || "")}" style="width:150px;font-size:14px;padding:6px 8px"></div></div>`).join("") : `<p class="muted">Todavía nadie ha creado cuenta. Manda el link de arriba.</p>`}</div>
+    <input data-tel="${u.uid}" inputmode="tel" placeholder="WhatsApp" value="${esc(u.telefono || "")}" style="width:150px;font-size:14px;padding:6px 8px">
+    <button class="link" type="button" data-docs="${u.uid}">Documentos ${docCount(u)}</button></div>
+    ${DOCS_OPEN === u.uid ? `<div id="docs-${u.uid}"></div>` : ""}</div>`).join("") : `<p class="muted">Todavía nadie ha creado cuenta. Manda el link de arriba.</p>`}</div>
     <p class="note">Colaborador: cotiza y ve solo sus propias cotizaciones. Cliente: ve solo sus préstamos y su avance.</p></div>`;
   $("panel").querySelectorAll("select[data-rol]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "usuarios", s.dataset.rol), { rol: s.value, solicita: "" })));
   $("panel").querySelectorAll("[data-ok]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.ok), { rol: "equipo", solicita: "" })));
   $("panel").querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.no), { solicita: "" })));
+  $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
+  if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true);
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
 }
 
@@ -478,6 +485,8 @@ function vTasas() {
     <form id="ft" novalidate>
       <div class="row">${Object.entries(GARANTIAS).map(([k, v]) => `<label for="t-${k}">Interés mensual: ${v.toLowerCase()} (%)<input id="t-${k}" inputmode="decimal" value="${t[k] ?? ""}"></label>`).join("")}
       <label for="t-plazo">Plazo sugerido (meses)<input id="t-plazo" inputmode="numeric" value="${CFG.plazo ?? 12}"></label></div>
+      <div class="row"><label for="t-atasa">Autos: tasa anual sugerida (%)<input id="t-atasa" inputmode="decimal" value="${CFG.autoTasa ?? ""}"></label>
+      <label for="t-aeng">Autos: enganche sugerido (%)<input id="t-aeng" inputmode="numeric" value="${CFG.autoEng ?? 35}"></label></div>
       <div class="row"><label for="t-fac">Semanal: pago por cada $1,000<input id="t-fac" inputmode="decimal" value="${CFG.fac ?? 100}"></label>
       <label for="t-sem">Semanal: número de semanas<input id="t-sem" inputmode="numeric" value="${CFG.sem ?? 14}"></label></div>
       <button class="btn primary" type="submit">Guardar</button><p class="toast" id="t-t"></p>
@@ -485,7 +494,176 @@ function vTasas() {
   $("ft").addEventListener("submit", async (e) => {
     e.preventDefault();
     const tasas = {}; Object.keys(GARANTIAS).forEach((k) => { const v = num($("t-" + k).value); if (v) tasas[k] = v; });
-    try { await setDoc(doc(db, "config", "tasas"), { tasas, plazo: parseInt($("t-plazo").value, 10) || 12, fac: num($("t-fac").value) || 100, sem: parseInt($("t-sem").value, 10) || 14 }); $("t-t").textContent = "Guardado."; }
+    try { await setDoc(doc(db, "config", "tasas"), { tasas, autoTasa: num($("t-atasa").value) || null, autoEng: num($("t-aeng").value) || 35, plazo: parseInt($("t-plazo").value, 10) || 12, fac: num($("t-fac").value) || 100, sem: parseInt($("t-sem").value, 10) || 14 }); $("t-t").textContent = "Guardado."; }
     catch (er) { $("t-t").textContent = "No se pudo guardar."; }
   });
+}
+
+
+/* ---------- Cotizar auto del inventario (Entre Amigos) ---------- */
+let AUTOS = null;
+const SITE = "https://ventaentreamigos.com";
+async function loadAutos() {
+  if (AUTOS) return AUTOS;
+  try { const r = await fetch("../data/autos.json", { cache: "no-cache" }); AUTOS = (await r.json()).filter((a) => a.disponible).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999)); }
+  catch (e) { AUTOS = []; }
+  return AUTOS;
+}
+async function vCotAuto() {
+  const autos = await loadAutos();
+  const eng0 = CFG.autoEng || 35, tasa0 = CFG.autoTasa || "";
+  $("panel").innerHTML = `
+  <div class="card">
+    <div class="seg"><button type="button" data-m="garantia" aria-pressed="false">Con garantía</button><button type="button" data-m="semanal" aria-pressed="false">Semanal con aval</button><button type="button" data-m="auto" aria-pressed="true">Auto del inventario</button></div>
+    <form id="fa" novalidate>
+      <div class="row"><label for="a-nom">Cliente<input id="a-nom" autocomplete="off" placeholder="Nombre del cliente"></label>
+      <label for="a-tel">WhatsApp del cliente<input id="a-tel" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label></div>
+      <label for="a-auto">Auto<select id="a-auto">${autos.map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}${a.apartado ? " (apartado)" : ""}</option>`).join("")}</select></label>
+      <div class="row"><label for="a-precio">Precio<input id="a-precio" inputmode="numeric"></label>
+      <label for="a-engp">Enganche (%)<input id="a-engp" inputmode="decimal" value="${eng0}"></label></div>
+      <div class="row"><label for="a-eng">Enganche ($)<input id="a-eng" inputmode="numeric"></label>
+      <label for="a-plazo">Plazo (meses)<select id="a-plazo">${[12, 24, 36, 48, 60].map((n) => `<option${n === 48 ? " selected" : ""}>${n}</option>`).join("")}</select></label></div>
+      <div class="row"><label for="a-tasa">Tasa anual (%)<input id="a-tasa" inputmode="decimal" value="${tasa0}" placeholder="Ej. 15.9"></label>
+      <label for="a-banco">Banco o financiera (opcional)<input id="a-banco" autocomplete="off" placeholder="Ej. BBVA"></label></div>
+      <label class="chk" for="a-iva" style="display:flex;gap:10px;align-items:center;font-size:15px;color:var(--soft)"><input id="a-iva" type="checkbox" checked style="width:22px;height:22px">Sumar IVA (16%) a los intereses</label>
+    </form>
+  </div>
+  <div class="card" aria-live="polite">
+    <div class="big"><span>Mensualidad aproximada</span><b id="ar-pago">$0</b></div>
+    <div class="facts"><div><span>Enganche</span><b id="ar-eng">$0</b></div><div><span>A financiar</span><b id="ar-fin">$0</b></div><div><span>Total pagado</span><b id="ar-tot">$0</b></div></div>
+    <p class="err" id="ar-err" hidden></p>
+    <div class="actions"><a class="btn primary" id="ab-wa" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a><button class="btn" type="button" id="ab-copy">Copiar</button><a class="btn" id="ab-ver" href="#" target="_blank" rel="noopener">Ver ficha</a></div>
+    <p class="toast" id="ar-toast"></p>
+    <details><summary>Mensaje que se envía</summary><pre id="ar-msg"></pre></details>
+    <p class="note">Cotización informativa. La mensualidad final depende de la aprobación del banco o financiera, el seguro y las comisiones.</p>
+  </div>`;
+  $("panel").querySelectorAll(".seg button").forEach((b) => (b.onclick = () => { MODE = b.dataset.m; vCotizar(); }));
+  if (!autos.length) { $("ar-err").hidden = false; $("ar-err").textContent = "No se pudo cargar el inventario."; return; }
+  const money = (el) => { const d = el.value.replace(/\D/g, ""); el.value = d ? Number(d).toLocaleString("es-MX") : ""; };
+  const setAuto = () => { const a = autos.find((x) => x.slug === $("a-auto").value); $("a-precio").value = a ? Number(a.precio).toLocaleString("es-MX") : ""; syncEng("p"); };
+  const syncEng = (from) => {
+    const P = num($("a-precio").value);
+    if (from === "p") $("a-eng").value = P ? Math.round((P * num($("a-engp").value)) / 100).toLocaleString("es-MX") : "";
+    else $("a-engp").value = P ? Math.round((num($("a-eng").value) / P) * 1000) / 10 : "";
+    calcAuto();
+  };
+  $("a-auto").onchange = setAuto;
+  $("a-precio").addEventListener("input", (e) => { money(e.target); syncEng("p"); });
+  $("a-engp").addEventListener("input", () => syncEng("p"));
+  $("a-eng").addEventListener("input", (e) => { money(e.target); syncEng("$"); });
+  $("fa").addEventListener("input", (e) => { if (!["a-precio", "a-engp", "a-eng"].includes(e.target.id)) calcAuto(); });
+  $("fa").addEventListener("change", calcAuto);
+  $("fa").addEventListener("submit", (e) => e.preventDefault());
+  $("ab-wa").addEventListener("click", (e) => { if (!LAST) { e.preventDefault(); return; } saveAuto(); });
+  $("ab-copy").onclick = () => { if (!LAST) return; saveAuto(); navigator.clipboard?.writeText(LAST.msg).then(() => ($("ar-toast").textContent = "Cotización copiada."), () => { $("ar-msg").closest("details").open = true; $("ar-toast").textContent = "Selecciona el mensaje y cópialo."; }); };
+  setAuto();
+}
+function calcAuto() {
+  const a = AUTOS.find((x) => x.slug === $("a-auto").value);
+  const P = num($("a-precio").value), E = num($("a-eng").value), n = parseInt($("a-plazo").value, 10), t = num($("a-tasa").value), iva = $("a-iva").checked;
+  const F = Math.max(0, P - E);
+  const err = (m) => { LAST = null; $("ar-err").hidden = false; $("ar-err").textContent = m; };
+  if (!a || !P) return err("Elige un auto.");
+  if (!t) return err("Escribe la tasa anual del banco o financiera.");
+  if (E >= P) return err("El enganche no puede ser igual o mayor al precio.");
+  const r = (t / 100 / 12) * (iva ? 1.16 : 1);
+  const pago = Math.ceil((r ? (F * r) / (1 - Math.pow(1 + r, -n)) : F / n) * 100) / 100;
+  const total = E + pago * n, nom = $("a-nom").value.trim(), tel = $("a-tel").value, banco = $("a-banco").value.trim();
+  const ficha = `${SITE}/auto.html?a=${encodeURIComponent(a.slug)}`;
+  const msg = `Hola${nom ? " " + nom : ""}, te comparto la cotización del ${a.title}:\n\nPrecio: ${mxn(P)}\nEnganche: ${mxn(E)} (${Math.round((E / P) * 100)}%)\nMonto a financiar: ${mxn(F)}\nPlazo: ${n} meses\nTasa: ${t}% anual${iva ? " + IVA" : ""}${banco ? " con " + banco : ""}\nMensualidad aproximada: ${mxn2(pago)}\n\nFotos y ficha completa:\n${ficha}\n\nConoce todo nuestro inventario:\n${SITE}/#inventario\n\nTomamos tu auto a cuenta. Cotización informativa, sujeta a la aprobación del crédito.\n\nEntre Amigos`;
+  LAST = { tipo: "auto", autoSlug: a.slug, autoTitulo: a.title, precio: P, enganche: E, monto: F, plazo: n, tasa: t, iva, banco, pago, total, cliente: nom, telefono: tel10(tel), msg };
+  $("ar-err").hidden = true;
+  $("ar-pago").textContent = mxn2(pago); $("ar-eng").textContent = mxn(E); $("ar-fin").textContent = mxn(F); $("ar-tot").textContent = mxn(total);
+  $("ar-msg").textContent = msg; $("ab-wa").href = waTo(tel, msg); $("ab-ver").href = ficha;
+}
+function saveAuto() {
+  if (!LAST) return;
+  const { msg, ...d } = LAST; const k = JSON.stringify(d); if (k === lastKey) return; lastKey = k;
+  addDoc(collection(db, "cotizaciones"), { ...d, por: ME.uid, fecha: new Date().toISOString(), estado: "cotizado" }).catch(() => (lastKey = ""));
+}
+
+
+/* ---------- Documentos del cliente ---------- */
+const DOCS = {
+  ine_f: "INE (frente)",
+  ine_r: "INE (reverso)",
+  domicilio: "Comprobante de domicilio (no mayor a 3 meses)",
+  constancia: "Constancia de situación fiscal",
+};
+const DEST = { pendiente: ["En revisión", "warn"], aprobado: ["Aprobado", "ok"], rechazado: ["Rechazado", "no"] };
+let DOCS_OPEN = "", docsUnsub = null;
+const docCount = (u) => { const d = u.docs || {}; const n = Object.keys(DOCS).filter((k) => d[k]).length; return `(${n}/${Object.keys(DOCS).length})`; };
+
+const BLOBS = {};
+function blobUrl(dataUrl) {
+  if (BLOBS[dataUrl.length + dataUrl.slice(-40)]) return BLOBS[dataUrl.length + dataUrl.slice(-40)];
+  const [h, b64] = dataUrl.split(","), mime = (h.match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
+  const bin = atob(b64), arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return (BLOBS[dataUrl.length + dataUrl.slice(-40)] = URL.createObjectURL(new Blob([arr], { type: mime })));
+}
+function fileToData(file) {
+  return new Promise((ok, bad) => {
+    if (file.type === "application/pdf") {
+      if (file.size > 650000) return bad(new Error("El PDF pesa más de 650 KB. Mejor tómale una foto o captura de pantalla."));
+      const fr = new FileReader(); fr.onload = () => ok({ data: fr.result, mime: "application/pdf" }); fr.onerror = () => bad(new Error("No se pudo leer el archivo.")); fr.readAsDataURL(file); return;
+    }
+    if (!file.type.startsWith("image/")) return bad(new Error("Sube una foto o un PDF."));
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const tryq = (max, q) => {
+        const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        return c.toDataURL("image/jpeg", q);
+      };
+      let d = tryq(1800, 0.75); if (d.length > 850000) d = tryq(1400, 0.65); if (d.length > 850000) d = tryq(1100, 0.6);
+      d.length > 900000 ? bad(new Error("La foto es demasiado pesada. Intenta con otra.")) : ok({ data: d, mime: "image/jpeg" });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); bad(new Error("No se pudo abrir la foto.")); };
+    img.src = url;
+  });
+}
+function docsCard(box, uid, admin) {
+  if (!box) return;
+  if (docsUnsub) { docsUnsub(); docsUnsub = null; }
+  let FILES = {};
+  const render = () => {
+    const done = Object.keys(DOCS).filter((k) => FILES[k]).length;
+    box.innerHTML = `<div class="card" style="${admin ? "margin-top:10px;background:var(--panel-2)" : ""}">
+      <div class="head"><h2>${admin ? "Documentos" : "Mis documentos"}</h2><span class="muted">${done} de ${Object.keys(DOCS).length}</span></div>
+      ${admin ? "" : `<p class="muted">Adelanta tus documentos para que tu préstamo esté listo más rápido. Puedes tomarles foto con tu celular.</p>`}
+      <div class="list">${Object.entries(DOCS).map(([k, t]) => {
+        const f = FILES[k], st = f ? DEST[f.estado] || DEST.pendiente : null;
+        return `<div class="item"><div class="item-top"><b>${t}</b>${st ? `<span class="pill ${st[1]}">${st[0]}</span>` : `<span class="pill">Falta</span>`}</div>
+          ${f ? `<div class="item-mid">Subido el ${fcorta(new Date(f.fecha))}${f.fechaDoc ? " · Fecha del comprobante: " + fcorta(new Date(f.fechaDoc + "T12:00:00")) : ""}${f.nota ? " · " + esc(f.nota) : ""}</div>` : ""}
+          ${k === "domicilio" && (admin || !f || f.estado !== "aprobado") ? `<label>Fecha que aparece en el comprobante<input type="date" data-fd="${k}" max="${today()}"></label>` : ""}
+          <div class="item-bot">
+            ${!f || f.estado !== "aprobado" || admin ? `<label class="btn sm" style="cursor:pointer">${f ? "Reemplazar" : "Subir foto o PDF"}<input type="file" accept="image/*,application/pdf" data-up="${k}" hidden></label>` : ""}
+            ${f ? `<button class="link" type="button" data-see="${k}">Ver</button>` : ""}
+            ${admin && f ? `<button class="btn sm primary" type="button" data-ap="${k}">Aprobar</button><button class="link" type="button" data-rj="${k}">Rechazar</button>` : ""}
+          </div><p class="err" data-er="${k}" hidden></p>
+          ${f && SEE === k ? (f.mime === "application/pdf" ? `<p><a href="${blobUrl(f.data)}" target="_blank" rel="noopener">Abrir PDF</a></p>` : `<img src="${f.data}" alt="${t}" style="max-width:100%;border-radius:10px;margin-top:6px">`) : ""}
+        </div>`;
+      }).join("")}</div></div>`;
+    box.querySelectorAll("[data-up]").forEach((inp) => inp.addEventListener("change", async () => {
+      const k = inp.dataset.up, file = inp.files[0], er = box.querySelector(`[data-er="${k}"]`); if (!file) return;
+      const fd = box.querySelector(`[data-fd="${k}"]`)?.value || "";
+      if (k === "domicilio" && !fd) { er.hidden = false; er.textContent = "Escribe primero la fecha que aparece en el comprobante."; inp.value = ""; return; }
+      if (k === "domicilio" && (Date.now() - new Date(fd + "T12:00:00").getTime()) / 864e5 > 92) { er.hidden = false; er.textContent = "El comprobante tiene más de 3 meses. Sube uno más reciente."; inp.value = ""; return; }
+      er.hidden = false; er.className = "ok"; er.textContent = "Subiendo…";
+      try {
+        const { data, mime } = await fileToData(file);
+        await setDoc(doc(db, "expedientes", uid, "archivos", k), { data, mime, nombre: file.name || k, fecha: new Date().toISOString(), fechaDoc: fd, estado: admin ? "aprobado" : "pendiente", nota: "", por: ME.uid });
+        await updateDoc(doc(db, "usuarios", uid), { ["docs." + k]: admin ? "aprobado" : "pendiente" }).catch(() => {});
+      } catch (e) { er.className = "err"; er.textContent = e.message || "No se pudo subir. Intenta de nuevo."; }
+    }));
+    box.querySelectorAll("[data-see]").forEach((b) => (b.onclick = () => { SEE = SEE === b.dataset.see ? "" : b.dataset.see; render(); }));
+    const setEst = (k, estado, nota) => Promise.all([updateDoc(doc(db, "expedientes", uid, "archivos", k), { estado, nota }), updateDoc(doc(db, "usuarios", uid), { ["docs." + k]: estado })]);
+    box.querySelectorAll("[data-ap]").forEach((b) => (b.onclick = () => setEst(b.dataset.ap, "aprobado", "")));
+    box.querySelectorAll("[data-rj]").forEach((b) => (b.onclick = () => setEst(b.dataset.rj, "rechazado", "Vuelve a subirlo, no se ve bien o no es válido.")));
+  };
+  let SEE = "";
+  docsUnsub = onSnapshot(collection(db, "expedientes", uid, "archivos"), (snap) => { FILES = {}; snap.docs.forEach((d) => (FILES[d.id] = d.data())); render(); }, () => { box.innerHTML = ""; });
+  render();
 }
