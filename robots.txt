@@ -3,5 +3,7 @@ Allow: /
 Disallow: /cotiza/
 Disallow: /nuevo/
 Disallow: /tools/
+Disallow: /clientes/
+Disallow: /colaboradores/
 
 Sitemap: https://ventaentreamigos.com/sitemap.xml

@@ -721,13 +721,17 @@ function vPersonas() {
   const order = { pendiente: 0, equipo: 1, cliente: 2, bloqueado: 3, admin: 4 };
   USERS.filter(isNew).forEach((u) => updateDoc(doc(db, "usuarios", u.uid), { visto: true }).catch(() => {}));
   const list = USERS.filter((u) => u.rol !== "admin").sort((a, b) => (order[a.rol] ?? 9) - (order[b.rol] ?? 9) || (a.nombre || "").localeCompare(b.nombre || ""));
-  const base = location.origin + location.pathname, link = base + "?nueva", linkC = base + "?nueva&tipo=colaborador";
+  const link = SITE + "/clientes", linkC = SITE + "/colaboradores";
+  const mC = `Hola, te comparto el enlace de Entre Amigos. Ahí creas tu cuenta y llenas tus datos. Desde ahí puedes subir tus documentos, ver tus préstamos y tus pagos, y pedir un préstamo:\n${link}\n\nCualquier duda, escríbenos.`;
+  const mE = `Hola, te comparto el enlace para registrarte como colaborador de Entre Amigos. Crea tu cuenta con tus datos y en cuanto la apruebe vas a poder cotizar y llevar el control de tus clientes:\n${linkC}`;
+  setTimeout(() => document.querySelectorAll("[data-cp]").forEach((b) => (b.onclick = () => navigator.clipboard?.writeText(b.dataset.cp === "c" ? link : linkC).then(() => (b.textContent = "Copiado")))));
   $("panel").innerHTML = `<div class="card">
     <h2>Invitar</h2>
-    <p class="muted">Al crear su cuenta cada persona elige si es cliente o colaborador. Los clientes entran directo y solo ven sus préstamos. Los colaboradores esperan a que tú los apruebes aquí.</p>
-    <div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Crea tu cuenta de cliente en Entre Amigos para ver tu préstamo: " + link)}">Invitar cliente</a>
-    <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Crea tu cuenta de colaborador en Entre Amigos para cotizar: " + linkC)}">Invitar colaborador</a></div>
-    <p class="note">Link para clientes: ${esc(link)}<br>Link para colaboradores: ${esc(linkC)}</p>
+    <p class="muted">Manda el enlace por WhatsApp. Cada persona crea su cuenta y llena sus datos. Los clientes entran directo y ven sus préstamos, sus pagos y sus documentos. Los colaboradores esperan a que tú los apruebes aquí.</p>
+    <div class="item"><div class="item-top"><b>Clientes</b><span>${esc(link)}</span></div>
+      <div class="actions"><a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mC)}">Mandar por WhatsApp</a><button class="btn sm" type="button" data-cp="c">Copiar enlace</button></div></div>
+    <div class="item"><div class="item-top"><b>Colaboradores</b><span>${esc(linkC)}</span></div>
+      <div class="actions"><a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mE)}">Mandar por WhatsApp</a><button class="btn sm" type="button" data-cp="e">Copiar enlace</button></div></div>
   </div>
   <div class="card"><h2>Personas</h2><div class="list">${list.length ? list.map((u) => `<div class="item">
     <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}</b><span>${esc(u.email)}</span></div>
