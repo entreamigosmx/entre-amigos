@@ -296,7 +296,7 @@ function saveCot() {
 }
 
 /* ---------- Cotizaciones ---------- */
-const EST = { cotizado: "Cotizado", aceptado: "Aceptado", descartado: "Descartado" };
+const EST = { cotizado: "Cotizado", aceptado: "Aceptado", negado: "No aprobado", descartado: "Descartado" };
 let FILT = "";
 function detCot(r) {
   if (r.tipo === "auto") return `Auto · ${esc(r.autoTitulo || "")} · enganche ${mxn(r.enganche)} · ${r.plazo} meses al ${r.tasa}% anual${r.banco ? " (" + esc(r.banco) + ")" : ""} · ${mxn2(r.pago)}/mes`;
@@ -317,11 +317,16 @@ function vCotizaciones() {
         <div class="item-mid">${detCot(r)}</div>
         ${r.aceptadoPor ? `<div class="item-bot"><span class="pill ok">Confirmada por el cliente</span><span>${esc(r.aceptadoNombre || "")} · ${esc(r.aceptadoEmail || "")}</span></div>` : ""}
         <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`
-          : `<span class="pill${est === "aceptado" ? " ok" : est === "descartado" ? " no" : ""}">${EST[est]}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`}
+          : `<span class="pill${est === "aceptado" ? " ok" : (est === "descartado" || est === "negado") ? " no" : ""}">${EST[est]}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`}
         ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
   $("c-f") && ($("c-f").onchange = (e) => { FILT = e.target.value; vCotizaciones(); });
-  $("panel").querySelectorAll("select[data-cot]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "cotizaciones", s.dataset.cot), { estado: s.value })));
+  $("panel").querySelectorAll("select[data-cot]").forEach((s) => (s.onchange = async () => {
+    await updateDoc(doc(db, "cotizaciones", s.dataset.cot), { estado: s.value });
+    if (s.value !== "negado") return;
+    const c = COTS.find((x) => x.id === s.dataset.cot) || {}, nom = c.cliente || c.aceptadoNombre || "";
+    notice(nom, c.telefono || USERS.find((u) => u.uid === c.aceptadoPor)?.telefono || "", `Hola${nom ? " " + nom : ""}, gracias por tu interés y por la confianza. Revisamos tu solicitud de préstamo por ${mxn(c.monto)} y por el momento no nos es posible aprobarla.\n\nSi cambia tu situación o quieres revisar otra opción (otro monto, plazo o garantía), con gusto lo platicamos.\n\nEntre Amigos`, "Préstamo no aprobado");
+  }));
   $("panel").querySelectorAll("[data-mk]").forEach((b) => (b.onclick = () => { const c = COTS.find((x) => x.id === b.dataset.mk); DRAFT = { ...c, email: c.aceptadoEmail || "", clienteUid: c.aceptadoPor || "", cotId: c.id }; go("prestamos"); }));
 }
 
@@ -477,7 +482,8 @@ async function cotBox() {
     return `<div class="card"><h2>Tu cotización</h2>
       <div class="big"><span>Monto del préstamo</span><b>${mxn(c.monto)}</b></div>
       <p>${detalle}</p><p class="muted">Total a pagar: ${mxn2(c.total)}${c.tipo !== "semanal" && c.garantia && c.garantia !== "ff" ? " · Garantía: " + esc(c.desc || GARANTIAS[c.garantia]) : ""}</p>
-      ${mine ? `<p class="ok">Confirmaste esta cotización. Te avisaremos por WhatsApp cuando tu préstamo esté listo y la fecha de tu primer pago.</p>`
+      ${c.estado === "negado" && (mine || !c.aceptadoPor) ? `<p class="muted">Por el momento no nos es posible aprobar esta solicitud. Si quieres revisar otra opción, escríbenos por WhatsApp.</p>`
+        : mine ? `<p class="ok">Confirmaste esta cotización. Te avisaremos por WhatsApp cuando tu préstamo esté listo y la fecha de tu primer pago.</p>`
         : libre ? `<button class="btn primary" type="button" data-acc="${c.id}">Confirmar cotización</button><p class="note">Al confirmar, Entre Amigos prepara tu préstamo y te indica la fecha de inicio.</p>`
         : `<p class="muted">Esta cotización ya no está disponible. Escríbenos si quieres una nueva.</p>`}</div>`;
   }).join("");
