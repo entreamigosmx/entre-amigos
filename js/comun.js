@@ -1,5 +1,5 @@
 // Funciones compartidas. BASE apunta a la raíz del sitio (la versión de prueba vive en /nuevo/).
-export const BASE = location.pathname.includes("/nuevo/") ? "../" : "";
+export const BASE = "";
 export const WA = "523333063319";
 export const SITE = "https://ventaentreamigos.com";
 

@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /cotiza/
 Disallow: /nuevo/
+Disallow: /tools/
 
 Sitemap: https://ventaentreamigos.com/sitemap.xml
