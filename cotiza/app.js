@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance } from "./calc.js?v=3";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance } from "./calc.js?v=4";
 
 const app = initializeApp({
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -315,7 +315,7 @@ function vPrestamos() {
   $("panel").innerHTML = `
   <div class="card"><details${DRAFT ? " open" : ""}><summary>Nuevo préstamo</summary>
     <form id="fp" novalidate style="margin-top:12px">
-      <div class="seg"><button type="button" data-pt="garantia" aria-pressed="${(d.tipo || "garantia") === "garantia"}">Con garantía</button><button type="button" data-pt="semanal" aria-pressed="${d.tipo === "semanal"}">Semanal</button></div>
+      <div class="seg"><button type="button" data-pt="garantia" aria-pressed="${(d.tipo || "garantia") === "garantia"}">Con garantía</button><button type="button" data-pt="semanal" aria-pressed="${d.tipo === "semanal"}">Semanal</button><button type="button" data-pt="interes" aria-pressed="false">Solo interés</button></div>
       <input type="hidden" id="p-tipo" value="${d.tipo || "garantia"}">
       <div class="row"><label for="p-nom">Cliente<input id="p-nom" value="${esc(d.cliente || "")}" placeholder="Nombre"></label>
       <label for="p-tel">WhatsApp<input id="p-tel" inputmode="tel" value="${esc(d.telefono || "")}" placeholder="33 1234 5678"></label></div>
@@ -348,6 +348,8 @@ function vPrestamos() {
     $("panel").querySelectorAll("[data-pt]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
     $("p-tasa-l").firstChild.textContent = t === "semanal" ? "Pago por cada $1,000" : "Interés mensual (%)";
     $("p-plazo-l").firstChild.textContent = t === "semanal" ? "Semanas" : "Meses";
+    $("p-plazo-l").hidden = t === "interes";
+    $("p-ini").previousSibling.textContent = t === "interes" ? "Fecha del primer pago de interés" : "Fecha del primer pago";
     $("p-gar-row").hidden = t === "semanal";
   }));
   $("p-monto").addEventListener("input", (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; });
@@ -355,7 +357,7 @@ function vPrestamos() {
   $("fp").addEventListener("submit", async (e) => {
     e.preventDefault();
     const tipo = $("p-tipo").value, monto = num($("p-monto").value), tasa = num($("p-tasa").value), plazo = parseInt($("p-plazo").value, 10) || 0;
-    if (!$("p-nom").value.trim() || !monto || (!tasa && !num($("p-fijo").value)) || !plazo) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, plazo y la tasa (o el pago acordado)."; return; }
+    if (!$("p-nom").value.trim() || !monto || (!tasa && !num($("p-fijo").value)) || (!plazo && tipo !== "interes")) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, plazo y la tasa (o el pago acordado)."; return; }
     const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
       cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
     const fijo = num($("p-fijo").value); if (fijo) p.pagoFijo = fijo;
@@ -371,9 +373,10 @@ function vPrestamos() {
   $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { OPEN = OPEN === b.dataset.open ? "" : b.dataset.open; vPrestamos(); }));
   $("panel").querySelectorAll("form[data-pay]").forEach((f) => f.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const m = num(f.querySelector("[name=m]").value), fe = f.querySelector("[name=f]").value || today();
+    const m = num(f.querySelector("[name=m]").value), fe = f.querySelector("[name=f]").value || today(), t = f.querySelector("[name=t]")?.value;
     if (!m) return;
-    await updateDoc(doc(db, "prestamos", f.dataset.pay), { pagos: arrayUnion({ monto: m, fecha: fe, reg: new Date().toISOString() }) });
+    const pg = { monto: m, fecha: fe, reg: new Date().toISOString() }; if (t === "capital") pg.tipo = "capital";
+    await updateDoc(doc(db, "prestamos", f.dataset.pay), { pagos: arrayUnion(pg) });
   }));
   $("panel").querySelectorAll("[data-undo]").forEach((b) => (b.onclick = async () => {
     const p = PRES.find((x) => x.id === b.dataset.undo); if (!p?.pagos?.length) return;
@@ -383,23 +386,26 @@ function vPrestamos() {
   $("panel").querySelectorAll("select[data-link]").forEach((s) => (s.onchange = () => { const u = USERS.find((x) => x.uid === s.value); updateDoc(doc(db, "prestamos", s.dataset.link), u ? { clienteUid: s.value, clienteEmail: u.email || "" } : { clienteUid: "" }); }));
   $("panel").querySelectorAll("input[data-mail]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "prestamos", i.dataset.mail), { clienteEmail: i.value.trim().toLowerCase() })));
 }
+const cuotaLbl = (p, n, total) => (p.tipo === "interes" ? "Interés del mes " + n : (p.tipo === "semanal" ? "Semana " : "Mes ") + n + " de " + total);
 function invMsg(p) {
   const link = location.origin + location.pathname + "?nueva";
   return `Hola ${p.cliente}, ahora puedes consultar tu préstamo en línea: en qué pago vas, cuánto llevas pagado y cuándo es tu próximo pago.\n\nCrea tu cuenta aquí${p.clienteEmail ? " con el correo " + p.clienteEmail : " con tu correo"}:\n${link}\n\nTambién puedes subir ahí tus documentos. Cualquier duda, escríbenos.\n\nEntre Amigos`;
 }
 function loanItem(p) {
   const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
-  const pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
+  const SI = p.tipo === "interes";
+  const pct = SI ? Math.min(100, Math.round((a.capPagado / p.monto) * 100)) : Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
   const venc = a.siguiente?.fecha && a.siguiente.fecha < new Date(new Date().toDateString());
-  const rec = a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago ${a.siguiente.n} de ${a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Llevas ${mxn2(a.pagado)} pagados y te restan ${mxn2(a.restante)}.\n\nEntre Amigos` : "";
+  const rec = SI && a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago de interés del mes por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Tu capital pendiente es de ${mxn2(a.capital)}.\n\nEntre Amigos` : a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago ${a.siguiente.n} de ${a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Llevas ${mxn2(a.pagado)} pagados y te restan ${mxn2(a.restante)}.\n\nEntre Amigos` : "";
   const open = OPEN === p.id, clientes = USERS.filter((u) => u.rol === "cliente");
   return `<div class="item">
-    <div class="item-top"><b>${esc(p.cliente)}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc ? `<span class="pill warn">Pago atrasado</span>` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
-    <div class="item-mid">${p.tipo === "semanal" ? "Semanal" : "Garantía " + (GARANTIAS[p.garantia] || "")}${p.desc ? " (" + esc(p.desc) + ")" : ""} · ${mxn(p.monto)} · pago ${mxn2(a.corrida.pago)}</div>
+    <div class="item-top"><b>${esc(p.cliente)}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc ? `<span class="pill warn">Pago atrasado</span>` : SI ? `Capital ${mxn(a.capital)}` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
+    <div class="item-mid">${SI ? "Solo interés · " + (p.garantia ? "Garantía " + (GARANTIAS[p.garantia] || "") : "") : p.tipo === "semanal" ? "Semanal" : "Garantía " + (GARANTIAS[p.garantia] || "")}${p.desc ? " (" + esc(p.desc) + ")" : ""} · ${mxn(p.monto)} · ${SI ? "interés " + p.tasa + "% = " + mxn2(a.corrida.pago) + "/mes" : "pago " + mxn2(a.corrida.pago)}</div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-    <div class="item-bot"><span>Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}</span>${a.siguiente ? `<span>Próximo: ${mxn2(a.siguiente.monto)} ${a.siguiente.fecha ? "el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}</div>
+    <div class="item-bot"><span>${SI ? `Intereses pagados ${mxn2(a.pagado)} · Abonos a capital ${mxn2(a.capPagado)}${a.interesAdeudado ? " · Interés vencido " + mxn2(a.interesAdeudado) : ""}` : `Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}`}</span>${a.siguiente ? `<span>Próximo: ${mxn2(a.siguiente.monto)} ${a.siguiente.fecha ? "el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}</div>
     <div class="item-bot"><button class="link" type="button" data-open="${p.id}">${open ? "Cerrar" : "Registrar pago y más"}</button>${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.telefono && !p.clienteUid && !USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<a href="${waTo(p.telefono, invMsg(p))}" target="_blank" rel="noopener">Invitar a ver su préstamo</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Ve su avance</span>` : p.clienteEmail ? `<span class="pill">Aún no crea cuenta</span>` : ""}</div>
     ${open ? `<form data-pay="${p.id}" class="row" novalidate style="margin-top:8px">
+        ${SI ? `<label>Concepto<select name="t"><option value="interes">Pago de interés</option><option value="capital">Abono a capital</option></select></label>` : ""}
         <label>Monto del pago<input name="m" inputmode="decimal" value="${a.siguiente ? a.siguiente.monto : ""}"></label>
         <label>Fecha<input name="f" type="date" value="${today()}"></label>
         <button class="btn primary" type="submit">Registrar pago</button>
@@ -412,8 +418,8 @@ function loanItem(p) {
 }
 function schedule(p, a) {
   const pagos = (p.pagos || []).slice().reverse();
-  return `<details><summary>Corrida y pagos</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>
-  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Monto</th></tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${mxn2(x.monto)}</td></tr>`).join("")}</table></div>` : ""}</details>`;
+  return `<details><summary>Corrida y pagos</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>${p.tipo === "interes" ? `<p class="note">Solo interés: cada mes se paga el interés sobre el capital pendiente. Los abonos a capital bajan el interés de los meses siguientes.</p>` : ""}
+  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th></tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td></tr>`).join("")}</table></div>` : ""}</details>`;
 }
 
 /* ---------- Mis préstamos (cliente) ---------- */
@@ -453,7 +459,16 @@ function vMis() {
   setTimeout(cotBox);
   setTimeout(() => docsCard($("docs-box"), ME.uid, false));
   $("panel").innerHTML = ver + `<div id="cot-box" style="display:grid;gap:16px"></div><div id="docs-box"></div>` + (PRES.length ? PRES.map((p) => {
-    const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes", pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
+    const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
+    if (p.tipo === "interes") return `<div class="card">
+      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : ""}</div>
+      <p class="muted">Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes. Puedes abonar a capital cuando quieras y tu interés baja.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}</p>
+      ${a.siguiente ? `<div class="big"><span>Tu próximo pago de interés</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : a.liquidado ? `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>` : ""}
+      <div class="facts"><div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div><div><span>Abonos a capital</span><b>${mxn2(a.capPagado)}</b></div><div><span>Intereses pagados</span><b>${mxn2(a.pagado)}</b></div></div>
+      ${schedule(p, a)}
+      <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, te envío el comprobante de mi pago.")}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
+    </div>`;
+    const pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
     return `<div class="card">
       <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : ""}</div>
       <p class="muted">${p.tipo === "semanal" ? `${a.total} pagos semanales` : `${a.total} pagos mensuales${p.desc ? " · Garantía: " + esc(p.desc) : ""}`}</p>
@@ -701,13 +716,14 @@ function cuotas() {
       const fecha = iso(fechaPago(p.inicio, f.n, p.tipo));
       const pagada = a.pagado + 0.5 >= acum;
       const debe = pagada ? 0 : Math.round(Math.min(f.pago, acum - a.pagado) * 100) / 100;
-      out.push({ p, n: f.n, total: a.total, monto: f.pago, debe, fecha, pagada, atrasada: !pagada && fecha < hoy, noPago: p.noPago?.[f.n] || "", restante: a.restante, pagado: a.pagado });
+      out.push({ p, n: f.n, total: a.total, monto: f.pago, debe, fecha, pagada, atrasada: !pagada && fecha < hoy, noPago: p.noPago?.[f.n] || "", restante: a.restante, pagado: a.pagado, capital: a.capital });
     });
   });
   return out;
 }
 function recMsg(c) {
   const atr = c.atrasada;
+  if (c.p.tipo === "interes") return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago de interés por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago de interés por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Tu capital pendiente es de ${mxn2(c.capital)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
   return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Llevas ${mxn2(c.pagado)} pagados y te restan ${mxn2(c.restante)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
 }
 function cuotaRow(c, showDate) {
@@ -715,7 +731,7 @@ function cuotaRow(c, showDate) {
   const st = c.pagada ? `<span class="pill ok">Pagó</span>` : c.atrasada ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
   return `<div class="item">
     <div class="item-top"><b>${esc(c.p.cliente)}</b><span>${st}</span></div>
-    <div class="item-mid">${c.p.tipo === "semanal" ? "Semana" : "Mes"} ${c.n} de ${c.total} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
+    <div class="item-mid">${cuotaLbl(c.p, c.n, c.total)} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
     ${c.pagada ? "" : `<div class="item-bot">
       <button class="btn sm primary" type="button" data-pago="${key}">Sí pagó</button>
       <button class="btn sm" type="button" data-otro="${key}">Pagó otra cantidad</button>

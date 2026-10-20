@@ -48,6 +48,7 @@ export const fcorta = (d) => (d ? d.toLocaleDateString("es-MX", { day: "numeric"
 
 // Avance de un préstamo según los pagos registrados.
 export function avance(p) {
+  if (p.tipo === "interes") return avanceInteres(p);
   const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa, p.pagoFijo) : corridaMensual(p.monto, p.tasa, p.plazo, p.pagoFijo);
   const pagado = (p.pagos || []).reduce((s, x) => s + (x.monto || 0), 0);
   let cubiertos = 0, acum = 0;
@@ -58,5 +59,36 @@ export function avance(p) {
     corrida: c, pagado: r2(pagado), restante, cubiertos, total: c.filas.length,
     siguiente: sig ? { n: sig.n, monto: r2(acum + sig.pago - pagado), fecha: fechaPago(p.inicio, sig.n, p.tipo) } : null,
     liquidado: restante <= 0.5,
+  };
+}
+
+// Préstamo de solo interés: cada mes se paga el interés sobre el capital que se debe;
+// el capital se abona cuando el cliente quiera. Sin fecha fija de liquidación.
+export function avanceInteres(p, hoyISO) {
+  const r = (p.tasa || 0) / 100;
+  const pagos = p.pagos || [];
+  const caps = pagos.filter((x) => x.tipo === "capital").sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  const intPagado = r2(pagos.filter((x) => x.tipo !== "capital").reduce((s, x) => s + (x.monto || 0), 0));
+  const capPagado = r2(caps.reduce((s, x) => s + (x.monto || 0), 0));
+  const capital = Math.max(0, r2(p.monto - capPagado));
+  const hoy = hoyISO || new Date().toISOString().slice(0, 10);
+  const lim = new Date(hoy + "T12:00:00"); lim.setDate(lim.getDate() + 35);
+  const filas = [];
+  for (let n = 1; n <= 600 && p.inicio; n++) {
+    const f = fechaPago(p.inicio, n, "mensual"); const fi = f.toISOString().slice(0, 10);
+    const capN = Math.max(0, r2(p.monto - caps.filter((x) => x.fecha < fi).reduce((s, x) => s + x.monto, 0)));
+    if (capN <= 0.5) break;
+    if (f > lim && filas.length) break;
+    filas.push({ n, pago: r2(capN * r), capital: capN, fecha: f });
+  }
+  let cubiertos = 0, acum = 0;
+  for (const f of filas) { if (acum + f.pago <= intPagado + 0.5) { acum += f.pago; cubiertos++; } else break; }
+  const vencido = filas.filter((f) => f.fecha.toISOString().slice(0, 10) <= hoy).reduce((s, f) => s + f.pago, 0);
+  const sig = cubiertos < filas.length ? filas[cubiertos] : null;
+  return {
+    tipo: "interes", corrida: { pago: r2(capital * r), filas, total: null }, pagado: intPagado, capPagado, capital,
+    interesAdeudado: Math.max(0, r2(vencido - intPagado)), restante: capital, cubiertos, total: null,
+    siguiente: capital > 0.5 && sig ? { n: sig.n, monto: r2(acum + sig.pago - intPagado), fecha: sig.fecha } : null,
+    liquidado: capital <= 0.5,
   };
 }
