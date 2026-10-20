@@ -614,7 +614,20 @@
   "disponible": true,
   "destacado": false,
   "orden": 17,
-  "galeria": []
+  "galeria": [
+   "fotos/toyota-sequoia-limited-2013/01.jpg",
+   "fotos/toyota-sequoia-limited-2013/02.jpg",
+   "fotos/toyota-sequoia-limited-2013/03.jpg",
+   "fotos/toyota-sequoia-limited-2013/04.jpg",
+   "fotos/toyota-sequoia-limited-2013/05.jpg",
+   "fotos/toyota-sequoia-limited-2013/06.jpg",
+   "fotos/toyota-sequoia-limited-2013/07.jpg",
+   "fotos/toyota-sequoia-limited-2013/08.jpg",
+   "fotos/toyota-sequoia-limited-2013/09.jpg",
+   "fotos/toyota-sequoia-limited-2013/10.jpg",
+   "fotos/toyota-sequoia-limited-2013/11.jpg"
+  ],
+  "foto": "fotos/toyota-sequoia-limited-2013/01.jpg"
  },
  {
   "title": "Can-Am Spyder F3 2018",
