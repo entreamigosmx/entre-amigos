@@ -12,8 +12,24 @@
   "disponible": true,
   "destacado": true,
   "orden": 1,
-  "galeria": [],
-  "descripcion": "<p>La SUV de lujo de tamaño completo por excelencia: espacio, presencia y potencia V8 en la versión más exclusiva de GMC. De un solo dueño, con 39,000 km, se factura. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor V8 de 6.2L</li><li>Tracción 4x4</li></ul><h4>Versión</h4><ul><li>Denali XL, la versión de mayor lujo y espacio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>39,000 km</li><li>Se factura</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "galeria": [
+   "fotos/gmc-yukon-denali-xl-2023/01.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/02.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/03.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/04.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/05.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/06.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/07.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/08.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/09.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/10.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/11.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/12.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/13.jpg",
+   "fotos/gmc-yukon-denali-xl-2023/14.jpg"
+  ],
+  "descripcion": "<p>La SUV de lujo de tamaño completo por excelencia: espacio, presencia y potencia V8 en la versión más exclusiva de GMC. De un solo dueño, con 39,000 km, se factura. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor V8 de 6.2L</li><li>Tracción 4x4</li></ul><h4>Versión</h4><ul><li>Denali XL, la versión de mayor lujo y espacio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>39,000 km</li><li>Se factura</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "foto": "fotos/gmc-yukon-denali-xl-2023/01.jpg"
  },
  {
   "title": "Mercedes-AMG GLE 63 4MATIC+ 2022",
