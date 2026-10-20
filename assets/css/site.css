@@ -200,3 +200,15 @@ footer .in{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand img{flex:0 0 auto}
 .brand b,.brand .wm span{white-space:nowrap}
 @media (max-width:360px){.brand .wm span{display:none}}
+
+/* nosotros compacto */
+.about-text h2{margin-bottom:14px}
+.story{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:0 20px}
+.story summary{cursor:pointer;list-style:none;padding:16px 0;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.06em;text-transform:uppercase;color:var(--lime);display:flex;justify-content:space-between;align-items:center}
+.story summary::-webkit-details-marker{display:none}
+.story summary::after{content:"+";font-size:26px;line-height:1}
+.story[open] summary::after{content:"–"}
+.story[open]{padding-bottom:12px}
+.story .lead{font-size:18px}
+@media (max-width:440px){.brand img{height:36px}.brand b{font-size:20px}.brand .wm span{font-size:11px}nav .btn{padding:7px 10px;font-size:13px;min-height:36px}nav.top .in{gap:10px}}
+@media (max-width:350px){.brand .wm span{display:none}}
