@@ -46,7 +46,7 @@ const ferr = document.getElementById("f-err");
 const min = (c) => Math.ceil(c.precio * 0.35);
 function updHint() {
   const c = CARS.find((x) => x.title === sel.value);
-  fh.textContent = c ? `Enganche mínimo para este auto: ${mxn(min(c))} (35% de ${mxn(c.precio)}).` : "El enganche mínimo es el 35% del precio del auto.";
+  fh.textContent = c ? `Enganche desde ${mxn(min(c))} (35% de ${mxn(c.precio)}). Con buen historial crediticio puede ser menor.` : "Enganche desde 35% del precio del auto. Con buen historial crediticio puede ser menor.";
 }
 function fillSelect() {
   sel.innerHTML = `<option value="">Elige un auto</option>` + CARS.map((c) => `<option>${esc(c.title)}</option>`).join("") + `<option>Otro auto</option>`;
@@ -67,7 +67,6 @@ document.getElementById("fin").addEventListener("submit", (e) => {
   let err = "";
   if (!auto) err = "Elige el auto que te interesa.";
   else if (!eng) err = "Escribe cuánto quieres dar de enganche.";
-  else if (c && eng < min(c)) err = `El enganche mínimo para este auto es ${mxn(min(c))}.`;
   else if (!nom) err = "Escribe tu nombre para saber a quién mandarle la cotización.";
   ferr.hidden = !err;
   ferr.textContent = err;
