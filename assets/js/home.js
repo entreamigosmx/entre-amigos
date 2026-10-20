@@ -20,13 +20,16 @@ function card(c) {
     <div class="pr"><b>${mxn(c.precio)}</b>${prev}</div></div></a>`;
 }
 
+const cats = (c) => (c.categorias && c.categorias.length ? c.categorias : [c.categoria].filter(Boolean));
 function drawChips() {
-  const cats = ["Todos", ...new Set(CARS.map((c) => c.categoria).filter(Boolean))];
-  chipsEl.innerHTML = cats.map((c) => `<button class="chip" type="button" aria-pressed="${c === current}">${esc(c)}</button>`).join("");
+  const ORDEN = ["SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Lujo", "Eléctricos", "Motos"];
+  const hay = new Set(CARS.flatMap(cats));
+  const cats_ = ["Todos", ...ORDEN.filter((x) => hay.has(x)), ...[...hay].filter((x) => !ORDEN.includes(x))];
+  chipsEl.innerHTML = cats_.map((c) => `<button class="chip" type="button" aria-pressed="${c === current}">${esc(c)}</button>`).join("");
   chipsEl.querySelectorAll(".chip").forEach((b) => (b.onclick = () => { current = b.textContent; drawChips(); drawCars(); }));
 }
 function drawCars() {
-  const list = CARS.filter((c) => current === "Todos" || c.categoria === current);
+  const list = CARS.filter((c) => current === "Todos" || cats(c).includes(current));
   carsEl.innerHTML = list.length ? list.map(card).join("") : `<div class="state">No hay autos en esta categoría por ahora.</div>`;
 }
 

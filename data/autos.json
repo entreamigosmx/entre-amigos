@@ -7,7 +7,7 @@
   "anio": 2023,
   "precio": 1380000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "SUV",
   "kilometraje": 39000,
   "disponible": true,
   "destacado": true,
@@ -29,7 +29,12 @@
    "fotos/gmc-yukon-denali-xl-2023/14.jpg"
   ],
   "descripcion": "<p>La SUV de lujo de tamaño completo por excelencia: espacio, presencia y potencia V8 en la versión más exclusiva de GMC. De un solo dueño, con 39,000 km, se factura. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor V8 de 6.2L</li><li>Tracción 4x4</li></ul><h4>Versión</h4><ul><li>Denali XL, la versión de mayor lujo y espacio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>39,000 km</li><li>Se factura</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "foto": "fotos/gmc-yukon-denali-xl-2023/01.jpg"
+  "foto": "fotos/gmc-yukon-denali-xl-2023/01.jpg",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ]
  },
  {
   "title": "Mercedes-AMG GLE 63 4MATIC+ 2022",
@@ -39,7 +44,7 @@
   "anio": 2022,
   "precio": 1299000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "SUV",
   "kilometraje": 48000,
   "disponible": true,
   "destacado": true,
@@ -71,7 +76,12 @@
    "fotos/mercedes-amg-gle-63-4matic-2022/22.jpg",
    "fotos/mercedes-amg-gle-63-4matic-2022/23.jpg"
   ],
-  "descripcion": "<p>Una SUV que combina el lujo y el confort de Mercedes-Benz con todo el carácter de AMG. En excelente estado, con 48,000 km y muy bien equipada: cómoda para el uso diario y con un V8 biturbo listo para cuando quieras disfrutarla de verdad.</p><h4>Motor y desempeño</h4><ul><li>Motor AMG V8 4.0L biturbo</li><li>571 hp y 750 Nm (553 lb-pie) de torque</li><li>Sistema híbrido ligero EQ Boost de 48V</li><li>Transmisión AMG SPEEDSHIFT TCT de 9 velocidades</li><li>Tracción integral AMG Performance 4MATIC+</li><li>Aceleración de 0 a 100 km/h en aproximadamente 4.0 segundos</li><li>Modos de manejo AMG DYNAMIC SELECT y suspensión deportiva AMG</li></ul><h4>Tecnología</h4><ul><li>Doble pantalla digital de 12.3 pulgadas</li><li>Sistema multimedia MBUX con comandos de voz \"Hey Mercedes\"</li><li>Apple CarPlay y Android Auto</li><li>Cámara 360°</li><li>Sistema de sonido premium</li></ul><h4>Interior</h4><ul><li>Interiores deportivos AMG</li><li>Techo panorámico</li><li>Iluminación ambiental</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Una SUV que combina el lujo y el confort de Mercedes-Benz con todo el carácter de AMG. En excelente estado, con 48,000 km y muy bien equipada: cómoda para el uso diario y con un V8 biturbo listo para cuando quieras disfrutarla de verdad.</p><h4>Motor y desempeño</h4><ul><li>Motor AMG V8 4.0L biturbo</li><li>571 hp y 750 Nm (553 lb-pie) de torque</li><li>Sistema híbrido ligero EQ Boost de 48V</li><li>Transmisión AMG SPEEDSHIFT TCT de 9 velocidades</li><li>Tracción integral AMG Performance 4MATIC+</li><li>Aceleración de 0 a 100 km/h en aproximadamente 4.0 segundos</li><li>Modos de manejo AMG DYNAMIC SELECT y suspensión deportiva AMG</li></ul><h4>Tecnología</h4><ul><li>Doble pantalla digital de 12.3 pulgadas</li><li>Sistema multimedia MBUX con comandos de voz \"Hey Mercedes\"</li><li>Apple CarPlay y Android Auto</li><li>Cámara 360°</li><li>Sistema de sonido premium</li></ul><h4>Interior</h4><ul><li>Interiores deportivos AMG</li><li>Techo panorámico</li><li>Iluminación ambiental</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ]
  },
  {
   "title": "Porsche Cayenne Coupé 2020",
@@ -81,7 +91,7 @@
   "anio": 2020,
   "precio": 1199000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "SUV",
   "kilometraje": 37000,
   "disponible": true,
   "destacado": true,
@@ -106,7 +116,11 @@
    "fotos/porsche-cayenne-coupe-2020/16.jpg",
    "fotos/porsche-cayenne-coupe-2020/17.jpg"
   ],
-  "descripcion": "<p>Deportividad, lujo y el desempeño característico de Porsche en una SUV espectacular. Con 37,000 km y servicio reciente.</p><h4>Motor y desempeño</h4><ul><li>Motor 3.0L V6 Turbo</li><li>Paquete Sport Chrono con reloj en el tablero</li><li>Escape deportivo</li></ul><h4>Interior y tecnología</h4><ul><li>Interior en color negro</li><li>Techo panorámico</li><li>Apple CarPlay</li></ul><h4>Mantenimiento</h4><ul><li>Servicio reciente</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Deportividad, lujo y el desempeño característico de Porsche en una SUV espectacular. Con 37,000 km y servicio reciente.</p><h4>Motor y desempeño</h4><ul><li>Motor 3.0L V6 Turbo</li><li>Paquete Sport Chrono con reloj en el tablero</li><li>Escape deportivo</li></ul><h4>Interior y tecnología</h4><ul><li>Interior en color negro</li><li>Techo panorámico</li><li>Apple CarPlay</li></ul><h4>Mantenimiento</h4><ul><li>Servicio reciente</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Lujo"
+  ]
  },
  {
   "title": "Chevrolet Suburban RST 2023",
@@ -116,7 +130,7 @@
   "anio": 2023,
   "precio": 1199000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "SUV",
   "kilometraje": 55000,
   "disponible": true,
   "destacado": false,
@@ -138,7 +152,12 @@
    "fotos/chevrolet-suburban-rst-2023/14.jpg"
   ],
   "descripcion": "<p>Espacio, confort y presencia para toda la familia en la versión RST de la Suburban, con su estilo deportivo y acabados oscuros. De un solo dueño, con 55,000 km y factura original. Seminueva certificada por Entre Amigos.</p><h4>Versión</h4><ul><li>Suburban RST</li><li>Amplio espacio para pasajeros y equipaje</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>55,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "foto": "fotos/chevrolet-suburban-rst-2023/01.jpg"
+  "foto": "fotos/chevrolet-suburban-rst-2023/01.jpg",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ]
  },
  {
   "title": "Porsche Macan S 2020",
@@ -148,7 +167,7 @@
   "anio": 2020,
   "precio": 999000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "SUV",
   "disponible": true,
   "destacado": true,
   "orden": 3,
@@ -170,7 +189,12 @@
   ],
   "foto": "fotos/porsche-macan-s-2020/01.jpg",
   "kilometraje": 20000,
-  "descripcion": "<p>La SUV deportiva compacta de Porsche, con el manejo y la precisión que distinguen a la marca. De un solo dueño, con 20,000 km y factura original. Seminueva certificada por Entre Amigos.</p><h4>Desempeño</h4><ul><li>Versión Macan S</li><li>Transmisión automática PDK con levas al volante</li><li>Paquete Sport Chrono con reloj en el tablero</li><li>Modo Off Road</li></ul><h4>Interior</h4><ul><li>Vestiduras en piel roja</li><li>Techo panorámico</li><li>Pantalla táctil con navegación</li></ul><h4>Exterior</h4><ul><li>Rines de 21 pulgadas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>20,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La SUV deportiva compacta de Porsche, con el manejo y la precisión que distinguen a la marca. De un solo dueño, con 20,000 km y factura original. Seminueva certificada por Entre Amigos.</p><h4>Desempeño</h4><ul><li>Versión Macan S</li><li>Transmisión automática PDK con levas al volante</li><li>Paquete Sport Chrono con reloj en el tablero</li><li>Modo Off Road</li></ul><h4>Interior</h4><ul><li>Vestiduras en piel roja</li><li>Techo panorámico</li><li>Pantalla táctil con navegación</li></ul><h4>Exterior</h4><ul><li>Rines de 21 pulgadas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>20,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ]
  },
  {
   "title": "Range Rover Sport HSE Dynamic 2022",
@@ -180,7 +204,7 @@
   "anio": 2022,
   "precio": 980000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "SUV",
   "kilometraje": 100296,
   "disponible": true,
   "destacado": true,
@@ -199,7 +223,12 @@
    "fotos/range-rover-sport-hse-dynamic-2022/10.jpg",
    "fotos/range-rover-sport-hse-dynamic-2022/11.jpg"
   ],
-  "descripcion": "<p>Hay SUV de lujo, y luego está Range Rover Sport. Elegancia, potencia y presencia en cada kilómetro, en una camioneta diseñada para quienes buscan el equilibrio entre sofisticación, desempeño y confort. De un solo dueño y seminueva certificada por Entre Amigos.</p><h4>Motor y desempeño</h4><ul><li>Motor 3.0L turbo</li><li>340 hp</li><li>Transmisión automática</li></ul><h4>Versión</h4><ul><li>Acabado HSE Dynamic</li><li>El diseño y la tecnología que distinguen a Land Rover en cualquier camino</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>100,296 km</li><li>Seminueva certificada por Entre Amigos</li></ul><h4>Facilidades de compra</h4><ul><li>Financiamiento con los principales bancos y financieras del país</li><li>Disponible para arrendamiento</li><li>Recibimos tu vehículo a cuenta</li></ul><p>Agenda tu cita y conoce esta Range Rover Sport en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Hay SUV de lujo, y luego está Range Rover Sport. Elegancia, potencia y presencia en cada kilómetro, en una camioneta diseñada para quienes buscan el equilibrio entre sofisticación, desempeño y confort. De un solo dueño y seminueva certificada por Entre Amigos.</p><h4>Motor y desempeño</h4><ul><li>Motor 3.0L turbo</li><li>340 hp</li><li>Transmisión automática</li></ul><h4>Versión</h4><ul><li>Acabado HSE Dynamic</li><li>El diseño y la tecnología que distinguen a Land Rover en cualquier camino</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>100,296 km</li><li>Seminueva certificada por Entre Amigos</li></ul><h4>Facilidades de compra</h4><ul><li>Financiamiento con los principales bancos y financieras del país</li><li>Disponible para arrendamiento</li><li>Recibimos tu vehículo a cuenta</li></ul><p>Agenda tu cita y conoce esta Range Rover Sport en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ]
  },
  {
   "title": "RAM Limited 2021",
@@ -209,7 +238,7 @@
   "anio": 2021,
   "precio": 880000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "Pickup",
   "disponible": true,
   "destacado": true,
   "orden": 5,
@@ -229,7 +258,12 @@
   ],
   "foto": "fotos/ram-limited-2021/01.jpg",
   "kilometraje": 83000,
-  "descripcion": "<p>La pickup de lujo por excelencia: potencia, espacio y el interior más refinado de su segmento en la versión Limited. De un solo dueño, con 83,000 km y servicios de agencia. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor HEMI V8 con sistema eTorque</li><li>Tracción 4x4</li></ul><h4>Interior y tecnología</h4><ul><li>Versión Limited</li><li>Vestiduras en piel</li><li>Pantalla vertical de 12 pulgadas</li><li>Tablero digital</li></ul><h4>Exterior</h4><ul><li>Rines de 22 pulgadas con llantas 35x12.50</li><li>Tapa enrollable en la caja</li><li>Gancho de arrastre</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>83,000 km</li><li>Servicios de agencia</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La pickup de lujo por excelencia: potencia, espacio y el interior más refinado de su segmento en la versión Limited. De un solo dueño, con 83,000 km y servicios de agencia. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor HEMI V8 con sistema eTorque</li><li>Tracción 4x4</li></ul><h4>Interior y tecnología</h4><ul><li>Versión Limited</li><li>Vestiduras en piel</li><li>Pantalla vertical de 12 pulgadas</li><li>Tablero digital</li></ul><h4>Exterior</h4><ul><li>Rines de 22 pulgadas con llantas 35x12.50</li><li>Tapa enrollable en la caja</li><li>Gancho de arrastre</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>83,000 km</li><li>Servicios de agencia</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Pickups",
+   "Trabajo",
+   "Lujo"
+  ]
  },
  {
   "title": "Mercedes-Benz A35 AMG 2024",
@@ -255,7 +289,7 @@
   "precio": 800000,
   "precioAnterior": 859000,
   "precioEspecial": true,
-  "categoria": "Todo terreno y pickup",
+  "categoria": "SUV",
   "kilometraje": 50000,
   "disponible": true,
   "destacado": true,
@@ -275,7 +309,11 @@
    "fotos/jeep-wrangler-sahara-2023/11.jpg",
    "fotos/jeep-wrangler-sahara-2023/12.jpg"
   ],
-  "descripcion": "<p>Un Wrangler Sahara realmente impecable: totalmente original, sin modificaciones y con excelente historial. Ideal para quien busca un Jeep bien cuidado, con 50,000 km y de un solo dueño.</p><h4>Motor y tracción</h4><ul><li>Motor 2.0L Turbo</li><li>270 hp y 295 lb-pie de torque</li><li>Transmisión automática de 8 velocidades</li><li>Tracción 4x4</li></ul><h4>Tecnología y confort</h4><ul><li>Pantalla Uconnect con Apple CarPlay y Android Auto</li><li>Cámara de reversa</li><li>Encendido por botón</li><li>Control crucero</li><li>Rines de aluminio de 18 pulgadas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Todos sus servicios de agencia</li><li>50,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu cita para conocerlo en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Un Wrangler Sahara realmente impecable: totalmente original, sin modificaciones y con excelente historial. Ideal para quien busca un Jeep bien cuidado, con 50,000 km y de un solo dueño.</p><h4>Motor y tracción</h4><ul><li>Motor 2.0L Turbo</li><li>270 hp y 295 lb-pie de torque</li><li>Transmisión automática de 8 velocidades</li><li>Tracción 4x4</li></ul><h4>Tecnología y confort</h4><ul><li>Pantalla Uconnect con Apple CarPlay y Android Auto</li><li>Cámara de reversa</li><li>Encendido por botón</li><li>Control crucero</li><li>Rines de aluminio de 18 pulgadas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Todos sus servicios de agencia</li><li>50,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu cita para conocerlo en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Todo terreno"
+  ]
  },
  {
   "title": "Volkswagen Teramont Cross Sport 2022",
@@ -285,7 +323,7 @@
   "anio": 2022,
   "precio": 675000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "SUV",
   "disponible": true,
   "destacado": false,
   "orden": 7,
@@ -305,7 +343,11 @@
   ],
   "foto": "fotos/volkswagen-cross-sport-2022/01.jpg",
   "kilometraje": 56000,
-  "descripcion": "<p>SUV de estilo coupé con presencia imponente, motor V6 y la imagen deportiva del paquete R-Line. De un solo dueño, con 56,000 km. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor V6</li><li>Tracción integral 4MOTION con selector de modos de manejo</li><li>Transmisión automática</li></ul><h4>Interior y tecnología</h4><ul><li>Paquete R-Line</li><li>Asientos en piel con ajuste eléctrico</li><li>Techo panorámico</li><li>Tablero digital y pantalla táctil</li><li>Sistema de sonido Fender</li><li>Clima automático</li></ul><h4>Exterior</h4><ul><li>Rines de 21 pulgadas</li><li>Faros LED</li><li>Cámara frontal y sensores de estacionamiento</li><li>Gancho de arrastre</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>56,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>SUV de estilo coupé con presencia imponente, motor V6 y la imagen deportiva del paquete R-Line. De un solo dueño, con 56,000 km. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor V6</li><li>Tracción integral 4MOTION con selector de modos de manejo</li><li>Transmisión automática</li></ul><h4>Interior y tecnología</h4><ul><li>Paquete R-Line</li><li>Asientos en piel con ajuste eléctrico</li><li>Techo panorámico</li><li>Tablero digital y pantalla táctil</li><li>Sistema de sonido Fender</li><li>Clima automático</li></ul><h4>Exterior</h4><ul><li>Rines de 21 pulgadas</li><li>Faros LED</li><li>Cámara frontal y sensores de estacionamiento</li><li>Gancho de arrastre</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>56,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares"
+  ]
  },
  {
   "title": "Cupra Formentor VZ 2023",
@@ -315,7 +357,7 @@
   "anio": 2023,
   "precio": 649000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "SUV",
   "kilometraje": 25000,
   "disponible": true,
   "destacado": false,
@@ -334,7 +376,11 @@
    "fotos/cupra-formentor-vz-2023/10.jpg",
    "fotos/cupra-formentor-vz-2023/11.jpg"
   ],
-  "descripcion": "<p>La versión más equipada de la Formentor, diseñada para quienes buscan una SUV con el desempeño de un deportivo. Una combinación de potencia, tecnología, confort y diseño que la hace una de las SUV deportivas más completas de su segmento. Con 25,000 km, de un solo dueño y factura original.</p><h4>Motor y desempeño</h4><ul><li>Motor 2.0 TSI</li><li>310 hp</li><li>Tracción integral 4Drive</li></ul><h4>Interior</h4><ul><li>Vestiduras deportivas</li></ul><h4>Historial y estado</h4><ul><li>Un solo dueño</li><li>Factura original</li><li>25,000 km</li><li>Excelente estado, lista para disfrutarse</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La versión más equipada de la Formentor, diseñada para quienes buscan una SUV con el desempeño de un deportivo. Una combinación de potencia, tecnología, confort y diseño que la hace una de las SUV deportivas más completas de su segmento. Con 25,000 km, de un solo dueño y factura original.</p><h4>Motor y desempeño</h4><ul><li>Motor 2.0 TSI</li><li>310 hp</li><li>Tracción integral 4Drive</li></ul><h4>Interior</h4><ul><li>Vestiduras deportivas</li></ul><h4>Historial y estado</h4><ul><li>Un solo dueño</li><li>Factura original</li><li>25,000 km</li><li>Excelente estado, lista para disfrutarse</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares"
+  ]
  },
  {
   "title": "Tesla Model S 75D 2018",
@@ -344,7 +390,7 @@
   "anio": 2018,
   "precio": 590000,
   "precioEspecial": false,
-  "categoria": "Eléctrico",
+  "categoria": "Sedán",
   "kilometraje": 23800,
   "disponible": true,
   "destacado": true,
@@ -362,7 +408,12 @@
    "fotos/tesla-model-s-75d-2018/09.jpg",
    "fotos/tesla-model-s-75d-2018/10.jpg"
   ],
-  "descripcion": "<p>Sedán de lujo 100% eléctrico con apenas 23,800 km. Combina la elegancia y el confort para el uso diario con una aceleración inmediata y un manejo completamente silencioso. Su diseño sigue siendo una referencia en su segmento.</p><h4>Desempeño</h4><ul><li>Batería de 75 kWh</li><li>Dos motores eléctricos con tracción integral (AWD)</li><li>Aceleración de 0 a 100 km/h en aproximadamente 4.4 segundos</li><li>Frenado regenerativo</li></ul><h4>Diseño exterior</h4><ul><li>Color negro</li><li>Rines de 21 pulgadas</li><li>Techo panorámico de cristal</li></ul><h4>Tecnología e interior</h4><ul><li>Pantalla táctil central de 17 pulgadas</li><li>Tablero de instrumentos digital</li><li>Interior negro con acabados en madera</li><li>Amplio espacio de carga: cajuela trasera y compartimento delantero</li></ul><p>Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Sedán de lujo 100% eléctrico con apenas 23,800 km. Combina la elegancia y el confort para el uso diario con una aceleración inmediata y un manejo completamente silencioso. Su diseño sigue siendo una referencia en su segmento.</p><h4>Desempeño</h4><ul><li>Batería de 75 kWh</li><li>Dos motores eléctricos con tracción integral (AWD)</li><li>Aceleración de 0 a 100 km/h en aproximadamente 4.4 segundos</li><li>Frenado regenerativo</li></ul><h4>Diseño exterior</h4><ul><li>Color negro</li><li>Rines de 21 pulgadas</li><li>Techo panorámico de cristal</li></ul><h4>Tecnología e interior</h4><ul><li>Pantalla táctil central de 17 pulgadas</li><li>Tablero de instrumentos digital</li><li>Interior negro con acabados en madera</li><li>Amplio espacio de carga: cajuela trasera y compartimento delantero</li></ul><p>Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Sedanes",
+   "Eléctricos",
+   "Lujo"
+  ]
  },
  {
   "title": "Mercedes-Benz E400 4MATIC 2019",
@@ -372,7 +423,7 @@
   "anio": 2019,
   "precio": 499000,
   "precioEspecial": false,
-  "categoria": "Sedanes",
+  "categoria": "Sedán",
   "kilometraje": 96800,
   "disponible": true,
   "destacado": false,
@@ -395,7 +446,11 @@
    "fotos/mercedes-benz-e400-4matic-2019/14.jpg",
    "fotos/mercedes-benz-e400-4matic-2019/15.jpg"
   ],
-  "descripcion": "<p>Lujo, potencia y confort en un sedán que sigue imponiendo presencia. Una combinación de elegancia, tecnología y desempeño, con 96,800 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Tracción integral 4MATIC</li><li>Interior premium</li><li>Equipamiento y tecnología Mercedes-Benz</li></ul><h4>Estado</h4><ul><li>96,800 km</li><li>Excelente estado</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Lujo, potencia y confort en un sedán que sigue imponiendo presencia. Una combinación de elegancia, tecnología y desempeño, con 96,800 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Tracción integral 4MATIC</li><li>Interior premium</li><li>Equipamiento y tecnología Mercedes-Benz</li></ul><h4>Estado</h4><ul><li>96,800 km</li><li>Excelente estado</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Sedanes",
+   "Lujo"
+  ]
  },
  {
   "title": "Honda Odyssey Touring 2019",
@@ -405,7 +460,7 @@
   "anio": 2019,
   "precio": 450000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "Minivan",
   "kilometraje": 70000,
   "disponible": true,
   "destacado": false,
@@ -424,7 +479,10 @@
    "fotos/honda-odyssey-touring-2019/10.jpg",
    "fotos/honda-odyssey-touring-2019/11.jpg"
   ],
-  "descripcion": "<p>La minivan ideal para quien busca comodidad, seguridad y espacio sin sacrificar equipamiento. Versión Touring, la más equipada, con 70,000 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Versión Touring, la más equipada</li><li>Vestiduras en piel</li><li>Amplio espacio para toda la familia</li><li>Gran comodidad para viajes largos y uso diario</li></ul><h4>Estado</h4><ul><li>70,000 km</li><li>Excelente estado, lista para disfrutarse</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La minivan ideal para quien busca comodidad, seguridad y espacio sin sacrificar equipamiento. Versión Touring, la más equipada, con 70,000 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Versión Touring, la más equipada</li><li>Vestiduras en piel</li><li>Amplio espacio para toda la familia</li><li>Gran comodidad para viajes largos y uso diario</li></ul><h4>Estado</h4><ul><li>70,000 km</li><li>Excelente estado, lista para disfrutarse</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Familiares"
+  ]
  },
  {
   "title": "Suzuki Jimny Turbo 2021",
@@ -434,7 +492,7 @@
   "anio": 2021,
   "precio": 445000,
   "precioEspecial": false,
-  "categoria": "Todo terreno y pickup",
+  "categoria": "SUV",
   "kilometraje": 11000,
   "disponible": true,
   "destacado": false,
@@ -454,7 +512,11 @@
    "fotos/suzuki-jimny-turbo-2021/12.jpg"
   ],
   "descripcion": "<p>Un Jimny listo para cualquier camino, con extras de todo terreno de alto nivel y apenas 11,000 km. Se factura y tiene sus servicios completos. Seminuevo certificado por Entre Amigos.</p><h4>Equipamiento todo terreno</h4><ul><li>Turbo kit</li><li>Suspensión Ironman de 3 pulgadas</li><li>Llantas BFGoodrich All-Terrain de 30 pulgadas</li><li>Parrilla con LED</li></ul><h4>Historial</h4><ul><li>11,000 km</li><li>Servicios completos</li><li>Se factura</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "foto": "fotos/suzuki-jimny-turbo-2021/01.jpg"
+  "foto": "fotos/suzuki-jimny-turbo-2021/01.jpg",
+  "categorias": [
+   "SUVs",
+   "Todo terreno"
+  ]
  },
  {
   "title": "Audi Q5 2018",
@@ -464,7 +526,7 @@
   "anio": 2018,
   "precio": 385000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "SUV",
   "disponible": true,
   "destacado": false,
   "orden": 12,
@@ -482,7 +544,11 @@
   ],
   "foto": "fotos/audi-q5-2018/01.jpg",
   "kilometraje": 95000,
-  "descripcion": "<p>SUV premium con la elegancia y el manejo que distinguen a Audi, con un interior en piel color café que la hace especial. Con 95,000 km. Seminueva certificada por Entre Amigos.</p><h4>Tecnología</h4><ul><li>Audi Virtual Cockpit: tablero digital con navegación</li><li>Apple CarPlay</li><li>Cámara de reversa y sensores de estacionamiento</li><li>Clima automático de dos zonas</li></ul><h4>Interior y exterior</h4><ul><li>Vestiduras en piel color café</li><li>Techo panorámico</li><li>Tracción quattro</li><li>Faros LED</li></ul><h4>Historial</h4><ul><li>95,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>SUV premium con la elegancia y el manejo que distinguen a Audi, con un interior en piel color café que la hace especial. Con 95,000 km. Seminueva certificada por Entre Amigos.</p><h4>Tecnología</h4><ul><li>Audi Virtual Cockpit: tablero digital con navegación</li><li>Apple CarPlay</li><li>Cámara de reversa y sensores de estacionamiento</li><li>Clima automático de dos zonas</li></ul><h4>Interior y exterior</h4><ul><li>Vestiduras en piel color café</li><li>Techo panorámico</li><li>Tracción quattro</li><li>Faros LED</li></ul><h4>Historial</h4><ul><li>95,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares"
+  ]
  },
  {
   "title": "Audi Q3 S line 2020",
@@ -492,7 +558,7 @@
   "anio": 2020,
   "precio": 380000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "SUV",
   "disponible": true,
   "destacado": false,
   "orden": 12.5,
@@ -515,7 +581,11 @@
    "fotos/audi-q3-s-line-2020/15.jpg",
    "fotos/audi-q3-s-line-2020/16.jpg"
   ],
-  "descripcion": "<p>Elegancia, tecnología y el manejo que distingue a Audi. Una SUV premium ideal para el día a día, en excelente estado y lista para estrenarse.</p><h4>Lo más destacado</h4><ul><li>Paquete S line</li><li>Excelente estado</li></ul><h4>Historial y documentación</h4><ul><li>Segundo dueño</li><li>Factura original</li><li>Servicios al día</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Elegancia, tecnología y el manejo que distingue a Audi. Una SUV premium ideal para el día a día, en excelente estado y lista para estrenarse.</p><h4>Lo más destacado</h4><ul><li>Paquete S line</li><li>Excelente estado</li></ul><h4>Historial y documentación</h4><ul><li>Segundo dueño</li><li>Factura original</li><li>Servicios al día</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares"
+  ]
  },
  {
   "title": "Volkswagen Amarok TDI 2018",
@@ -540,7 +610,7 @@
   "anio": 2024,
   "precio": 369000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "SUV",
   "kilometraje": 15000,
   "disponible": true,
   "destacado": false,
@@ -563,7 +633,11 @@
    "fotos/peugeot-2008-allure-pack-2024/14.jpg",
    "fotos/peugeot-2008-allure-pack-2024/15.jpg"
   ],
-  "descripcion": "<p>SUV moderna, muy bien equipada y prácticamente nueva, con solo 15,000 km. Un solo dueño y factura original. Combina un diseño que destaca con un manejo ágil y un excelente rendimiento de combustible.</p><h4>Motor y transmisión</h4><ul><li>Motor 1.2L PureTech Turbo</li><li>130 hp y 230 Nm de torque</li><li>Transmisión automática de 6 velocidades</li></ul><h4>Tecnología y confort</h4><ul><li>Peugeot i-Cockpit 3D</li><li>Pantalla táctil de 10 pulgadas con Apple CarPlay y Android Auto</li><li>Cargador inalámbrico para smartphone</li><li>Techo panorámico</li><li>Aire acondicionado automático</li><li>Acceso y encendido sin llave (Keyless)</li><li>Volante multifunción forrado en piel</li><li>Control crucero</li></ul><h4>Asistencias y seguridad</h4><ul><li>Cámara de reversa con visión de 180 grados</li><li>Sensores de estacionamiento</li><li>Sensores de lluvia y de luz</li><li>Freno de estacionamiento eléctrico</li><li>6 bolsas de aire</li><li>Control de estabilidad y de tracción</li><li>Anclajes ISOFIX</li></ul><h4>Exterior</h4><ul><li>Faros LED</li><li>Rines de aluminio bitono de 17 pulgadas</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>SUV moderna, muy bien equipada y prácticamente nueva, con solo 15,000 km. Un solo dueño y factura original. Combina un diseño que destaca con un manejo ágil y un excelente rendimiento de combustible.</p><h4>Motor y transmisión</h4><ul><li>Motor 1.2L PureTech Turbo</li><li>130 hp y 230 Nm de torque</li><li>Transmisión automática de 6 velocidades</li></ul><h4>Tecnología y confort</h4><ul><li>Peugeot i-Cockpit 3D</li><li>Pantalla táctil de 10 pulgadas con Apple CarPlay y Android Auto</li><li>Cargador inalámbrico para smartphone</li><li>Techo panorámico</li><li>Aire acondicionado automático</li><li>Acceso y encendido sin llave (Keyless)</li><li>Volante multifunción forrado en piel</li><li>Control crucero</li></ul><h4>Asistencias y seguridad</h4><ul><li>Cámara de reversa con visión de 180 grados</li><li>Sensores de estacionamiento</li><li>Sensores de lluvia y de luz</li><li>Freno de estacionamiento eléctrico</li><li>6 bolsas de aire</li><li>Control de estabilidad y de tracción</li><li>Anclajes ISOFIX</li></ul><h4>Exterior</h4><ul><li>Faros LED</li><li>Rines de aluminio bitono de 17 pulgadas</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares"
+  ]
  },
  {
   "title": "Can-Am Spyder RT 2018",
@@ -574,7 +648,7 @@
   "precio": 330000,
   "precioAnterior": 349000,
   "precioEspecial": true,
-  "categoria": "Motos",
+  "categoria": "Trimoto",
   "disponible": true,
   "destacado": false,
   "orden": 15,
@@ -593,7 +667,10 @@
   ],
   "foto": "fotos/can-am-spyder-rt-2018/01.jpg",
   "kilometraje": 27000,
-  "descripcion": "<p>La Spyder de turismo de Can-Am, pensada para viajar cómodo y con estilo. Edición en negro y dorado, con 27,000 km y servicios en agencia.</p><h4>Confort</h4><ul><li>Asiento de copiloto con calefacción</li><li>Respaldo para piloto y copiloto</li><li>Parabrisas alto</li><li>Maletas laterales y baúl trasero</li></ul><h4>Tecnología</h4><ul><li>Sistema de audio BRP con bocinas</li><li>Conexión Bluetooth</li><li>Tablero digital a color</li></ul><h4>Historial</h4><ul><li>27,000 km</li><li>Servicios en agencia</li></ul><p>Enganche desde $115,500. Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La Spyder de turismo de Can-Am, pensada para viajar cómodo y con estilo. Edición en negro y dorado, con 27,000 km y servicios en agencia.</p><h4>Confort</h4><ul><li>Asiento de copiloto con calefacción</li><li>Respaldo para piloto y copiloto</li><li>Parabrisas alto</li><li>Maletas laterales y baúl trasero</li></ul><h4>Tecnología</h4><ul><li>Sistema de audio BRP con bocinas</li><li>Conexión Bluetooth</li><li>Tablero digital a color</li></ul><h4>Historial</h4><ul><li>27,000 km</li><li>Servicios en agencia</li></ul><p>Enganche desde $115,500. Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Motos"
+  ]
  },
  {
   "title": "Suzuki Jimny Automático 2021",
@@ -603,7 +680,7 @@
   "anio": 2021,
   "precio": 320000,
   "precioEspecial": false,
-  "categoria": "Todo terreno y pickup",
+  "categoria": "SUV",
   "kilometraje": 71000,
   "disponible": true,
   "destacado": false,
@@ -627,7 +704,11 @@
    "fotos/suzuki-jimny-automatico-2021/15.jpg",
    "fotos/suzuki-jimny-automatico-2021/16.jpg"
   ],
-  "descripcion": "<p>Compacto, divertido y listo para la aventura. Un 4x4 con mucho carácter, de un solo dueño, con 71,000 km y extras que lo hacen todavía más atractivo.</p><h4>Mecánica</h4><ul><li>Transmisión automática</li><li>Tracción 4x4</li></ul><h4>Equipamiento</h4><ul><li>CarPlay inalámbrico</li><li>Canastilla en el techo</li><li>Carrocería de 3 puertas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>71,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Compacto, divertido y listo para la aventura. Un 4x4 con mucho carácter, de un solo dueño, con 71,000 km y extras que lo hacen todavía más atractivo.</p><h4>Mecánica</h4><ul><li>Transmisión automática</li><li>Tracción 4x4</li></ul><h4>Equipamiento</h4><ul><li>CarPlay inalámbrico</li><li>Canastilla en el techo</li><li>Carrocería de 3 puertas</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>71,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Todo terreno"
+  ]
  },
  {
   "title": "Mercedes-Benz C200 Exclusive 2018",
@@ -637,7 +718,7 @@
   "anio": 2018,
   "precio": 290000,
   "precioEspecial": false,
-  "categoria": "Sedanes",
+  "categoria": "Sedán",
   "disponible": true,
   "destacado": false,
   "orden": 16.3,
@@ -657,7 +738,10 @@
    "fotos/mercedes-benz-c200-exclusive-2018/15.jpg",
    "fotos/mercedes-benz-c200-exclusive-2018/16.jpg"
   ],
-  "descripcion": "<p>Elegancia, confort y presencia en uno de los sedanes más representativos de Mercedes-Benz. Versión Exclusive con factura original.</p><h4>Lo más destacado</h4><ul><li>Versión Exclusive</li><li>Interiores premium</li><li>Excelente equilibrio entre confort y desempeño</li><li>Diseño elegante y sofisticado</li></ul><h4>Documentación</h4><ul><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Elegancia, confort y presencia en uno de los sedanes más representativos de Mercedes-Benz. Versión Exclusive con factura original.</p><h4>Lo más destacado</h4><ul><li>Versión Exclusive</li><li>Interiores premium</li><li>Excelente equilibrio entre confort y desempeño</li><li>Diseño elegante y sofisticado</li></ul><h4>Documentación</h4><ul><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Sedanes"
+  ]
  },
  {
   "title": "Mercedes-Benz CLA 250 Sport AMG 2018",
@@ -667,7 +751,7 @@
   "anio": 2018,
   "precio": 290000,
   "precioEspecial": false,
-  "categoria": "Sedanes",
+  "categoria": "Sedán",
   "kilometraje": 99600,
   "disponible": true,
   "destacado": false,
@@ -690,7 +774,10 @@
    "fotos/mercedes-benz-cla-250-sport-amg-2018/14.jpg",
    "fotos/mercedes-benz-cla-250-sport-amg-2018/15.jpg"
   ],
-  "descripcion": "<p>Diseño deportivo, elegancia y el carácter de Mercedes-Benz en un sedán que sigue robando miradas. Con paquete Sport AMG, 99,600 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Paquete Sport AMG</li><li>Interior deportivo premium</li><li>Excelente combinación de desempeño y confort</li></ul><h4>Estado</h4><ul><li>99,600 km</li><li>Excelente estado</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Diseño deportivo, elegancia y el carácter de Mercedes-Benz en un sedán que sigue robando miradas. Con paquete Sport AMG, 99,600 km y en excelente estado.</p><h4>Lo más destacado</h4><ul><li>Paquete Sport AMG</li><li>Interior deportivo premium</li><li>Excelente combinación de desempeño y confort</li></ul><h4>Estado</h4><ul><li>99,600 km</li><li>Excelente estado</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Sedanes"
+  ]
  },
  {
   "title": "Toyota Sequoia Limited 2013",
@@ -700,7 +787,7 @@
   "anio": 2013,
   "precio": 285000,
   "precioEspecial": false,
-  "categoria": "SUV y familiares",
+  "categoria": "SUV",
   "disponible": true,
   "destacado": false,
   "orden": 17,
@@ -719,7 +806,11 @@
   ],
   "foto": "fotos/toyota-sequoia-limited-2013/01.jpg",
   "kilometraje": 190000,
-  "descripcion": "<p>Una SUV de tamaño completo con la confiabilidad que distingue a Toyota: espacio para toda la familia, motor V8 y la versión más equipada de la Sequoia. Con 190,000 km y dos dueños. Seminueva certificada por Entre Amigos.</p><h4>Versión y motor</h4><ul><li>Versión Limited</li><li>Motor i-Force V8 de 5.7L</li><li>Transmisión automática</li></ul><h4>Interior</h4><ul><li>Tres filas de asientos</li><li>Vestiduras en piel</li><li>Clima independiente para pasajeros traseros</li></ul><h4>Historial</h4><ul><li>Dos dueños</li><li>190,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Una SUV de tamaño completo con la confiabilidad que distingue a Toyota: espacio para toda la familia, motor V8 y la versión más equipada de la Sequoia. Con 190,000 km y dos dueños. Seminueva certificada por Entre Amigos.</p><h4>Versión y motor</h4><ul><li>Versión Limited</li><li>Motor i-Force V8 de 5.7L</li><li>Transmisión automática</li></ul><h4>Interior</h4><ul><li>Tres filas de asientos</li><li>Vestiduras en piel</li><li>Clima independiente para pasajeros traseros</li></ul><h4>Historial</h4><ul><li>Dos dueños</li><li>190,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "SUVs",
+   "Familiares"
+  ]
  },
  {
   "title": "Can-Am Spyder F3 2018",
@@ -729,7 +820,7 @@
   "anio": 2018,
   "precio": 270000,
   "precioEspecial": true,
-  "categoria": "Motos",
+  "categoria": "Trimoto",
   "disponible": true,
   "destacado": false,
   "orden": 18,
@@ -743,7 +834,10 @@
   "foto": "fotos/can-am-spyder-f3-2018/01.jpg",
   "kilometraje": 23000,
   "descripcion": "<p>Estilo, comodidad y la emoción de rodar en tres ruedas. Una Spyder F3 lista para carretera, con 23,000 km, sin adeudos y servicios al corriente en agencia.</p><h4>Equipamiento</h4><ul><li>Maletas laterales</li><li>Respaldo para pasajero</li><li>Parabrisas alto</li><li>Asiento para dos personas</li></ul><h4>Historial</h4><ul><li>23,000 km</li><li>Servicios al corriente en agencia</li><li>Sin adeudos</li></ul><p>Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "precioAnterior": 290000
+  "precioAnterior": 290000,
+  "categorias": [
+   "Motos"
+  ]
  },
  {
   "title": "RAM ProMaster 2024",
@@ -774,7 +868,10 @@
   "foto": "fotos/ram-promaster-2024/01.jpg",
   "kilometraje": 15000,
   "descripcion": "<p>Van de carga compacta, práctica y económica, ideal para tu negocio. Prácticamente nueva: con 15,000 km, factura original y lista para reestrenar.</p><h4>Para trabajar</h4><ul><li>Caja de carga cerrada con piso protegido</li><li>Puertas traseras de doble hoja</li><li>Mampara divisoria entre cabina y carga</li><li>Ganchos de sujeción para la carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Vidrios eléctricos</li><li>Transmisión manual</li></ul><h4>Historial</h4><ul><li>15,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "precioAnterior": 280000
+  "precioAnterior": 280000,
+  "categorias": [
+   "Trabajo"
+  ]
  },
  {
   "title": "Ford Transit Courier 2022",
@@ -805,7 +902,10 @@
   ],
   "foto": "fotos/ford-transit-2022/01.jpg",
   "kilometraje": 24000,
-  "descripcion": "<p>Van de carga compacta, ágil y económica, ideal para repartos en ciudad. De un solo dueño, con factura original y en excelente estado.</p><h4>Para trabajar</h4><ul><li>Área de carga con piso protegido y paneles de madera</li><li>Puertas traseras de doble hoja</li><li>Puerta lateral corrediza</li><li>Rejilla divisoria entre cabina y carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Radio con Bluetooth y entrada auxiliar</li><li>Transmisión manual de 6 velocidades</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>24,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>Van de carga compacta, ágil y económica, ideal para repartos en ciudad. De un solo dueño, con factura original y en excelente estado.</p><h4>Para trabajar</h4><ul><li>Área de carga con piso protegido y paneles de madera</li><li>Puertas traseras de doble hoja</li><li>Puerta lateral corrediza</li><li>Rejilla divisoria entre cabina y carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Radio con Bluetooth y entrada auxiliar</li><li>Transmisión manual de 6 velocidades</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>24,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Trabajo"
+  ]
  },
  {
   "title": "Can-Am Ryker 2023",
@@ -815,7 +915,7 @@
   "anio": 2023,
   "precio": 245000,
   "precioEspecial": false,
-  "categoria": "Motos",
+  "categoria": "Trimoto",
   "disponible": true,
   "destacado": false,
   "orden": 21,
@@ -830,7 +930,10 @@
   ],
   "foto": "fotos/can-am-ryker-2023/01.jpg",
   "kilometraje": 10000,
-  "descripcion": "<p>La forma más divertida de rodar en tres ruedas. Una Ryker de un solo dueño, con 10,000 km, factura original y varios extras que la hacen lista para viajar.</p><h4>Extras</h4><ul><li>Baúl trasero GIVI</li><li>Parabrisas alto</li><li>Faros auxiliares LED</li><li>Espejos en los extremos del manubrio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>10,000 km</li><li>Factura original</li></ul><p>Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La forma más divertida de rodar en tres ruedas. Una Ryker de un solo dueño, con 10,000 km, factura original y varios extras que la hacen lista para viajar.</p><h4>Extras</h4><ul><li>Baúl trasero GIVI</li><li>Parabrisas alto</li><li>Faros auxiliares LED</li><li>Espejos en los extremos del manubrio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>10,000 km</li><li>Factura original</li></ul><p>Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Motos"
+  ]
  },
  {
   "title": "Ford Lobo Limited Platinum 75 Aniversario 2023",
@@ -840,7 +943,7 @@
   "anio": 2023,
   "precio": 1050000,
   "precioEspecial": false,
-  "categoria": "Lujo",
+  "categoria": "Pickup",
   "kilometraje": 69000,
   "disponible": true,
   "destacado": true,
@@ -862,7 +965,12 @@
    "fotos/ford-lobo-limited-hibrida-2023/13.jpg",
    "fotos/ford-lobo-limited-hibrida-2023/14.jpg"
   ],
-  "descripcion": "<p>La pickup más completa de Ford: el lujo de la versión Limited con la potencia y la eficiencia del sistema híbrido PowerBoost. De un solo dueño, con 69,000 km y se factura. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor 3.5L V6 biturbo híbrido PowerBoost</li><li>430 hp</li><li>Tracción 4x4</li><li>Pro Trailer Backup Assist para maniobrar con remolque</li></ul><h4>Interior y tecnología</h4><ul><li>Versión Limited Platinum, edición 75 Aniversario</li><li>Asientos en piel con costura acolchada</li><li>Techo panorámico</li><li>Pantalla táctil de 12 pulgadas con SYNC y navegación</li><li>Tablero digital de 12 pulgadas</li></ul><h4>Exterior</h4><ul><li>Rines pulidos de 22 pulgadas</li><li>Estribos eléctricos</li><li>Caja con recubrimiento de fábrica</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>69,000 km</li><li>Se factura</li><li>Disponible para arrendamiento</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La pickup más completa de Ford: el lujo de la versión Limited con la potencia y la eficiencia del sistema híbrido PowerBoost. De un solo dueño, con 69,000 km y se factura. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor 3.5L V6 biturbo híbrido PowerBoost</li><li>430 hp</li><li>Tracción 4x4</li><li>Pro Trailer Backup Assist para maniobrar con remolque</li></ul><h4>Interior y tecnología</h4><ul><li>Versión Limited Platinum, edición 75 Aniversario</li><li>Asientos en piel con costura acolchada</li><li>Techo panorámico</li><li>Pantalla táctil de 12 pulgadas con SYNC y navegación</li><li>Tablero digital de 12 pulgadas</li></ul><h4>Exterior</h4><ul><li>Rines pulidos de 22 pulgadas</li><li>Estribos eléctricos</li><li>Caja con recubrimiento de fábrica</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>69,000 km</li><li>Se factura</li><li>Disponible para arrendamiento</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Pickups",
+   "Trabajo",
+   "Lujo"
+  ]
  },
  {
   "title": "BMW F 900 GS 2024",
@@ -872,7 +980,7 @@
   "anio": 2024,
   "precio": 329000,
   "precioEspecial": false,
-  "categoria": "Motos",
+  "categoria": "Moto",
   "kilometraje": 9000,
   "disponible": true,
   "destacado": true,
@@ -888,6 +996,9 @@
    "fotos/bmw-f900-gs-2024/07.jpg",
    "fotos/bmw-f900-gs-2024/08.jpg"
   ],
-  "descripcion": "<p>La aventura comienza donde termina el camino. No todas las F 900 GS son iguales: esta unidad fue equipada con más de $70,000 en accesorios premium, lista para viajar desde el primer día. Modelo 2024 con 9,000 km, un solo dueño y factura original. Seminueva certificada por Entre Amigos.</p><h4>Protección</h4><ul><li>Defensas con protector</li><li>Skid plate</li><li>Protector de faro</li><li>Handguards</li></ul><h4>Confort y manejo</h4><ul><li>Cristal alto</li><li>Alzas de manubrio</li><li>Extensión de pata lateral</li><li>Parador central</li><li>Espejos BMW Option 719</li></ul><h4>Equipaje</h4><ul><li>Top case</li><li>Maletas laterales</li><li>Tank bag</li></ul><h4>Tecnología e iluminación</h4><ul><li>Pantalla Carpuride con Apple CarPlay y Android Auto</li><li>Dos pares de faros LED auxiliares</li><li>Estrobo trasero</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>9,000 km</li><li>Factura original</li><li>Servicios realizados en tiempo y forma</li></ul><p>Recibimos tu vehículo a cuenta y trabajamos con los principales bancos y financieras del país. Agenda tu cita en Entre Amigos, Guadalajara, Jalisco.</p>"
+  "descripcion": "<p>La aventura comienza donde termina el camino. No todas las F 900 GS son iguales: esta unidad fue equipada con más de $70,000 en accesorios premium, lista para viajar desde el primer día. Modelo 2024 con 9,000 km, un solo dueño y factura original. Seminueva certificada por Entre Amigos.</p><h4>Protección</h4><ul><li>Defensas con protector</li><li>Skid plate</li><li>Protector de faro</li><li>Handguards</li></ul><h4>Confort y manejo</h4><ul><li>Cristal alto</li><li>Alzas de manubrio</li><li>Extensión de pata lateral</li><li>Parador central</li><li>Espejos BMW Option 719</li></ul><h4>Equipaje</h4><ul><li>Top case</li><li>Maletas laterales</li><li>Tank bag</li></ul><h4>Tecnología e iluminación</h4><ul><li>Pantalla Carpuride con Apple CarPlay y Android Auto</li><li>Dos pares de faros LED auxiliares</li><li>Estrobo trasero</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>9,000 km</li><li>Factura original</li><li>Servicios realizados en tiempo y forma</li></ul><p>Recibimos tu vehículo a cuenta y trabajamos con los principales bancos y financieras del país. Agenda tu cita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Motos"
+  ]
  }
 ]
