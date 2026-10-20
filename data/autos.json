@@ -545,7 +545,22 @@
   "disponible": true,
   "destacado": false,
   "orden": 15,
-  "galeria": []
+  "galeria": [
+   "fotos/can-am-spyder-rt-2018/01.jpg",
+   "fotos/can-am-spyder-rt-2018/02.jpg",
+   "fotos/can-am-spyder-rt-2018/03.jpg",
+   "fotos/can-am-spyder-rt-2018/04.jpg",
+   "fotos/can-am-spyder-rt-2018/05.jpg",
+   "fotos/can-am-spyder-rt-2018/06.jpg",
+   "fotos/can-am-spyder-rt-2018/07.jpg",
+   "fotos/can-am-spyder-rt-2018/08.jpg",
+   "fotos/can-am-spyder-rt-2018/09.jpg",
+   "fotos/can-am-spyder-rt-2018/10.jpg",
+   "fotos/can-am-spyder-rt-2018/11.jpg"
+  ],
+  "foto": "fotos/can-am-spyder-rt-2018/01.jpg",
+  "kilometraje": 27000,
+  "descripcion": "<p>La Spyder de turismo de Can-Am, pensada para viajar cómodo y con estilo. Edición en negro y dorado, con 27,000 km y servicios en agencia.</p><h4>Confort</h4><ul><li>Asiento de copiloto con calefacción</li><li>Respaldo para piloto y copiloto</li><li>Parabrisas alto</li><li>Maletas laterales y baúl trasero</li></ul><h4>Tecnología</h4><ul><li>Sistema de audio BRP con bocinas</li><li>Conexión Bluetooth</li><li>Tablero digital a color</li></ul><h4>Historial</h4><ul><li>27,000 km</li><li>Servicios en agencia</li></ul><p>Enganche desde $115,500. Tomamos tu vehículo a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  },
  {
   "title": "Suzuki Jimny Automático 2021",
