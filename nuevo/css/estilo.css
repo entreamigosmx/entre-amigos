@@ -67,6 +67,7 @@ section.blk+section.blk{border-top:1px solid var(--line)}
 /* portada */
 .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line);background:#000}
 .hero img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%;opacity:.5}
+.hero video.vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,11,10,.96) 10%,rgba(10,11,10,.55) 60%,rgba(10,11,10,.25))}
 .hero .in{position:relative;z-index:1;padding-block:clamp(72px,12vw,140px) clamp(56px,9vw,110px);display:grid;gap:22px}
 .hero h1{font-size:clamp(46px,8vw,96px);font-weight:800;display:grid;gap:2px}
@@ -163,8 +164,9 @@ select,input{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);b
 /* contacto */
 .contact{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:var(--gap)}
 @media (max-width:860px){.contact{grid-template-columns:1fr}}
-.local{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:10px;min-height:340px}
-.local img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.local{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,minmax(0,1fr));gap:10px;height:clamp(420px,46vw,540px)}
+.local>*{min-height:0}
+.local img,.local video{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;background:#111}
 .local img:first-child{grid-row:1/3}
 .info{display:grid;gap:14px;align-content:start}
 .info .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:6px}
@@ -219,3 +221,11 @@ footer a{color:var(--soft)}
 .prose h2{color:var(--ink);margin-top:12px}
 .pending{border:1px dashed var(--warn);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:15px}
 .dtop>*{min-width:0}
+
+/* Portada con video */
+@media (max-width:979px){.hero::after{background:linear-gradient(180deg,rgba(10,11,10,.55),rgba(10,11,10,.7) 45%,rgba(10,11,10,.92))}.hero img.bg{display:none}}
+@media (min-width:980px){
+  .hero video.vid{inset:auto;top:50%;transform:translateY(-50%);right:max(32px,calc((100vw - 1180px)/2));left:auto;width:auto;height:min(calc(100% - 96px),620px);aspect-ratio:9/16;opacity:1;z-index:2;border-radius:20px;border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .hero img.bg{opacity:.55}
+  .hero .in>*{max-width:min(640px,calc(100vw - 560px))}
+}

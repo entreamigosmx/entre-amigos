@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=1">
+<link rel="stylesheet" href="css/estilo.css?v=2">
 </head>
 <body>
 
@@ -28,7 +28,8 @@
 <main>
 <!-- 1. Portada -->
 <section class="hero g">
-  <img class="bg" src="../assets/img/portada.jpg" srcset="../assets/img/portada-800.jpg 800w, ../assets/img/portada.jpg 1182w" sizes="100vw" alt="Autos en el estacionamiento de Entre Amigos" fetchpriority="high">
+  <img class="bg" src="../assets/img/portada-fondo.jpg" alt="" aria-hidden="true">
+  <video class="vid" id="hv" autoplay muted loop playsinline preload="auto" poster="../assets/img/portada-video.jpg" aria-label="Video: detallado y presentación de una Rolls-Royce Cullinan en Entre Amigos"><source src="../assets/video/portada.mp4" type="video/mp4"></video>
   <div class="in">
     <span class="eyebrow">Agencia automotriz · Guadalajara</span>
     <h1><span>Autos certificados.</span><span class="l2">Mejores experiencias.</span></h1>
@@ -142,9 +143,9 @@
   <p class="pending" style="margin-bottom:var(--gap)">Pendiente para la versión final: fotos del equipo con nombre y función de cada persona. Esta nota solo aparece en la vista previa.</p>
   <div class="contact">
     <div class="local">
-      <img src="../assets/img/fachada.jpg" alt="Fachada de Entre Amigos en Av. Aztecas 1021" loading="lazy">
-      <img src="../assets/img/anuncio.jpg" alt="Anuncio de Entre Amigos" loading="lazy">
-      <img src="../assets/img/motos.jpg" alt="Motocicletas frente al local de Entre Amigos" loading="lazy">
+      <img src="../assets/img/fachada-2.jpg" alt="Fachada de Entre Amigos en Av. Aztecas 1021" loading="lazy" style="object-position:center 35%">
+      <video autoplay muted loop playsinline preload="metadata" poster="../assets/img/anuncio-video.jpg" aria-label="Anuncio de Entre Amigos"><source src="../assets/video/anuncio.mp4" type="video/mp4"></video>
+      <img src="../assets/img/showroom.jpg" alt="Interior de un vehículo de lujo en el showroom de Entre Amigos" loading="lazy" style="object-position:center 30%">
     </div>
     <div class="info">
       <div class="box"><h3>Dirección</h3><p>Av. Aztecas 1021, Col. Monraz<br>C.P. 44670, Guadalajara, Jalisco</p><div class="btns" style="margin-top:6px"><a class="btn ghost" href="https://www.google.com/maps/search/?api=1&query=Av.%20Aztecas%201021%2C%20Monraz%2C%2044670%20Guadalajara%2C%20Jalisco" target="_blank" rel="noopener">Cómo llegar</a></div></div>
@@ -163,5 +164,6 @@
 <a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
 
 <script type="module" src="js/inicio.js?v=1"></script>
+<script>if(matchMedia("(prefers-reduced-motion: reduce)").matches)document.querySelectorAll("video[autoplay]").forEach(v=>{v.removeAttribute("autoplay");v.pause()});</script>
 </body>
 </html>
