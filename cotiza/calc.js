@@ -34,6 +34,18 @@ export function corridaSemanal(monto, semanas, porMil, pagoFijo) {
   return { pago, filas, intereses: r2(total - monto), total };
 }
 
+// Interés mensual sobre saldo + abono fijo a capital cada mes (el pago baja cada mes).
+export function corridaCapFijo(monto, tasaMensualPct, abono) {
+  const r = tasaMensualPct / 100, filas = [];
+  let saldo = monto, intereses = 0;
+  for (let n = 1; saldo > 0.5 && n <= 600 && abono > 0; n++) {
+    const int = r2(saldo * r), cap = r2(Math.min(abono, saldo));
+    saldo = r2(saldo - cap); intereses += int;
+    filas.push({ n, pago: r2(int + cap), interes: int, capital: cap, saldo });
+  }
+  return { pago: filas[0]?.pago || 0, filas, intereses: r2(intereses), total: r2(monto + intereses) };
+}
+
 export function factorGarantia(meses) { return meses > 12 ? 3 : 2; }
 
 // Fecha del pago n (1-based) a partir de la fecha del primer pago.
@@ -49,7 +61,7 @@ export const fcorta = (d) => (d ? d.toLocaleDateString("es-MX", { day: "numeric"
 // Avance de un préstamo según los pagos registrados.
 export function avance(p) {
   if (p.tipo === "interes") return avanceInteres(p);
-  const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa, p.pagoFijo) : corridaMensual(p.monto, p.tasa, p.plazo, p.pagoFijo);
+  const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa, p.pagoFijo) : p.tipo === "capfijo" ? corridaCapFijo(p.monto, p.tasa, p.abono) : corridaMensual(p.monto, p.tasa, p.plazo, p.pagoFijo);
   const pagado = (p.pagos || []).reduce((s, x) => s + (x.monto || 0), 0);
   let cubiertos = 0, acum = 0;
   for (const f of c.filas) { if (acum + f.pago <= pagado + 0.5) { acum += f.pago; cubiertos++; } else break; }
@@ -59,6 +71,7 @@ export function avance(p) {
     corrida: c, pagado: r2(pagado), restante, cubiertos, total: c.filas.length,
     siguiente: sig ? { n: sig.n, monto: r2(acum + sig.pago - pagado), fecha: fechaPago(p.inicio, sig.n, p.tipo) } : null,
     liquidado: restante <= 0.5,
+    capital: cubiertos ? c.filas[cubiertos - 1].saldo : p.monto,
   };
 }
 
@@ -91,4 +104,13 @@ export function avanceInteres(p, hoyISO) {
     siguiente: capital > 0.5 && sig ? { n: sig.n, monto: r2(acum + sig.pago - intPagado), fecha: sig.fecha } : null,
     liquidado: capital <= 0.5,
   };
+}
+
+// Lo que el cliente tiene vencido hoy (pagos con fecha pasada que no ha cubierto).
+export function vencido(p, a, hoyISO) {
+  const hoy = hoyISO || new Date().toISOString().slice(0, 10);
+  if (a.liquidado || !p.inicio) return 0;
+  if (p.tipo === "interes") return a.interesAdeudado || 0;
+  const debido = a.corrida.filas.filter((f) => fechaPago(p.inicio, f.n, p.tipo).toISOString().slice(0, 10) < hoy).reduce((s, f) => s + f.pago, 0);
+  return Math.max(0, r2(debido - a.pagado));
 }

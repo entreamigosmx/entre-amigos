@@ -118,3 +118,5 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);borde
 .day u{position:absolute;top:4px;left:0;right:0;display:flex;justify-content:center;gap:2px;text-decoration:none}
 .day u b{width:6px;height:6px;border-radius:50%;display:block}
 .notice{border-color:var(--lime)}
+.seg.wrap{grid-auto-flow:row;grid-template-columns:1fr 1fr}
+.seg button{min-width:0}

@@ -21,7 +21,7 @@
 <main class="blk g" style="padding-block:clamp(40px,6vw,72px) 80px"><div class="in">
   <a class="back" href="./">← Volver al inicio</a>
   <div class="head"><span class="eyebrow">Préstamos</span><h1 style="font-size:clamp(40px,6vw,64px)">Préstamos con garantía</h1>
-  <p class="lead">Si necesitas liquidez, te prestamos con garantía. El monto y las condiciones dependen de la garantía y se definen al revisarla.</p></div>
+  <p class="lead">Si necesitas liquidez, te prestamos con garantía. Plazos a tu medida, con pagos semanales o mensuales. El monto y las condiciones dependen de la garantía y se definen al revisarla.</p></div>
   <div class="sell">
     <div class="opt"><h3>Con tu auto</h3><p>Puedes seguir usando tu auto: dejas la documentación endosada y una llave mientras dura el préstamo.</p></div>
     <div class="opt"><h3>Con relojes, oro o monedas</h3><p>Tu garantía queda bajo resguardo y se te devuelve al liquidar el préstamo.</p></div>
@@ -31,12 +31,49 @@
     <div><h2 style="font-size:clamp(28px,3.6vw,40px)">Qué necesitas</h2>
       <ul class="req" style="margin-top:14px"><li>INE vigente</li><li>Comprobante de domicilio no mayor a 3 meses</li><li>Constancia de situación fiscal</li><li>La garantía y sus documentos (por ejemplo, factura del auto)</li></ul>
       <p class="note" style="margin-top:14px">Todo préstamo está sujeto a evaluación y aprobación. No publicamos tasas porque dependen de cada garantía y plazo.</p></div>
-    <div class="btns" style="align-content:start"><a class="btn primary" href="https://wa.me/523333063319?text=Hola%2C%20me%20interesa%20un%20pr%C3%A9stamo%20con%20garant%C3%ADa." target="_blank" rel="noopener">Solicitar información por WhatsApp</a><a class="btn quiet" href="cotiza/">Ya soy cliente: ver mi préstamo</a></div>
+    <form class="card" id="sol" novalidate style="align-self:start">
+      <h3>Solicita tu préstamo</h3>
+      <p class="muted" style="margin:0">Llena estos datos y te mandamos tu cotización por WhatsApp.</p>
+      <div class="row2"><label for="s-nom">Nombre<input id="s-nom" autocomplete="name" placeholder="Tu nombre"></label>
+      <label for="s-tel">WhatsApp<input id="s-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label></div>
+      <label for="s-monto">Monto que necesitas<input id="s-monto" inputmode="numeric" autocomplete="off" placeholder="Ej. 50,000"></label>
+      <div class="row2"><label for="s-plazo">Plazo<input id="s-plazo" inputmode="numeric" autocomplete="off" placeholder="Ej. 3"></label>
+      <label for="s-uni">En<select id="s-uni"><option value="meses">Meses (pagos mensuales)</option><option value="semanas">Semanas (pagos semanales)</option></select></label></div>
+      <div class="row2"><label for="s-gar">Garantía<select id="s-gar"><option>Auto</option><option>Reloj</option><option>Oro</option><option>Monedas</option><option>Otra prenda</option><option value="aval">Sin garantía (con aval)</option></select></label>
+      <label for="s-val">Valor aproximado (opcional)<input id="s-val" inputmode="numeric" autocomplete="off" placeholder="Ej. 250,000"></label></div>
+      <label for="s-desc">Descripción de la garantía<input id="s-desc" autocomplete="off" placeholder="Ej. Jetta 2019, Rolex Submariner, 5 centenarios"></label>
+      <label for="s-nota">Comentarios (opcional)<input id="s-nota" autocomplete="off" placeholder="Ej. Lo necesito para el viernes"></label>
+      <p class="err" id="s-err" hidden></p>
+      <button class="btn primary" type="submit">Enviar solicitud por WhatsApp</button>
+      <a class="btn quiet" href="cotiza/">Ya soy cliente: ver mi préstamo</a>
+    </form>
   </div>
 </div></main>
 <footer class="g"><div class="in">
   <span>Entre Amigos · Av. Aztecas 1021, Monraz, Guadalajara · 33 3306 3319</span>
   <span><a href="prestamos.html">Préstamos con garantía</a></span>
 </div></footer>
+<script>
+(function () {
+  var $ = function (i) { return document.getElementById(i); };
+  var fmt = function (e) { var v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; };
+  $("s-monto").addEventListener("input", fmt); $("s-val").addEventListener("input", fmt);
+  var aval = function () { var a = $("s-gar").value === "aval"; $("s-val").closest("label").hidden = a; $("s-desc").closest("label").hidden = a; };
+  $("s-gar").addEventListener("change", aval); aval();
+  $("sol").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = $("s-uni").value, g = $("s-gar").value;
+    if (!nom || !monto || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe tu nombre, el monto y el plazo."; return; }
+    $("s-err").hidden = true;
+    var L = ["Hola, quiero solicitar un préstamo.", "", "Nombre: " + nom];
+    if ($("s-tel").value.trim()) L.push("WhatsApp: " + $("s-tel").value.trim());
+    L.push("Monto: $" + monto, "Plazo: " + n + " " + uni, "Pagos: " + (uni === "semanas" ? "semanales" : "mensuales"));
+    if (g === "aval") L.push("Garantía: sin garantía (con aval)");
+    else { L.push("Garantía: " + g + ($("s-desc").value.trim() ? " - " + $("s-desc").value.trim() : "")); if ($("s-val").value.trim()) L.push("Valor aproximado: $" + $("s-val").value.trim()); }
+    if ($("s-nota").value.trim()) L.push("Comentarios: " + $("s-nota").value.trim());
+    window.open("https://wa.me/523333063319?text=" + encodeURIComponent(L.join("\n")), "_blank", "noopener");
+  });
+})();
+</script>
 </body>
 </html>
