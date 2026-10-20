@@ -148,7 +148,7 @@ onAuthStateChanged(auth, async (u) => {
 let TAB = "";
 const TABS = () => isAdmin()
   ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["personas", "Personas"], ["tasas", "Tasas"]]
-  : isTeam() ? [["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"]]
+  : isTeam() ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"], ["prestamos", "Mis clientes"]]
   : [["mis", "Mis préstamos"]];
 
 let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {};
@@ -160,6 +160,7 @@ function startApp() {
   const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
   if (isAdmin()) listenP("all", collection(db, "prestamos"));
+  else if (isTeam()) listenP("mine", query(collection(db, "prestamos"), where("por", "==", ME.uid)));
   else if (USER.rol === "cliente") {
     listenP("uid", query(collection(db, "prestamos"), where("clienteUid", "==", ME.uid)));
     unsubs.push(onSnapshot(query(collection(db, "cotizaciones"), where("aceptadoPor", "==", ME.uid)), (s) => { MYCOTS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "mis") cotBox(); }, () => {}));
@@ -297,7 +298,7 @@ function vCotizaciones() {
         <div class="item-mid">${detCot(r)}</div>
         ${r.aceptadoPor ? `<div class="item-bot"><span class="pill ok">Confirmada por el cliente</span><span>${esc(r.aceptadoNombre || "")} · ${esc(r.aceptadoEmail || "")}</span></div>` : ""}
         <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`
-          : `<span class="pill${est === "aceptado" ? " ok" : est === "descartado" ? " no" : ""}">${EST[est]}</span>`}
+          : `<span class="pill${est === "aceptado" ? " ok" : est === "descartado" ? " no" : ""}">${EST[est]}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`}
         ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
   $("c-f") && ($("c-f").onchange = (e) => { FILT = e.target.value; vCotizaciones(); });
@@ -307,10 +308,22 @@ function vCotizaciones() {
 
 /* ---------- Préstamos (admin) ---------- */
 let DRAFT = null, OPEN = "", DRAFT_COT = "";
+let OWN = "";
+const ownerOf = (p) => p.por || ADMIN_UID();
+const ADMIN_UID = () => (isAdmin() ? ME.uid : USERS.find((u) => u.rol === "admin")?.uid || "");
+const visibles = () => PRES.filter((p) => !OWN || ownerOf(p) === OWN);
+function ownerFilter(rerender) {
+  if (!isAdmin()) return "";
+  const ids = [...new Set(PRES.map(ownerOf))];
+  if (ids.length < 2 && !OWN) return "";
+  setTimeout(() => { const s = $("own-f"); if (s) s.onchange = () => { OWN = s.value; rerender(); }; });
+  return `<label for="own-f">Cartera de<select id="own-f"><option value="">Todos</option>${ids.map((i) => `<option value="${esc(i)}"${i === OWN ? " selected" : ""}>${esc(i === ME.uid ? "Yo" : nameOf(i))}</option>`).join("")}</select></label>`;
+}
 function vPrestamos() {
   const clientes = USERS.filter((u) => u.rol === "cliente");
   const d = DRAFT || {};
-  const act = PRES.filter((p) => !avance(p).liquidado), liq = PRES.filter((p) => avance(p).liquidado);
+  const VP = visibles();
+  const act = VP.filter((p) => !avance(p).liquidado), liq = VP.filter((p) => avance(p).liquidado);
   const cartera = act.reduce((s, p) => s + avance(p).restante, 0);
   $("panel").innerHTML = `
   <div class="card"><details${DRAFT ? " open" : ""}><summary>Nuevo préstamo</summary>
@@ -320,7 +333,7 @@ function vPrestamos() {
       <div class="row"><label for="p-nom">Cliente<input id="p-nom" value="${esc(d.cliente || "")}" placeholder="Nombre"></label>
       <label for="p-tel">WhatsApp<input id="p-tel" inputmode="tel" value="${esc(d.telefono || "")}" placeholder="33 1234 5678"></label></div>
       <label for="p-mail">Correo del cliente (con este correo verá su avance al crear su cuenta)<input id="p-mail" type="email" inputmode="email" value="${esc(d.email || "")}" placeholder="cliente@correo.com"></label>
-      <label for="p-uid">O elige su cuenta si ya la creó<select id="p-uid"><option value="">Todavía sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === d.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
+      <label for="p-uid"${isAdmin() ? "" : " hidden"}>O elige su cuenta si ya la creó<select id="p-uid"><option value="">Todavía sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === d.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
       <div class="row"><label for="p-monto">Monto<input id="p-monto" inputmode="numeric" value="${d.monto ? Number(d.monto).toLocaleString("es-MX") : ""}"></label>
       <label for="p-tasa" id="p-tasa-l">${d.tipo === "semanal" ? "Pago por cada $1,000" : "Interés mensual (%)"}<input id="p-tasa" inputmode="decimal" value="${d.tasa ?? ""}"></label></div>
       <div class="row"><label for="p-plazo" id="p-plazo-l">${d.tipo === "semanal" ? "Semanas" : "Meses"}<input id="p-plazo" inputmode="numeric" value="${d.plazo ?? ""}"></label>
@@ -337,7 +350,7 @@ function vPrestamos() {
       <button class="btn primary" type="submit">Guardar préstamo</button>
     </form></details></div>
   <div class="card">
-    <div class="head"><h2>Préstamos activos</h2></div>
+    <div class="head"><h2>${isAdmin() ? "Préstamos activos" : "Mis clientes activos"}</h2>${ownerFilter(vPrestamos)}</div>
     <div class="stats"><span class="stat"><b>${act.length}</b> activos</span><span class="stat">Por cobrar <b>${mxn(cartera)}</b></span><span class="stat"><b>${liq.length}</b> liquidados</span></div>
     <div class="list">${act.length ? act.map(loanItem).join("") : `<p class="muted">Sin préstamos activos. Crea uno arriba o desde una cotización aceptada.</p>`}</div>
   </div>
@@ -359,7 +372,7 @@ function vPrestamos() {
     const tipo = $("p-tipo").value, monto = num($("p-monto").value), tasa = num($("p-tasa").value), plazo = parseInt($("p-plazo").value, 10) || 0;
     if (!$("p-nom").value.trim() || !monto || (!tasa && !num($("p-fijo").value)) || (!plazo && tipo !== "interes")) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, plazo y la tasa (o el pago acordado)."; return; }
     const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
-      cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
+      por: ME.uid, cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
     const fijo = num($("p-fijo").value); if (fijo) p.pagoFijo = fijo;
     const hechos = parseInt($("p-hechos").value, 10) || 0, ya = num($("p-ya").value);
     if (hechos || ya) {
@@ -399,7 +412,7 @@ function loanItem(p) {
   const rec = SI && a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago de interés del mes por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Tu capital pendiente es de ${mxn2(a.capital)}.\n\nEntre Amigos` : a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago ${a.siguiente.n} de ${a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Llevas ${mxn2(a.pagado)} pagados y te restan ${mxn2(a.restante)}.\n\nEntre Amigos` : "";
   const open = OPEN === p.id, clientes = USERS.filter((u) => u.rol === "cliente");
   return `<div class="item">
-    <div class="item-top"><b>${esc(p.cliente)}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc ? `<span class="pill warn">Pago atrasado</span>` : SI ? `Capital ${mxn(a.capital)}` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
+    <div class="item-top"><b>${esc(p.cliente)}${isAdmin() && ownerOf(p) !== ME.uid ? ` <span class="pill">Cobra: ${esc(nameOf(ownerOf(p)))}</span>` : ""}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc ? `<span class="pill warn">Pago atrasado</span>` : SI ? `Capital ${mxn(a.capital)}` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
     <div class="item-mid">${SI ? "Solo interés · " + (p.garantia ? "Garantía " + (GARANTIAS[p.garantia] || "") : "") : p.tipo === "semanal" ? "Semanal" : "Garantía " + (GARANTIAS[p.garantia] || "")}${p.desc ? " (" + esc(p.desc) + ")" : ""} · ${mxn(p.monto)} · ${SI ? "interés " + p.tasa + "% = " + mxn2(a.corrida.pago) + "/mes" : "pago " + mxn2(a.corrida.pago)}</div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
     <div class="item-bot"><span>${SI ? `Intereses pagados ${mxn2(a.pagado)} · Abonos a capital ${mxn2(a.capPagado)}${a.interesAdeudado ? " · Interés vencido " + mxn2(a.interesAdeudado) : ""}` : `Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}`}</span>${a.siguiente ? `<span>Próximo: ${mxn2(a.siguiente.monto)} ${a.siguiente.fecha ? "el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}</div>
@@ -412,7 +425,7 @@ function loanItem(p) {
         ${p.pagos?.length ? `<button class="btn" type="button" data-undo="${p.id}">Borrar último pago</button>` : ""}
       </form>
       <label>Correo del cliente<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
-      <label>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
+      <label${isAdmin() ? "" : " hidden"}>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
       ${schedule(p, a)}` : ""}
   </div>`;
 }
@@ -708,7 +721,7 @@ const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, 
 // Todas las cuotas de todos los préstamos con su estado.
 function cuotas() {
   const out = [], hoy = today();
-  PRES.forEach((p) => {
+  visibles().forEach((p) => {
     if (!p.inicio) return;
     const a = avance(p); let acum = 0;
     a.corrida.filas.forEach((f) => {
@@ -726,6 +739,12 @@ function recMsg(c) {
   if (c.p.tipo === "interes") return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago de interés por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago de interés por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Tu capital pendiente es de ${mxn2(c.capital)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
   return `Hola ${c.p.cliente}, ${atr ? "te recordamos que tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " venció el " + fcorta(new Date(c.fecha + "T12:00:00")) + ". Por favor ponte al corriente o avísanos si necesitas ayuda." : "te recordamos tu pago " + c.n + " de " + c.total + " por " + mxn2(c.debe) + " con fecha " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} Llevas ${mxn2(c.pagado)} pagados y te restan ${mxn2(c.restante)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
 }
+function colabLink(c) {
+  const u = USERS.find((x) => x.uid === ownerOf(c.p));
+  if (!u?.telefono) return `<span class="muted">Cobra: ${esc(u?.nombre || "colaborador")} (sin WhatsApp)</span>`;
+  const msg = `Hola ${u.nombre}, ${c.atrasada ? "tu cliente " + c.p.cliente + " tiene atrasado su pago (" + cuotaLbl(c.p, c.n, c.total) + ") por " + mxn2(c.debe) + " desde el " + fcorta(new Date(c.fecha + "T12:00:00")) + "." : "recuerda que tu cliente " + c.p.cliente + " tiene pago (" + cuotaLbl(c.p, c.n, c.total) + ") por " + mxn2(c.debe) + " el " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} ¿Me ayudas a darle seguimiento?`;
+  return `<a class="btn sm" href="${waTo(u.telefono, msg)}" target="_blank" rel="noopener">Avisar a ${esc(u.nombre)}</a>`;
+}
 function cuotaRow(c, showDate) {
   const key = c.p.id + ":" + c.n;
   const st = c.pagada ? `<span class="pill ok">Pagó</span>` : c.atrasada ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
@@ -737,6 +756,7 @@ function cuotaRow(c, showDate) {
       <button class="btn sm" type="button" data-otro="${key}">Pagó otra cantidad</button>
       <button class="btn sm" type="button" data-nopago="${key}">No pagó</button>
       ${c.p.telefono ? `<a class="btn sm" href="${waTo(c.p.telefono, recMsg(c))}" target="_blank" rel="noopener">Recordatorio</a>` : `<span class="muted">Sin WhatsApp registrado</span>`}
+      ${isAdmin() && ownerOf(c.p) !== ME.uid ? colabLink(c) : ""}
     </div>
     <form data-otrof="${key}" class="row" hidden novalidate style="margin-top:6px"><label>Monto recibido<input name="m" inputmode="decimal" value="${c.debe}"></label><button class="btn sm primary" type="submit">Registrar</button></form>`}
   </div>`;
@@ -748,7 +768,7 @@ function vAgenda() {
   const deHoy = all.filter((c) => c.fecha === hoy);
   const prox = all.filter((c) => !c.pagada && c.fecha > hoy && c.fecha <= en7).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
   const recientes = [];
-  PRES.forEach((p) => (p.pagos || []).forEach((x) => { if (x.fecha >= iso(new Date(Date.now() - 7 * 864e5))) recientes.push({ p, ...x }); }));
+  visibles().forEach((p) => (p.pagos || []).forEach((x) => { if (x.fecha >= iso(new Date(Date.now() - 7 * 864e5))) recientes.push({ p, ...x }); }));
   recientes.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
   const sum = (l, k) => l.reduce((s, c) => s + (c[k] || 0), 0);
   // calendario del mes
@@ -765,7 +785,7 @@ function vAgenda() {
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   $("panel").innerHTML = `
   <div class="card">
-    <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2></div>
+    <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
     <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
   ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${atr.map((c) => cuotaRow(c, true)).join("")}</div></div>` : ""}

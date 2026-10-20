@@ -43,9 +43,13 @@ service cloud.firestore {
     }
     match /prestamos/{id} {
       allow read: if admin()
+        || (team() && resource.data.por == request.auth.uid)
         || (signed() && resource.data.clienteUid == request.auth.uid)
         || (verified() && resource.data.clienteEmail == request.auth.token.email.lower());
-      allow write: if admin();
+      allow create: if admin() || (team() && request.resource.data.por == request.auth.uid);
+      allow update: if admin()
+        || (team() && resource.data.por == request.auth.uid && request.resource.data.por == request.auth.uid);
+      allow delete: if admin();
     }
   }
 }
