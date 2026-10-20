@@ -311,13 +311,16 @@ function detCot(r) {
   return r.tipo === "semanal" ? `Semanal · ${mxn(r.monto)} · ${r.plazo} pagos de ${mxn2(r.pago)}`
     : `Garantía ${GARANTIAS[r.garantia] || ""}${r.desc ? " (" + esc(r.desc) + ")" : ""} · ${mxn(r.monto)} · ${r.plazo} meses al ${r.tasa}% · ${mxn2(r.pago)}/mes`;
 }
+const canDel = (r) => isAdmin() || (r.por === ME.uid && !r.aceptadoPor && !PRES.some((p) => p.cotId === r.id));
 function vCotizaciones() {
   const rows = COTS.filter((r) => !FILT || r.por === FILT);
   const acc = rows.filter((r) => r.estado === "aceptado"), sum = (l) => l.reduce((s, r) => s + (r.monto || 0), 0);
   const people = [...new Set(COTS.map((r) => r.por))];
+  const viejas = rows.filter((r) => canDel(r) && (r.estado === "descartado" || r.estado === "negado"));
   $("panel").innerHTML = `<div class="card">
     <div class="head"><h2>${isAdmin() ? "Cotizaciones" : "Mis cotizaciones"}</h2>
     ${isAdmin() ? `<label for="c-f">Quién cotizó<select id="c-f"><option value="">Todos</option>${people.map((p) => `<option value="${esc(p)}"${p === FILT ? " selected" : ""}>${esc(nameOf(p))}</option>`).join("")}</select></label>` : ""}</div>
+    ${viejas.length ? `<div class="actions" style="margin-bottom:10px"><button class="btn sm" type="button" id="c-clean">Borrar descartadas y no aprobadas (${viejas.length})</button></div>` : ""}
     <div class="stats"><span class="stat"><b>${rows.length}</b> cotizaciones</span><span class="stat">Cotizado <b>${mxn(sum(rows))}</b></span><span class="stat"><b>${acc.length}</b> aceptadas · <b>${mxn(sum(acc))}</b></span></div>
     <div class="list">${rows.length ? rows.map((r) => {
       const f = new Date(r.fecha), est = r.estado || "cotizado";
@@ -326,9 +329,12 @@ function vCotizaciones() {
         ${r.aceptadoPor ? `<div class="item-bot"><span class="pill ok">Confirmada por el cliente</span><span>${esc(r.aceptadoNombre || "")} · ${esc(r.aceptadoEmail || "")}</span></div>` : ""}
         <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`
           : `<span class="pill${est === "aceptado" ? " ok" : (est === "descartado" || est === "negado") ? " no" : ""}">${EST[est]}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`}
-        ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}</div></div>`;
+        ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}${canDel(r) ? `<button class="link del" type="button" data-del="${r.id}">Borrar</button>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
   $("c-f") && ($("c-f").onchange = (e) => { FILT = e.target.value; vCotizaciones(); });
+  const twice = (b, txt, fn) => (b.onclick = async () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = txt; return; } b.disabled = true; try { await fn(); } catch (e) { b.disabled = false; b.textContent = "No se pudo borrar"; } });
+  $("panel").querySelectorAll("[data-del]").forEach((b) => twice(b, "Toca otra vez para borrar", () => deleteDoc(doc(db, "cotizaciones", b.dataset.del))));
+  $("c-clean") && twice($("c-clean"), `Toca otra vez para borrar ${viejas.length}`, () => Promise.all(viejas.map((r) => deleteDoc(doc(db, "cotizaciones", r.id)))));
   $("panel").querySelectorAll("select[data-cot]").forEach((s) => (s.onchange = async () => {
     await updateDoc(doc(db, "cotizaciones", s.dataset.cot), { estado: s.value });
     if (s.value !== "negado") return;

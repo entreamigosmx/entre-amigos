@@ -120,3 +120,9 @@ pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);borde
 .notice{border-color:var(--lime)}
 .seg.wrap{grid-auto-flow:row;grid-template-columns:1fr 1fr}
 .seg button{min-width:0}
+.link.del{color:#ff8a80;margin-left:auto}
+.card,.card>*{min-width:0}
+.btn{white-space:normal;text-align:center}
+.wrap>*{min-width:0}
+#v-app{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+#v-app[hidden]{display:none}

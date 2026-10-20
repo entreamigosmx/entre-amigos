@@ -33,7 +33,8 @@ service cloud.firestore {
             && request.resource.data.aceptadoPor == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['estado', 'aceptadoPor', 'aceptadoEmail', 'aceptadoNombre', 'aceptadoEn']));
-      allow delete: if admin();
+      allow delete: if admin()
+        || (team() && resource.data.por == request.auth.uid && resource.data.get('aceptadoPor', '') == '');
     }
     match /expedientes/{uid}/archivos/{tipo} {
       allow read: if admin() || (signed() && request.auth.uid == uid);
