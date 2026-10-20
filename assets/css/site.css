@@ -194,3 +194,9 @@ footer .in{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .sign .m em{font-style:normal;color:var(--lime)}
 
 .btn .arr{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* logo completo, sin cortes */
+.brand{flex:0 1 auto;min-width:0}
+.brand img{flex:0 0 auto}
+.brand b,.brand .wm span{white-space:nowrap}
+@media (max-width:360px){.brand .wm span{display:none}}
