@@ -212,3 +212,12 @@ footer .in{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .story .lead{font-size:18px}
 @media (max-width:440px){.brand img{height:36px}.brand b{font-size:20px}.brand .wm span{font-size:11px}nav .btn{padding:7px 10px;font-size:13px;min-height:36px}nav.top .in{gap:10px}}
 @media (max-width:350px){.brand .wm span{display:none}}
+
+/* opiniones que rotan */
+.revs{transition:opacity .35s ease;min-height:210px}
+.revs.fading{opacity:0}
+.rev-dots{display:flex;gap:8px;justify-content:center;margin-top:18px}
+.rev-dots button{width:9px;height:9px;padding:0;border-radius:50%;border:0;background:var(--line);cursor:pointer}
+.rev-dots button[aria-current="true"]{background:var(--lime);width:22px;border-radius:5px}
+@media (prefers-reduced-motion:reduce){.revs{transition:none}}
+.score .stars{color:var(--lime)}
