@@ -44,14 +44,6 @@
   "nombre": "Marcela C."
  },
  {
-  "texto": "Excelente servicio, te facilitan la vida, se encargan de todo.",
-  "nombre": "Liliana O."
- },
- {
-  "texto": "Excelente servicio. Me ayudaron mucho, muy buena atención.",
-  "nombre": "Fernanda O."
- },
- {
   "texto": "Excelente servicio, totalmente de confianza.",
   "nombre": "Martha O."
  },
@@ -82,5 +74,61 @@
  {
   "texto": "Excelente servicio.",
   "nombre": "Jennifer G."
+ },
+ {
+  "texto": "5 carros vendidos con ellos, en un lapso menor a dos meses de espera por carro; uno de ellos se vendió el mismo día. Satisfecho con su servicio y profesionalismo.",
+  "nombre": "De León Comercializadora"
+ },
+ {
+  "texto": "Me consiguieron una camioneta que tenía meses en lista de espera. Fui con ellos y me resolvieron todo de inmediato. Excelente servicio y atención.",
+  "nombre": "Vialetica México"
+ },
+ {
+  "texto": "Excelente atención de los que trabajan ahí y muy eficientes para la venta de autos.",
+  "nombre": "Gustavo G."
+ },
+ {
+  "texto": "Excelente servicio, muy profesionales.",
+  "nombre": "Simón L."
+ },
+ {
+  "texto": "Excelente servicio. Cualquier auto que quieras, lo consiguen. Calidad-precio y muy buena atención. 100% confiables, recomendados totalmente.",
+  "nombre": "Cristy V."
+ },
+ {
+  "texto": "Excelente servicio, no tiene falla.",
+  "nombre": "Lorena Q."
+ },
+ {
+  "texto": "Los mejores y una atención bastante profesional.",
+  "nombre": "Javier O."
+ },
+ {
+  "texto": "Buena atención, amable y dispuesto.",
+  "nombre": "Cristian N."
+ },
+ {
+  "texto": "Excelente servicio, atención y sobre todo honestos. Recomiendo mucho comprar o vender su auto con ellos. Acabo de comprar mi camioneta y me encantó; la detallé con ellos y me la dejaron como nueva.",
+  "nombre": "Paola D."
+ },
+ {
+  "texto": "Increíble trato de los dueños. Me ayudaron a encontrar el carro de mis sueños y me tomaron el mío a cuenta.",
+  "nombre": "Raúl V."
+ },
+ {
+  "texto": "Excelentes opciones y precios, pero sobre todo un excelente servicio.",
+  "nombre": "Álvaro A."
+ },
+ {
+  "texto": "Ahí vendí mi auto anterior. Solo se los dejé y ellos se encargaron de todo; en menos de una semana ya estaba vendido.",
+  "nombre": "Federico A."
+ },
+ {
+  "texto": "Excelente servicio y calidad en su trabajo. Me hicieron un detallado a mi coche y quedó espectacular.",
+  "nombre": "Daniel H."
+ },
+ {
+  "texto": "Atención, profesionalismo y variedad. Me asesoraron en todo momento.",
+  "nombre": "Diego A."
  }
 ]
