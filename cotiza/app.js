@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification, deleteUser,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
@@ -1229,8 +1229,21 @@ function vMis() {
       ${schedule(p, a)}
       <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, te envío el comprobante de mi pago.")}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
     </div>`;
-  }).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard();
+  }).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard() + `<details class="card"><summary class="muted">Eliminar mi cuenta</summary><p class="muted" style="margin:10px 0">Se borran tu cuenta, tus datos y tus documentos de esta app. Podrás registrarte de nuevo con el mismo correo. Los préstamos que tengas con Entre Amigos no se borran.</p><button class="btn danger" type="button" id="b-delme">Eliminar mi cuenta</button><p class="toast err" id="delme-t"></p></details>`;
   setTimeout(solicitudForm);
+  setTimeout(() => { const b = $("b-delme"); if (!b) return; b.onclick = async () => {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para confirmar"; return; }
+    b.disabled = true;
+    try {
+      await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", ME.uid, "archivos", k)).catch(() => {})));
+      await deleteDoc(doc(db, "usuarios", ME.uid)).catch(() => {});
+      await deleteUser(auth.currentUser);
+      location.replace(location.pathname + "?nueva");
+    } catch (e) {
+      b.disabled = false; b.dataset.sure = "";  b.textContent = "Eliminar mi cuenta";
+      $("delme-t").textContent = e && e.code === "auth/requires-recent-login" ? "Por seguridad, sal de tu cuenta, vuelve a entrar y toca otra vez Eliminar mi cuenta." : "No se pudo eliminar. Intenta de nuevo.";
+    }
+  }; });
 }
 
 /* ---------- Personas (admin) ---------- */
@@ -1256,7 +1269,7 @@ function vPersonas() {
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
     ${u.rol === "cliente" && u.solicita === "equipo" ? `<span class="pill warn">Quiere ser colaborador</span><button class="btn sm primary" type="button" data-ok="${u.uid}">Aprobar</button><button class="link" type="button" data-no="${u.uid}">Dejar como cliente</button>` : isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
     <input data-tel="${u.uid}" inputmode="tel" placeholder="WhatsApp" value="${esc(u.telefono || "")}" style="width:150px;font-size:14px;padding:6px 8px">
-    <button class="link" type="button" data-docs="${u.uid}">Documentos ${docCount(u)}</button></div>
+    <button class="link" type="button" data-docs="${u.uid}">Documentos ${docCount(u)}</button><button class="link del" type="button" data-udel="${u.uid}">Borrar registro</button></div>
     ${DOCS_OPEN === u.uid ? `<div id="docs-${u.uid}"></div>` : ""}</div>`).join("") : `<p class="muted">Todavía nadie ha creado cuenta. Manda el link de arriba.</p>`}</div>
     <p class="note">Colaborador: cotiza y ve solo sus propias cotizaciones. Cliente: ve solo sus préstamos y su avance.</p></div>`;
   $("panel").querySelectorAll("select[data-rol]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "usuarios", s.dataset.rol), { rol: s.value, solicita: "" })));
@@ -1269,6 +1282,13 @@ function vPersonas() {
   $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
   if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true);
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
+  // Borra los datos de la persona en la app (perfil y documentos). Sus préstamos y cotizaciones se conservan.
+  $("panel").querySelectorAll("[data-udel]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: se borran sus datos y documentos"; return; }
+    b.disabled = true; const uid = b.dataset.udel;
+    await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", uid, "archivos", k)).catch(() => {})));
+    await deleteDoc(doc(db, "usuarios", uid)).catch(() => { b.disabled = false; b.textContent = "No se pudo borrar"; });
+  }));
 }
 
 /* ---------- Tasas (admin) ---------- */
