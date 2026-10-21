@@ -535,7 +535,7 @@ function detCot(r) {
     : `Garantía ${GARANTIAS[r.garantia] || ""}${r.desc ? " (" + esc(r.desc) + ")" : ""} · ${mxn(r.monto)} · ${r.plazo} meses al ${r.tasa}% · ${mxn2(r.pago)}/mes`;
 }
 const canEditCot = (r) => r && r.tipo !== "auto" && (isAdmin() || (r.por === ME.uid && r.estado === "borrador"));
-const canDel = (r) => isAdmin() || (r.por === ME.uid && !r.aceptadoPor && !PRES.some((p) => p.cotId === r.id));
+const canDel = (r) => isAdmin() || (r.por === ME.uid && r.estado === "borrador");
 function vCotizaciones() {
   const rows = COTS.filter((r) => !FILT || r.por === FILT);
   const acc = rows.filter((r) => r.estado === "aceptado"), sum = (l) => l.reduce((s, r) => s + (r.monto || 0), 0);
