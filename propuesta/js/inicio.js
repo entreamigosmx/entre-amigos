@@ -1,0 +1,56 @@
+import { autos, card, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=p1";
+
+document.getElementById("fixwa").innerHTML = WA_ICON;
+document.getElementById("wa-sell").insertAdjacentHTML("afterbegin", WA_ICON);
+
+/* Destacados */
+autos().then((list) => {
+  const dest = list.filter((a) => a.portada && !a.apartado).slice(0, 8);
+  const pick = dest.length >= 6 ? dest : dest.concat(list.filter((a) => !a.portada && !a.apartado)).slice(0, 8);
+  document.getElementById("cars").innerHTML = pick.map(card).join("");
+  const t = `Ver todo el inventario (${list.length})`;
+  document.getElementById("all-btn").textContent = t;
+  document.getElementById("all-top").textContent = t;
+}).catch(() => {
+  document.getElementById("cars").innerHTML = `<p class="empty">No pudimos cargar el inventario. Recarga la página o escríbenos por WhatsApp al 33 3306 3319.</p>`;
+});
+
+/* Vende tu auto: pocos datos y WhatsApp con todo escrito */
+const $ = (id) => document.getElementById(id);
+["v-km"].forEach((id) => $(id).addEventListener("input", (e) => { const d = e.target.value.replace(/\D/g, ""); e.target.value = d ? Number(d).toLocaleString("es-MX") : ""; }));
+$("vf").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = (id) => $(id).value.trim();
+  const err = !v("v-marca") || !v("v-modelo") || !v("v-anio") ? "Escribe marca, modelo y año." : !v("v-nom") ? "Escribe tu nombre." : "";
+  $("v-err").hidden = !err; $("v-err").textContent = err; if (err) return;
+  const L = ["Hola, quiero vender mi auto.", "", "Auto: " + v("v-marca") + " " + v("v-modelo") + " " + v("v-anio")];
+  if (v("v-km")) L.push("Kilometraje: " + v("v-km") + " km");
+  L.push("Nombre: " + v("v-nom")); if (v("v-tel")) L.push("WhatsApp: " + v("v-tel"));
+  L.push("Me interesa: " + $("v-como").value, "", "En seguida les mando fotos.");
+  location.href = wa(L.join("\n"));
+});
+
+/* Opiniones que rotan */
+const box = document.getElementById("revs"), dots = document.getElementById("rev-dots");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+fetch(BASE + "data/opiniones.json", { cache: "no-cache" }).then((r) => r.json()).then((list) => {
+  for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  let start = 0, paused = false;
+  const per = () => (innerWidth >= 1100 ? 4 : innerWidth >= 800 ? 3 : innerWidth >= 560 ? 2 : 1);
+  const draw = () => {
+    const n = Math.min(per(), list.length);
+    box.classList.add("fading");
+    setTimeout(() => {
+      box.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
+      box.innerHTML = Array.from({ length: n }, (_, k) => list[(start + k) % list.length]).map((o) => `<figure class="rev"><div class="stars" aria-label="5 de 5 estrellas">★★★★★</div><blockquote>${esc(o.texto)}</blockquote><figcaption>${esc(o.nombre)} · Google</figcaption></figure>`).join("");
+      box.classList.remove("fading");
+      const pages = Math.ceil(list.length / n), cur = Math.floor(start / n) % pages;
+      dots.innerHTML = Array.from({ length: pages }, (_, p) => `<button type="button" aria-label="Opiniones ${p + 1}" data-p="${p}"${p === cur ? ' aria-current="true"' : ""}></button>`).join("");
+    }, reduce ? 0 : 300);
+  };
+  dots.onclick = (e) => { const b = e.target.closest("button"); if (b) { start = Number(b.dataset.p) * per(); draw(); } };
+  box.onmouseenter = () => (paused = true); box.onmouseleave = () => (paused = false);
+  box.addEventListener("touchstart", () => { paused = true; setTimeout(() => (paused = false), 12000); }, { passive: true });
+  draw(); setInterval(() => { if (!paused && !document.hidden) { start = (start + Math.min(per(), list.length)) % list.length; draw(); } }, 7000);
+  addEventListener("resize", draw);
+}).catch(() => {});

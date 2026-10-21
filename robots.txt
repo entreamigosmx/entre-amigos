@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /cotiza/
 Disallow: /nuevo/
+Disallow: /propuesta/
 Disallow: /tools/
 Disallow: /clientes/
 Disallow: /colaboradores/
