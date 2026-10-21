@@ -301,3 +301,31 @@ details.ficha .desc{margin:0;padding:0 18px 18px}
   body:has(.mbar){padding-bottom:84px}
 }
 .res .big b.sm{font-size:clamp(32px,6vw,42px)}
+/* Nivelador lateral */
+.rail{position:fixed;left:6px;top:calc(env(safe-area-inset-top,0px) + 92px);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);width:14px;z-index:18;pointer-events:none}
+.rail>*{pointer-events:auto}
+.rtrack{position:absolute;left:5px;top:0;bottom:0;width:3px;border-radius:3px;background:rgba(255,255,255,.12);cursor:pointer}
+.rtrack::before{content:"";position:absolute;inset:0 -10px}
+.rfill{position:absolute;left:0;top:0;width:100%;border-radius:3px;background:var(--lime)}
+.rdots{position:absolute;left:0;top:0;bottom:0;width:14px}
+.rdots button{position:absolute;left:3px;width:7px;height:7px;margin-top:-3.5px;padding:0;border-radius:50%;border:0;background:rgba(255,255,255,.35);cursor:pointer}
+.rdots button.past,.rdots button.on{background:var(--lime)}
+.rdots button::after{content:"";position:absolute;inset:-9px}
+.rdots span{display:none}
+.rthumb{position:absolute;left:0;margin-top:-15px;height:30px;display:flex;align-items:center;gap:6px;padding:0 10px 0 4px;border-radius:999px;border:1px solid rgba(182,226,31,.6);background:rgba(10,11,10,.88);color:var(--ink);font:700 12px var(--body);letter-spacing:.02em;white-space:nowrap;cursor:grab;touch-action:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .25s,transform .25s}
+.rthumb::before{content:"";width:6px;height:16px;border-radius:3px;background:var(--lime);flex:none}
+.rail:not(.live) .rthumb{opacity:.35;transform:scale(.9);transform-origin:left center}
+.rail:not(.live) .rthumb span{display:none}
+.rail.drag .rthumb{cursor:grabbing;opacity:1}
+.rmenu{position:absolute;left:0;top:0;margin-top:-4px;display:grid;gap:2px;min-width:180px;padding:6px;border-radius:12px;background:rgba(16,18,16,.97);border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.rmenu button{text-align:left;font:600 15px var(--body);color:var(--soft);background:transparent;border:0;border-radius:8px;padding:10px 12px;cursor:pointer}
+.rmenu button:hover{background:var(--panel-2);color:var(--ink)}
+@media (min-width:1100px){
+  .rail{left:18px;width:150px}
+  .rdots span{display:block;position:absolute;left:16px;top:50%;transform:translateY(-50%);font:600 12px var(--body);color:var(--muted);white-space:nowrap;opacity:0;transition:opacity .2s}
+  .rail:hover .rdots span,.rdots button.on span{opacity:1}
+  .rdots button.on span{color:var(--lime)}
+  .rthumb{display:none}
+  .rmenu{display:none}
+}
+@media (min-width:1100px) and (max-width:1500px){.rail:not(:hover) .rdots span{opacity:0!important}}
