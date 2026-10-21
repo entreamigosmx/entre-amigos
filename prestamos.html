@@ -71,7 +71,7 @@ Promise.all([
 ]).then(([A, F]) => {
   const app = A.initializeApp({ apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8", authDomain: "entre-amigos-financiera.firebaseapp.com", projectId: "entre-amigos-financiera", appId: "1:244817036834:web:7dd1a54f4825a318a2ac7b" });
   const db = F.getFirestore(app);
-  guardar = (d) => F.addDoc(F.collection(db, "solicitudes"), d);
+  guardar = (d) => F.addDoc(F.collection(db, "solicitudes"), d).then((r) => r.id);
 }).catch(() => {});
 $("sol").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -85,8 +85,18 @@ $("sol").addEventListener("submit", (e) => {
   if (g === "aval") L.push("Garantía: sin garantía (con aval)");
   else { L.push("Garantía: " + GAR[g] + (desc ? " - " + desc : "")); if (val) L.push("Valor aproximado: $" + val.toLocaleString("es-MX")); }
   if (nota) L.push("Comentarios: " + nota);
-  try { guardar && guardar({ nombre: nom.slice(0, 80), telefono: tel, monto: num(monto), plazo: n, unidad: uni, garantia: g, desc: desc.slice(0, 200), valor: val, nota: nota.slice(0, 300), fecha: new Date().toISOString(), origen: "web", estado: "nueva" }).catch(() => {}); } catch (er) {}
+  const datos = { nombre: nom.slice(0, 80), telefono: tel, monto: num(monto), plazo: n, unidad: uni, garantia: g, desc: desc.slice(0, 200), valor: val, nota: nota.slice(0, 300), fecha: new Date().toISOString(), origen: "web", estado: "nueva" };
   window.open("https://wa.me/523333063319?text=" + encodeURIComponent(L.join("\n")), "_blank", "noopener");
+  fetch("https://ntfy.sh/entreamigos-avisos-7q4k9x2m", { method: "POST", body: "$" + monto + " a " + n + " " + uni + (g === "aval" ? " con aval" : " con garantía " + GAR[g]) + ". Revísala en la app.", headers: { Title: "Nueva solicitud de préstamo", Click: "https://ventaentreamigos.com/cotiza/", Tags: "bell" } }).catch(() => {});
+  const listo = (id) => {
+    const q = "?nueva" + (id ? "&sol=" + id : "") + "&nom=" + encodeURIComponent(nom) + (tel ? "&tel=" + tel : "");
+    $("sol").innerHTML = `<h3>Recibimos tu solicitud</h3>
+      <p class="muted" style="margin:0">Te contestamos por WhatsApp. <b>Último paso:</b> crea tu cuenta (toma un minuto). Ahí ves tu cotización y tu corrida de pagos, subes tus documentos y das seguimiento a tu solicitud.</p>
+      <a class="btn primary" href="cotiza/${q}">Crear mi cuenta</a>
+      <p class="note" style="margin:0">Si no se abrió WhatsApp, escríbenos al 33 3306 3319.</p>`;
+    $("sol").scrollIntoView({ block: "start" });
+  };
+  if (guardar) guardar(datos).then(listo, () => listo("")); else listo("");
 });
 </script>
 </body>

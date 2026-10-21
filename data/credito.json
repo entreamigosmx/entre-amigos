@@ -14,5 +14,5 @@
   "plazoInicial": 48,
   "precioMin": 50000,
   "precioMax": 5000000,
-  "tasaEsMinima": true
+  "tasaEsMinima": false
 }

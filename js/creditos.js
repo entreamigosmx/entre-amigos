@@ -46,7 +46,7 @@ function calc() {
   const a = LIST.find((x) => x.slug === $("c-auto").value);
   const nom = $("c-nom").value.trim();
   const L = [`Hola${nom ? ", soy " + nom : ""}. Quiero cotizar un crédito${a ? " para el " + a.title : ""}.`, "", "Precio: " + mxn(p), `Enganche: ${mxn(e)} (${Math.round(ENGP)}%)`, "Monto a financiar: " + mxn(f), "Plazo: " + PLAZO + " meses"];
-  if (f && t) L.push("Mensualidad estimada" + (MIN && t <= CFG.tasaAnual ? " desde " : ": ") + mxn2(m) + " (tasa " + (MIN && t <= CFG.tasaAnual ? "desde " : "de ") + t + "% anual)");
+  if (f && t) L.push("Mensualidad estimada" + (MIN && t <= CFG.tasaAnual ? " desde " : ": ") + mxn2(m) + " (tasa " + (MIN && t <= CFG.tasaAnual ? "desde " : "de referencia ") + t + "% anual)");
   L.push("", "¿Me ayudan con una cotización formal?");
   $("r-wa").href = wa(L.join("\n"));
   const u = new URL(location); a ? u.searchParams.set("a", a.slug) : u.searchParams.delete("a"); history.replaceState(null, "", u);
@@ -77,6 +77,10 @@ Promise.all([
   $("c-eng-r").min = 0; $("c-eng-r").max = 90;
   if (CFG.tasaAnual) $("c-tasa").value = CFG.tasaAnual;
   MIN = !!CFG.tasaEsMinima;
+  if (CFG.tasaAnual && !MIN) {
+    $("c-tasa").closest(".field").querySelector(".note").textContent = "Referencia " + CFG.tasaAnual + "%";
+    $("c-tasa-n").hidden = false; $("c-tasa-n").textContent = `Usamos ${CFG.tasaAnual}% anual como referencia. Tu tasa puede ser mayor o menor según tu historial crediticio y la financiera. Cámbiala para ver cómo cambia tu pago.`;
+  }
   if (MIN) {
     $("r-men").previousElementSibling.textContent = "Mensualidad estimada desde";
     $("c-tasa").closest(".field").querySelector(".note").textContent = "Desde " + CFG.tasaAnual + "%";

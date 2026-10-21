@@ -23,6 +23,9 @@ const db = getFirestore(app);
 // Administradores: también están en las reglas de Firestore (las reglas son las que mandan).
 const ADMINS = ["jesusreynosoalfaro@gmail.com"];
 const WA = "523333063319";
+// Aviso al celular del administrador (app gratuita ntfy, tema privado). Sin datos personales.
+const AVISO = "https://ntfy.sh/entreamigos-avisos-7q4k9x2m";
+const avisar = (titulo, msg) => fetch(AVISO, { method: "POST", body: msg, headers: { Title: titulo, Click: "https://ventaentreamigos.com/cotiza/", Tags: "bell" } }).catch(() => {});
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -52,8 +55,16 @@ let TIPO = "cliente";
 function setTipo(t) { TIPO = t; document.querySelectorAll("#l-tipo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tipo === t))); }
 document.querySelectorAll("#l-tipo button").forEach((b) => (b.onclick = () => setTipo(b.dataset.tipo)));
 const QS = new URLSearchParams(location.search);
+var PEND_TEL_Q = "";
 if (QS.has("nueva")) setSignup(true);
 if (QS.get("tipo") === "colaborador") setTipo("colaborador");
+const SOLQ = /^[A-Za-z0-9]{10,40}$/.test(QS.get("sol") || "") ? QS.get("sol") : "";
+if (SOLQ || QS.get("nom")) {
+  setSignup(true); $("l-tipo-w").hidden = true;
+  $("l-sub").textContent = "Último paso: crea tu cuenta para dar seguimiento a tu solicitud, subir tus documentos y recibir tu cotización. Si ya tienes cuenta, toca \"Entra aquí\" abajo.";
+  if (QS.get("nom")) $("l-nom").value = QS.get("nom").slice(0, 80);
+  if (QS.get("tel")) { $("l-tel").value = QS.get("tel").replace(/\D/g, "").slice(-10); PEND_TEL_Q = $("l-tel").value; }
+}
 const INV = (QS.get("inv") || "").split(",").filter((x) => /^[A-Za-z0-9]{10,40}$/.test(x));
 if (INV.length) { setSignup(true); $("l-sub").textContent = "Crea tu cuenta para ver tu préstamo, tus pagos y tus documentos. Si ya tienes una, toca \"Entra aquí\" abajo."; $("l-tipo-w").hidden = true; }
 if (QS.has("c")) { setSignup(true); $("l-sub").textContent = "Para ver y confirmar tu cotización, crea tu cuenta. Si ya tienes una, toca \"Entra aquí\" abajo."; $("l-tipo-w").hidden = true; }
@@ -113,8 +124,9 @@ async function ensureUser(u, nombre) {
   const ref = doc(db, "usuarios", u.uid);
   const s = await getDoc(ref);
   if (s.exists()) return s.data();
-  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : "", telefono: PEND_TEL || "", creado: new Date().toISOString() };
+  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : "", telefono: PEND_TEL || PEND_TEL_Q || "", creado: new Date().toISOString() };
   await setDoc(ref, d);
+  if (d.rol !== "admin") avisar(d.solicita === "equipo" ? "Nuevo colaborador por aprobar" : "Nuevo cliente registrado", d.solicita === "equipo" ? "Alguien pidió acceso como colaborador. Revísalo en Personas." : "Se creó una cuenta de cliente nueva en la app.");
   return d;
 }
 
@@ -170,7 +182,8 @@ function startApp() {
       const s = await getDoc(doc(db, "prestamos", id)); const t = s.data()?.telefono;
       if (t) { await updateDoc(doc(db, "usuarios", ME.uid), { telefono: t }); USER.telefono = t; if (TAB === "mis") draw(); }
     }).catch(() => {}));
-    if (INV.length) history.replaceState(null, "", location.pathname);
+    if (SOLQ) updateDoc(doc(db, "solicitudes", SOLQ), { uid: ME.uid, email: (ME.email || "").toLowerCase() }).catch(() => {});
+    if (INV.length || SOLQ) history.replaceState(null, "", location.pathname);
     listenP("uid", query(collection(db, "prestamos"), where("clienteUid", "==", ME.uid)));
     unsubs.push(onSnapshot(query(collection(db, "cotizaciones"), where("aceptadoPor", "==", ME.uid)), (s) => { MYCOTS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "mis") cotBox(); }, () => {}));
     if (ME.emailVerified && ME.email) listenP("mail", query(collection(db, "prestamos"), where("clienteEmail", "==", ME.email.toLowerCase())));
@@ -479,13 +492,16 @@ function saveCot(estado = "cotizado") {
 
 /* ---------- Solicitudes que llegan de la página ---------- */
 let SOL_ID = "", SOL_VER = false;
-const SEST = { nueva: "Nueva", cotizada: "Cotizada", invitada: "Invitada a registrarse", descartada: "Descartada" };
+const SEST = { nueva: "Nueva", cotizada: "Cotizada", invitada: "Invitada a registrarse", negada: "No aprobada", descartada: "Descartada" };
+function solNo(x) {
+  return `Hola ${x.nombre}, gracias por tu solicitud de préstamo por ${mxn(x.monto)}. Por el momento no nos es posible aprobarla en esas condiciones.\n\nSi te interesa revisar otra opción (otro monto, plazo o garantía), con gusto te ayudamos. Tus datos quedan registrados para ofrecerte opciones más adelante.\n\nEntre Amigos`;
+}
 function solTxt(x) {
   const g = x.garantia === "aval" ? "Sin garantía (con aval)" : (GARANTIAS[x.garantia] || x.garantia || "") + (x.desc ? " · " + esc(x.desc) : "") + (x.valor ? " · valor aprox. " + mxn(x.valor) : "");
   return `${mxn(x.monto)} a ${x.plazo} ${x.unidad === "semanas" ? "semanas" : "meses"} · ${g}`;
 }
 function solInv(x) {
-  return `Hola ${x.nombre}, gracias por tu solicitud de préstamo por ${mxn(x.monto)}.\n\nPara darte tu cotización y avanzar más rápido, crea tu cuenta aquí y sube tus documentos (INE y comprobante de domicilio):\n${SITE}/clientes\n\nEn cuanto la revisemos te contactamos.\n\nEntre Amigos`;
+  return `Hola ${x.nombre}, gracias por tu solicitud de préstamo por ${mxn(x.monto)}.\n\nPara darte tu cotización y avanzar más rápido, crea tu cuenta aquí y sube tus documentos (INE y comprobante de domicilio):\n${SITE}/cotiza/?nueva&sol=${x.id}&nom=${encodeURIComponent(x.nombre || "")}&tel=${x.telefono || ""}\n\nEn cuanto la revisemos te contactamos.\n\nEntre Amigos`;
 }
 function solicitudesCard(limit) {
   const nuevas = SOLS.filter((x) => x.estado === "nueva"), rest = SOLS.filter((x) => x.estado !== "nueva");
@@ -496,14 +512,15 @@ function solicitudesCard(limit) {
     <div class="list">${L.length ? L.slice(0, limit || 999).map((x) => `<div class="item">
       <div class="item-top"><b>${esc(x.nombre)}</b><span>${x.estado === "nueva" ? `<span class="pill warn">Nueva</span>` : `<span class="pill">${SEST[x.estado] || esc(x.estado)}</span>`} ${fhora(x.fecha)}</span></div>
       <div class="item-mid">${solTxt(x)}${x.nota ? `<br>"${esc(x.nota)}"` : ""}</div>
-      <div class="item-bot">${x.telefono ? `<a href="https://wa.me/52${esc(x.telefono)}" target="_blank" rel="noopener">${esc(x.telefono)}</a>` : `<span>Sin WhatsApp</span>`}${x.origen === "cliente" ? `<span class="pill ok">Ya es cliente</span>` : ""}</div>
-      ${x.estado === "descartada" ? "" : `<div class="actions"><button class="btn sm primary" type="button" data-solcot="${x.id}">Cotizar y enviar</button>${x.telefono && x.origen !== "cliente" ? `<a class="btn sm" href="${waTo(x.telefono, solInv(x))}" target="_blank" rel="noopener" data-solinv="${x.id}">Solo invitar a registrarse</a>` : ""}<button class="btn sm" type="button" data-soldes="${x.id}">Descartar</button></div>`}
+      <div class="item-bot">${x.telefono ? `<a href="https://wa.me/52${esc(x.telefono)}" target="_blank" rel="noopener">${esc(x.telefono)}</a>` : `<span>Sin WhatsApp</span>`}${x.origen === "cliente" || x.uid ? `<span class="pill ok">Ya tiene cuenta</span>` : `<span class="pill">Sin cuenta todavía</span>`}</div>
+      ${x.estado === "descartada" ? "" : `<div class="actions"><button class="btn sm primary" type="button" data-solcot="${x.id}">Cotizar y enviar</button>${x.telefono && x.origen !== "cliente" && !x.uid ? `<a class="btn sm" href="${waTo(x.telefono, solInv(x))}" target="_blank" rel="noopener" data-solinv="${x.id}">Solo invitar a registrarse</a>` : ""}${x.telefono && x.estado !== "negada" ? `<a class="btn sm" href="${waTo(x.telefono, solNo(x))}" target="_blank" rel="noopener" data-solno="${x.id}">No aprobar</a>` : ""}<button class="btn sm" type="button" data-soldes="${x.id}">Descartar</button></div>`}
     </div>`).join("") : `<p class="muted">No hay solicitudes nuevas.</p>`}</div></div>`;
 }
 function bindSolicitudes(rerender) {
   const P = $("panel");
   $("sol-ver") && ($("sol-ver").onclick = () => { SOL_VER = !SOL_VER; rerender(); });
   P.querySelectorAll("[data-solcot]").forEach((b) => (b.onclick = () => cotizarSolicitud(SOLS.find((x) => x.id === b.dataset.solcot))));
+  P.querySelectorAll("[data-solno]").forEach((a) => a.addEventListener("click", () => updateDoc(doc(db, "solicitudes", a.dataset.solno), { estado: "negada" }).catch(() => {})));
   P.querySelectorAll("[data-solinv]").forEach((a) => a.addEventListener("click", () => updateDoc(doc(db, "solicitudes", a.dataset.solinv), { estado: "invitada" }).catch(() => {})));
   P.querySelectorAll("[data-soldes]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "¿Descartar?"; return; } updateDoc(doc(db, "solicitudes", b.dataset.soldes), { estado: "descartada" }); }));
 }
@@ -1080,6 +1097,7 @@ function solicitudForm() {
     if (!m || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe el monto y el plazo."; return; }
     const gar = g === "aval" ? "Sin garantía (con aval)" : GARANTIAS[g] + ($("s-desc").value.trim() ? ": " + $("s-desc").value.trim() : "");
     const msg = `Hola, quiero solicitar ${PRES.length ? "otro " : "un "}préstamo.\n\nNombre: ${USER.nombre || ""}\nCorreo: ${ME.email || ""}${USER.telefono ? "\nWhatsApp: " + USER.telefono : ""}\nMonto: ${mxn(m)}\nPlazo: ${n} ${$("s-uni").value}\nPagos: ${$("s-uni").value === "semanas" ? "semanales" : "mensuales"}\nGarantía: ${gar}${$("s-nota").value.trim() ? "\nComentarios: " + $("s-nota").value.trim() : ""}`;
+    avisar("Nueva solicitud de préstamo", `${mxn(m)} a ${n} ${$("s-uni").value} (cliente con cuenta). Ábrela en la app.`);
     addDoc(collection(db, "solicitudes"), { nombre: (USER.nombre || "").slice(0, 80), telefono: USER.telefono || "", monto: m, plazo: n, unidad: $("s-uni").value, garantia: g, desc: $("s-desc").value.trim().slice(0, 200), valor: 0, nota: $("s-nota").value.trim().slice(0, 300), fecha: new Date().toISOString(), origen: "cliente", uid: ME.uid, email: (ME.email || "").toLowerCase(), estado: "nueva" }).catch(() => {});
     window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
   };
