@@ -1,6 +1,6 @@
 // Nivelador lateral: muestra en qué parte de la página vas y permite saltar o arrastrar a cualquier sección.
 (function () {
-  var SECS = [["inicio", "Inicio"], ["necesitas", "¿Qué necesitas?"], ["destacados", "Autos"], ["como", "Nosotros"], ["opiniones", "Opiniones"], ["vende", "Vender"], ["financiamiento", "Crédito"], ["servicios", "Servicios"], ["contacto", "Contacto"]];
+  var SECS = [["inicio", "Inicio"], ["destacados", "Autos"], ["necesitas", "¿Qué necesitas?"], ["opiniones", "Opiniones"], ["como", "Nosotros"], ["vende", "Vender"], ["financiamiento", "Crédito"], ["servicios", "Servicios"], ["contacto", "Contacto"]];
   var $ = function (id) { return document.getElementById(id); };
   var rail = $("rail"), track = $("rtrack"), fill = $("rfill"), dots = $("rdots"), thumb = $("rthumb"), name = $("rname"), menu = $("rmenu");
   if (!rail) return;
