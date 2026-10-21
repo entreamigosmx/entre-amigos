@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification, deleteUser,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
@@ -1229,21 +1229,9 @@ function vMis() {
       ${schedule(p, a)}
       <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, te envío el comprobante de mi pago.")}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
     </div>`;
-  }).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard() + `<details class="card"><summary class="muted">Eliminar mi cuenta</summary><p class="muted" style="margin:10px 0">Se borran tu cuenta, tus datos y tus documentos de esta app. Podrás registrarte de nuevo con el mismo correo. Los préstamos que tengas con Entre Amigos no se borran.</p><button class="btn danger" type="button" id="b-delme">Eliminar mi cuenta</button><p class="toast err" id="delme-t"></p></details>`;
+  }).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard();
   setTimeout(solicitudForm);
-  setTimeout(() => { const b = $("b-delme"); if (!b) return; b.onclick = async () => {
-    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para confirmar"; return; }
-    b.disabled = true;
-    try {
-      await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", ME.uid, "archivos", k)).catch(() => {})));
-      await deleteDoc(doc(db, "usuarios", ME.uid)).catch(() => {});
-      await deleteUser(auth.currentUser);
-      location.replace(location.pathname + "?nueva");
-    } catch (e) {
-      b.disabled = false; b.dataset.sure = "";  b.textContent = "Eliminar mi cuenta";
-      $("delme-t").textContent = e && e.code === "auth/requires-recent-login" ? "Por seguridad, sal de tu cuenta, vuelve a entrar y toca otra vez Eliminar mi cuenta." : "No se pudo eliminar. Intenta de nuevo.";
-    }
-  }; });
+
 }
 
 /* ---------- Personas (admin) ---------- */
