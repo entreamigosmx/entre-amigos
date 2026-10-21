@@ -1124,6 +1124,7 @@ async function cotBox() {
       ${corridaCliente(c)}
       ${c.estado === "negado" && (mine || !c.aceptadoPor) ? `<p class="muted">Por el momento no nos es posible aprobar esta solicitud. Si quieres revisar otra opción, escríbenos por WhatsApp.</p>`
         : mine ? `<p class="ok">Confirmaste esta cotización. Te avisaremos por WhatsApp cuando tu préstamo esté listo y la fecha de tu primer pago.</p>`
+        : libre && !ME.emailVerified ? `<p class="cov bad" style="margin:0">Para confirmar tu cotización, primero confirma tu correo con el enlace que te mandamos (revisa también "No deseados" o "Spam"). En cuanto lo confirmes, aquí aparece el botón.</p>`
         : libre ? `<button class="btn primary" type="button" data-acc="${c.id}">Confirmar cotización</button><p class="note">Al confirmar, Entre Amigos prepara tu préstamo y te indica la fecha de inicio.</p>`
         : `<p class="muted">Esta cotización ya no está disponible. Escríbenos si quieres una nueva.</p>`}</div>`;
   }).join("");
@@ -1191,14 +1192,17 @@ let VERI_T = null;
 function vMis() {
   const okv = QS.has("verificado") && ME.emailVerified ? `<div class="card"><p class="ok" style="margin:0">Tu correo quedó confirmado. Ya puedes ver tus préstamos y seguir con tu solicitud.</p></div>` : "";
   if (QS.has("verificado")) history.replaceState(null, "", location.pathname);
-  const ver = ME.emailVerified ? okv : `<div class="card"><h3>Confirma tu correo</h3><p class="muted">Te mandamos un enlace a ${esc(ME.email)}. Ábrelo para que aparezcan tus préstamos, y luego toca "Ya lo confirmé". Revisa también la carpeta de spam.</p><div class="actions"><button class="btn primary" type="button" id="b-ver">Ya lo confirmé</button><button class="btn" type="button" id="b-rev">Reenviar correo</button></div><p class="toast" id="ver-t"></p></div>`;
+  const ver = ME.emailVerified ? okv : `<div class="card"><h3>Confirma tu correo</h3><p class="muted" style="margin:0">Te mandamos un enlace a <b>${esc(ME.email)}</b>. Ábrelo para activar tu cuenta.</p>
+    <p class="cov" style="margin:0"><b>¿No lo ves?</b> Revisa la carpeta <b>"No deseados"</b> o <b>"Spam"</b>. Si está ahí, márcalo como "No es spam" para recibir nuestros avisos.</p>
+    <p class="note" style="margin:0">Esta pantalla se actualiza sola en cuanto lo confirmas. El botón de abajo solo funciona si de verdad ya abriste el enlace.</p>
+    <div class="actions"><button class="btn primary" type="button" id="b-ver">Ya lo confirmé</button><button class="btn" type="button" id="b-rev">Reenviar correo</button></div><p class="toast" id="ver-t"></p></div>`;
   if (!ME.emailVerified && !VERI_T) {
     const chk = async () => { try { await auth.currentUser.reload(); if (auth.currentUser.emailVerified) { clearInterval(VERI_T); await auth.currentUser.getIdToken(true); location.reload(); } } catch (e) {} };
     VERI_T = setInterval(() => { if (!document.hidden) chk(); }, 5000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); });
   }
   setTimeout(() => {
-    $("b-ver") && ($("b-ver").onclick = async () => { await ME.reload(); if (auth.currentUser.emailVerified) { await auth.currentUser.getIdToken(true); location.reload(); } else $("ver-t").textContent = "Todavía no aparece confirmado. Abre el enlace del correo e intenta de nuevo."; });
+    $("b-ver") && ($("b-ver").onclick = async () => { await ME.reload(); if (auth.currentUser.emailVerified) { await auth.currentUser.getIdToken(true); location.reload(); } else $("ver-t").textContent = "Todavía no está confirmado. Abre el enlace del correo (revisa también No deseados) y vuelve a tocar el botón."; });
     $("b-rev") && ($("b-rev").onclick = () => sendEmailVerification(auth.currentUser, ACS).then(() => ($("ver-t").textContent = "Correo reenviado."), () => ($("ver-t").textContent = "Espera un momento antes de reenviar.")));
   });
   setTimeout(cotBox);

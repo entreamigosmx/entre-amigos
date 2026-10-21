@@ -30,7 +30,7 @@ service cloud.firestore {
       allow update: if admin()
         || (team() && resource.data.por == request.auth.uid && resource.data.estado == 'borrador'
             && request.resource.data.por == request.auth.uid && request.resource.data.estado in ['borrador', 'cotizado'])
-        || (signed() && resource.data.estado == 'cotizado'
+        || (verified() && resource.data.estado == 'cotizado'
             && request.resource.data.estado == 'aceptado'
             && request.resource.data.aceptadoPor == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
