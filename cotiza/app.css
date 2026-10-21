@@ -151,3 +151,6 @@ details.rep{border-top:1px solid var(--line);padding-top:10px}
 .task{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border-radius:9px;background:var(--panel-2);border-left:4px solid var(--line);font-size:14px}
 .task.late{border-left-color:var(--warn)}.task.due{border-left-color:var(--soft)}.task.paid{border-left-color:var(--lime)}.task.msg{border-left-color:#4fc3f7}
 .task .btn{flex:none}
+.step{margin:4px 0 -4px;font:700 13px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+label.inline{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+label.inline select{width:auto;font-size:14px;padding:5px 8px}

@@ -28,6 +28,8 @@ service cloud.firestore {
         || (signed() && resource.data.aceptadoPor == request.auth.uid);
       allow create: if team() && request.resource.data.por == request.auth.uid;
       allow update: if admin()
+        || (team() && resource.data.por == request.auth.uid && resource.data.estado == 'borrador'
+            && request.resource.data.por == request.auth.uid && request.resource.data.estado in ['borrador', 'cotizado'])
         || (signed() && resource.data.estado == 'cotizado'
             && request.resource.data.estado == 'aceptado'
             && request.resource.data.aceptadoPor == request.auth.uid

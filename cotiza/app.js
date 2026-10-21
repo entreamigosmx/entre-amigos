@@ -244,17 +244,25 @@ function bindPick(pre, form) {
 }
 
 /* ---------- Cotizar ---------- */
-let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null;
+let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null, EDIT_COT = null, EDIT_PEND = false;
+function editarCot(c) {
+  if (!canEditCot(c)) return;
+  EDIT_COT = c; EDIT_PEND = true; MODE = c.tipo === "semanal" ? "semanal" : "garantia"; go("cotizar");
+}
 function vCotizar() {
   touched = false; SOL_ID = "";
+  if (!EDIT_PEND) EDIT_COT = null; EDIT_PEND = false;
   if (MODE === "auto") return vCotAuto();
   $("panel").innerHTML = `
   <div class="card">
     <div class="seg"><button type="button" data-m="garantia" aria-pressed="${MODE === "garantia"}">Con garantía</button><button type="button" data-m="semanal" aria-pressed="${MODE === "semanal"}">Semanal con aval</button><button type="button" data-m="auto" aria-pressed="false">Auto del inventario</button></div>
+    ${EDIT_COT ? `<div class="cov ok" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span>Editando la cotización de <b>${esc(EDIT_COT.cliente || "")}</b>${EDIT_COT.estado === "borrador" ? " (borrador, todavía no se envía)" : ""}.</span><button class="btn sm" type="button" id="q-cancel">Cancelar edición</button></div>` : ""}
     <form id="fq" novalidate>
-      ${pickCliente("q")}
+      <p class="step">1. Cliente</p>
+      ${EDIT_COT ? "" : pickCliente("q")}
       <div class="row"><label for="q-nom">Cliente<input id="q-nom" autocomplete="off" placeholder="Nombre del cliente"></label>
       <label for="q-tel">WhatsApp del cliente<input id="q-tel" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label></div>
+      <p class="step">2. Condiciones</p>
       <div class="row"><label for="q-monto">Monto a prestar (MXN)<input id="q-monto" inputmode="numeric" value="${MODE === "garantia" ? "100,000" : "10,000"}"></label>
       ${MODE === "garantia"
         ? `<label for="q-tasa">Interés mensual (%)<input id="q-tasa" inputmode="decimal" value="5"></label></div>
@@ -273,7 +281,8 @@ function vCotizar() {
     <div class="big"><span id="r-lbl">Pago</span><b id="r-pago">$0</b></div>
     <div class="facts"><div><span>Prestado</span><b id="r-m">$0</b></div><div><span>Intereses</span><b id="r-i">$0</b></div><div><span>Total a pagar</span><b id="r-t">$0</b></div></div>
     <p class="err" id="r-err" hidden></p>
-    <div class="actions"><button class="btn primary" type="button" id="b-img">Enviar con imagen de la corrida</button><a class="btn" id="b-wa" href="#" target="_blank" rel="noopener">Solo texto por WhatsApp</a><button class="btn" type="button" id="b-copy">Copiar</button></div>
+    <p class="step">3. Revisa y envía</p>
+    <div class="actions"><button class="btn primary" type="button" id="b-img">Enviar con imagen de la corrida</button><a class="btn" id="b-wa" href="#" target="_blank" rel="noopener">Solo texto por WhatsApp</a><button class="btn" type="button" id="b-copy">Copiar</button><button class="btn" type="button" id="b-draft">${EDIT_COT && EDIT_COT.estado !== "borrador" ? "Guardar cambios" : "Guardar sin enviar"}</button></div>
     <p class="note" style="margin:0">"Enviar con imagen" abre el menú de compartir de tu iPhone: elige WhatsApp y luego al cliente. Le llega la imagen con la corrida y el mensaje.</p>
     <p class="toast" id="r-toast"></p>
     <details><summary>Ver imagen que se envía</summary><img id="r-img" alt="Imagen de la cotización" style="width:100%;border-radius:10px;margin-top:8px"></details>
@@ -281,7 +290,8 @@ function vCotizar() {
     <details><summary>Mensaje que se envía</summary><pre id="r-msg"></pre></details>
     <p class="note">Las cotizaciones que envías o copias se guardan en tu historial.</p>
   </div>`;
-  $("panel").querySelectorAll(".seg button").forEach((b) => (b.onclick = () => { MODE = b.dataset.m; vCotizar(); }));
+  $("panel").querySelectorAll(".seg button").forEach((b) => (b.onclick = () => { MODE = b.dataset.m; EDIT_PEND = !!EDIT_COT && b.dataset.m !== "auto"; vCotizar(); }));
+  $("q-cancel") && ($("q-cancel").onclick = () => { EDIT_COT = null; go("cotizaciones"); });
   ["q-monto", "q-val"].forEach((id) => $(id)?.addEventListener("input", (e) => { const d = e.target.value.replace(/\D/g, ""); e.target.value = d ? Number(d).toLocaleString("es-MX") : ""; }));
   $("fq").addEventListener("input", (e) => { if (["q-tasa", "q-fac", "q-sem"].includes(e.target.id)) touched = true; if (e.target.id === "q-plazo") e.target.dataset.t = "1"; calc(); });
   $("fq").addEventListener("change", (e) => { if (e.target.id === "q-gar" || e.target.id === "q-plazo") { if (e.target.id === "q-gar") { $("q-desc").placeholder = { auto: "Ej. Jetta 2019", reloj: "Ej. Rolex Submariner", oro: "Ej. Esclava 14k, 30 g", monedas: "Ej. 5 centenarios", otro: "Describe la prenda", ff: "Garantía acordada (opcional)" }[e.target.value]; touched = false; applyCfg(); } } calc(); });
@@ -296,12 +306,30 @@ function vCotizar() {
     if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], text: LAST.msg }).catch(() => {});
     else { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); $("r-toast").textContent = "Se descargó la imagen. Mándala por WhatsApp junto con el mensaje (botón Solo texto)."; }
   };
+  $("b-draft").onclick = async () => {
+    if (!LAST) return;
+    if (EDIT_COT && EDIT_COT.estado !== "borrador") { const ok = await saveCot("cotizado"); $("r-toast").textContent = ok ? "Cambios guardados." : "No se pudo guardar. Revisa tu conexión."; return; }
+    const ok = await saveCot("borrador");
+    $("r-toast").textContent = ok ? "Guardada sin enviar. La encuentras en " + (isAdmin() ? "Cotizaciones" : "Mis cotizaciones") + " para editarla y enviarla después." : "No se pudo guardar. Revisa tu conexión.";
+  };
   $("b-copy").onclick = () => {
     if (!LAST) return; saveCot();
     const ok = () => ($("r-toast").textContent = "Cotización copiada. Pégala en el chat del cliente.");
     navigator.clipboard?.writeText(LAST.msg).then(ok, () => { $("r-msg").closest("details").open = true; $("r-toast").textContent = "Selecciona el mensaje y cópialo."; });
   };
   applyCfg(); calc();
+  if (EDIT_COT) fillCot(EDIT_COT);
+}
+function fillCot(c) {
+  const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
+  const money = (v) => (v ? Number(v).toLocaleString("es-MX") : "");
+  set("q-nom", c.cliente || ""); set("q-tel", c.telefono || ""); set("q-monto", money(c.monto));
+  if (MODE === "semanal") { set("q-sem", c.plazo); set("q-fac", c.tasa); if (c.inicio) set("q-ini", c.inicio); }
+  else {
+    if (GARANTIAS[c.garantia]) $("q-gar").value = c.garantia;
+    set("q-tasa", c.tasa); set("q-plazo", c.plazo); $("q-plazo").dataset.t = "1"; set("q-desc", c.desc || ""); set("q-val", money(c.valor));
+  }
+  touched = true; calc();
 }
 function applyCfg() {
   if (!$("fq")) return;
@@ -338,7 +366,8 @@ function calc() {
       tbl: "<tr><th>Semana</th><th>Fecha</th><th>Pago</th><th>Resta</th></tr>" + c.filas.map((x) => `<tr><td>${x.n}</td><td>${fcorta(fechaPago(ini, x.n, "semanal"))}</td><td>${mxn2(x.pago)}</td><td>${mxn2(x.saldo)}</td></tr>`).join("") };
   }
   r.cliente = nom; r.telefono = tel10(tel);
-  { const { msg, tbl, lbl, ...dd } = r; const k = JSON.stringify(dd); if (k !== curKey) { curKey = k; CUR_REF = doc(collection(db, "cotizaciones")); } }
+  if (EDIT_COT) CUR_REF = doc(db, "cotizaciones", EDIT_COT.id);
+  else { const { msg, tbl, lbl, ...dd } = r; const k = JSON.stringify(dd); if (k !== curKey || !CUR_REF || CUR_REF.id === (LAST_SENT || "")) { curKey = k; CUR_REF = doc(collection(db, "cotizaciones")); } }
   r.msg += "\n\nRevisa y confirma tu cotización aquí:\n" + location.origin + location.pathname + "?c=" + CUR_REF.id;
   LAST = r; $("r-err").hidden = true;
   $("r-lbl").textContent = r.lbl; $("r-pago").textContent = mxn2(r.pago); $("r-m").textContent = mxn(r.monto); $("r-i").textContent = mxn(r.intereses); $("r-t").textContent = mxn(r.total);
@@ -424,13 +453,28 @@ async function corridaPNG(r) {
   g.fillStyle = INK; g.font = `600 25px ${F}`; g.fillText("ventaentreamigos.com  ·  WhatsApp 33 3306 3319", P, ty + 110);
   return new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no()), "image/png"));
 }
-function saveCot() {
-  if (!LAST) return;
+let LAST_SENT = "";
+function saveCot(estado = "cotizado") {
+  if (!LAST) return Promise.resolve();
   const { msg, tbl, lbl, ...d } = LAST;
-  if (CUR_REF.id === lastKey) return; lastKey = CUR_REF.id;
+  const key = CUR_REF.id + estado + JSON.stringify(d);
+  if (key === lastKey) return Promise.resolve(); lastKey = key;
+  const now = new Date().toISOString();
   if (SOL_ID) d.solId = SOL_ID;
-  setDoc(CUR_REF, { ...d, por: ME.uid, fecha: new Date().toISOString(), estado: "cotizado" }).catch(() => (lastKey = ""));
-  if (SOL_ID) { updateDoc(doc(db, "solicitudes", SOL_ID), { estado: "cotizada", cotId: CUR_REF.id, cotizadaEn: new Date().toISOString() }).catch(() => {}); SOL_ID = ""; }
+  let pr;
+  if (EDIT_COT) {
+    const upd = { ...d, editada: now, editPor: ME.uid };
+    if (EDIT_COT.estado === "borrador") { upd.estado = estado; if (estado === "cotizado") upd.fecha = now; }
+    pr = updateDoc(CUR_REF, upd);
+  } else pr = setDoc(CUR_REF, { ...d, por: ME.uid, fecha: now, estado });
+  pr = pr.then(() => true, () => { lastKey = ""; return false; });
+  if (estado === "borrador") EDIT_COT = { ...(EDIT_COT || {}), id: CUR_REF.id, cliente: d.cliente, estado: "borrador", por: EDIT_COT?.por || ME.uid };
+  else {
+    if (EDIT_COT && EDIT_COT.estado === "borrador") EDIT_COT = { ...EDIT_COT, estado: "cotizado" };
+    if (!isAdmin()) { LAST_SENT = CUR_REF.id; EDIT_COT = null; }
+    if (SOL_ID) { updateDoc(doc(db, "solicitudes", SOL_ID), { estado: "cotizada", cotId: CUR_REF.id, cotizadaEn: now }).catch(() => {}); SOL_ID = ""; }
+  }
+  return pr;
 }
 
 /* ---------- Solicitudes que llegan de la página ---------- */
@@ -483,13 +527,14 @@ function cotizarSolicitud(x) {
 }
 
 /* ---------- Cotizaciones ---------- */
-const EST = { cotizado: "Cotizado", aceptado: "Aceptado", negado: "No aprobado", descartado: "Descartado" };
+const EST = { borrador: "Borrador (sin enviar)", cotizado: "Enviada", aceptado: "Aceptado", negado: "No aprobado", descartado: "Descartado" };
 let FILT = "";
 function detCot(r) {
   if (r.tipo === "auto") return `Auto · ${esc(r.autoTitulo || "")} · enganche ${mxn(r.enganche)} · ${r.plazo} meses al ${r.tasa}% anual${r.banco ? " (" + esc(r.banco) + ")" : ""} · ${mxn2(r.pago)}/mes`;
   return r.tipo === "semanal" ? `Semanal · ${mxn(r.monto)} · ${r.plazo} pagos de ${mxn2(r.pago)}`
     : `Garantía ${GARANTIAS[r.garantia] || ""}${r.desc ? " (" + esc(r.desc) + ")" : ""} · ${mxn(r.monto)} · ${r.plazo} meses al ${r.tasa}% · ${mxn2(r.pago)}/mes`;
 }
+const canEditCot = (r) => r && r.tipo !== "auto" && (isAdmin() || (r.por === ME.uid && r.estado === "borrador"));
 const canDel = (r) => isAdmin() || (r.por === ME.uid && !r.aceptadoPor && !PRES.some((p) => p.cotId === r.id));
 function vCotizaciones() {
   const rows = COTS.filter((r) => !FILT || r.por === FILT);
@@ -503,14 +548,16 @@ function vCotizaciones() {
     <div class="stats"><span class="stat"><b>${rows.length}</b> cotizaciones</span><span class="stat">Cotizado <b>${mxn(sum(rows))}</b></span><span class="stat"><b>${acc.length}</b> aceptadas · <b>${mxn(sum(acc))}</b></span></div>
     <div class="list">${rows.length ? rows.map((r) => {
       const f = new Date(r.fecha), est = r.estado || "cotizado";
-      return `<div class="item"><div class="item-top"><b>${esc(r.cliente || "Sin nombre")}</b><span>${f.toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${f.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span></div>
+      const pill = `<span class="pill${est === "aceptado" ? " ok" : (est === "descartado" || est === "negado") ? " no" : est === "borrador" ? " warn" : ""}">${EST[est] || est}</span>`;
+      return `<div class="item"><div class="item-top"><b>${esc(r.cliente || "Sin nombre")}</b>${pill}</div>
         <div class="item-mid">${detCot(r)}</div>
+        <div class="item-bot"><span>${f.toLocaleDateString("es-MX", { day: "numeric", month: "short" })} ${f.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}${isAdmin() ? " · Cotizó: " + esc(nameOf(r.por)) : ""}${r.editada ? " · Editada" : ""}</span>${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}</div>
         ${r.aceptadoPor ? `<div class="item-bot"><span class="pill ok">Confirmada por el cliente</span><span>${esc(r.aceptadoNombre || "")} · ${esc(r.aceptadoEmail || "")}</span></div>` : ""}
-        <div class="item-bot">${isAdmin() ? `<select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select><span>Cotizó: ${esc(nameOf(r.por))}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`
-          : `<span class="pill${est === "aceptado" ? " ok" : (est === "descartado" || est === "negado") ? " no" : ""}">${EST[est]}</span>${r.tipo === "auto" ? "" : `<button class="link" type="button" data-mk="${r.id}">Crear préstamo</button>`}`}
-        ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}${canDel(r) ? `<button class="link del" type="button" data-del="${r.id}">Borrar</button>` : ""}</div></div>`;
+        ${isAdmin() ? `<label class="inline">Estado <select data-cot="${r.id}" aria-label="Estado">${Object.entries(EST).map(([k, v]) => `<option value="${k}"${k === est ? " selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}
+        <div class="actions" style="margin-top:6px">${canEditCot(r) ? `<button class="btn sm${est === "borrador" ? " primary" : ""}" type="button" data-edcot="${r.id}">${est === "borrador" ? "Editar y enviar" : "Editar"}</button>` : ""}${r.tipo !== "auto" && est !== "borrador" ? `<button class="btn sm" type="button" data-mk="${r.id}">Crear préstamo</button>` : ""}${canDel(r) ? `<button class="btn sm danger" type="button" data-del="${r.id}">Borrar</button>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
   $("c-f") && ($("c-f").onchange = (e) => { FILT = e.target.value; vCotizaciones(); });
+  $("panel").querySelectorAll("[data-edcot]").forEach((b) => (b.onclick = () => editarCot(COTS.find((x) => x.id === b.dataset.edcot))));
   bindSolicitudes(vCotizaciones);
   const twice = (b, txt, fn) => (b.onclick = async () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = txt; return; } b.disabled = true; try { await fn(); } catch (e) { b.disabled = false; b.textContent = "No se pudo borrar"; } });
   $("panel").querySelectorAll("[data-del]").forEach((b) => twice(b, "Toca otra vez para borrar", () => deleteDoc(doc(db, "cotizaciones", b.dataset.del))));
