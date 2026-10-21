@@ -257,6 +257,15 @@ function bindPick(pre, form) {
 }
 
 /* ---------- Cotizar ---------- */
+let COV = "", COV_OK_ONCE = "";
+// Regla de garantía 2 a 1 (3 a 1 arriba de 12 meses): los colaboradores no pueden enviar si no se cumple; el administrador confirma con un segundo toque.
+function covGuard() {
+  if (!COV) return true;
+  const t = $("r-toast");
+  if (!isAdmin()) { t.textContent = COV + " Ajusta el monto o el valor para poder enviarla."; t.className = "toast err"; return false; }
+  if (COV_OK_ONCE === curKey + COV) return true;
+  COV_OK_ONCE = curKey + COV; t.className = "toast err"; t.textContent = COV + " Toca otra vez para enviarla de todos modos."; return false;
+}
 let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null, EDIT_COT = null, EDIT_PEND = false;
 function editarCot(c) {
   if (!canEditCot(c)) return;
@@ -282,7 +291,7 @@ function vCotizar() {
       <div class="row"><label for="q-gar">Garantía<select id="q-gar">${Object.entries(GARANTIAS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
       <label for="q-desc">Descripción<input id="q-desc" autocomplete="off" placeholder="Ej. Jetta 2019"></label></div>
       <div class="row"><label for="q-plazo">Plazo (meses)<input id="q-plazo" inputmode="numeric" value="12"></label>
-      <label for="q-val">Valor de la garantía (opcional)<input id="q-val" inputmode="numeric" placeholder="Ej. 250,000"></label></div>
+      <label for="q-val">Valor de la garantía<input id="q-val" inputmode="numeric" placeholder="Ej. 250,000"></label></div>
       <p class="cov" id="q-cov"></p>`
         : `<label for="q-sem">Número de semanas<input id="q-sem" inputmode="numeric" value="14"></label></div>
       <div class="row"><label for="q-fac">Pago semanal por cada $1,000<input id="q-fac" inputmode="decimal" value="100"></label>
@@ -310,9 +319,9 @@ function vCotizar() {
   $("fq").addEventListener("change", (e) => { if (e.target.id === "q-gar" || e.target.id === "q-plazo") { if (e.target.id === "q-gar") { $("q-desc").placeholder = { auto: "Ej. Jetta 2019", reloj: "Ej. Rolex Submariner", oro: "Ej. Esclava 14k, 30 g", monedas: "Ej. 5 centenarios", otro: "Describe la prenda", ff: "Garantía acordada (opcional)" }[e.target.value]; touched = false; applyCfg(); } } calc(); });
   $("fq").addEventListener("submit", (e) => e.preventDefault());
   bindPick("q", $("fq"));
-  $("b-wa").addEventListener("click", (e) => { if (!LAST) { e.preventDefault(); return; } saveCot(); });
+  $("b-wa").addEventListener("click", (e) => { if (!LAST || !covGuard()) { e.preventDefault(); return; } saveCot(); });
   $("b-img").onclick = () => {
-    if (!LAST) return;
+    if (!LAST || !covGuard()) return;
     if (!IMG.file || IMG.key !== IMG.want) { $("r-toast").textContent = "Preparando la imagen, toca otra vez en un segundo."; return; }
     saveCot();
     const f = IMG.file;
@@ -326,7 +335,7 @@ function vCotizar() {
     $("r-toast").textContent = ok ? "Guardada sin enviar. La encuentras en " + (isAdmin() ? "Cotizaciones" : "Mis cotizaciones") + " para editarla y enviarla después." : "No se pudo guardar. Revisa tu conexión.";
   };
   $("b-copy").onclick = () => {
-    if (!LAST) return; saveCot();
+    if (!LAST || !covGuard()) return; saveCot();
     const ok = () => ($("r-toast").textContent = "Cotización copiada. Pégala en el chat del cliente.");
     navigator.clipboard?.writeText(LAST.msg).then(ok, () => { $("r-msg").closest("details").open = true; $("r-toast").textContent = "Selecciona el mensaje y cópialo."; });
   };
@@ -362,6 +371,7 @@ function calc() {
     const c = corridaMensual(M, t, n), fx = factorGarantia(n), req = M * fx, cov = $("q-cov");
     const ff = g === "ff";
     $("q-val").closest("label").hidden = ff;
+    COV = ff || (val && val >= req) ? "" : !val ? `Falta el valor de la garantía. Para ${mxn(M)} a ${n} meses debe valer al menos ${mxn(req)} (${fx} a 1).` : `La garantía no cubre ${fx} a 1: para ${mxn(M)} a ${n} meses debe valer al menos ${mxn(req)}. Con ${mxn(val)} se puede prestar hasta ${mxn(Math.floor(val / fx))}.`;
     if (ff) { cov.className = "cov"; cov.textContent = "Friends & family: tasa preferencial y garantía acordada. No aplica la regla 2 a 1 / 3 a 1."; }
     else if (val) { const ok = val >= req; cov.className = "cov " + (ok ? "ok" : "bad"); cov.textContent = ok ? `Garantía suficiente (${fx} a 1). Con este valor puedes prestar hasta ${mxn(Math.floor(val / fx))}.` : `Garantía insuficiente: para ${mxn(M)} a ${n} meses debe valer al menos ${mxn(req)} (${fx} a 1). Con este valor puedes prestar hasta ${mxn(Math.floor(val / fx))}.`; }
     else { cov.className = "cov"; cov.textContent = `Para ${mxn(M)} a ${n} meses, la garantía debe valer al menos ${mxn(req)} (${fx} a 1).`; }
@@ -378,6 +388,7 @@ function calc() {
     r = { tipo: "semanal", monto: M, tasa: f, plazo: n, inicio: ini, pago: c.pago, total: c.total, intereses: c.intereses, msg, lbl: "Pago semanal",
       tbl: "<tr><th>Semana</th><th>Fecha</th><th>Pago</th><th>Resta</th></tr>" + c.filas.map((x) => `<tr><td>${x.n}</td><td>${fcorta(fechaPago(ini, x.n, "semanal"))}</td><td>${mxn2(x.pago)}</td><td>${mxn2(x.saldo)}</td></tr>`).join("") };
   }
+  if (MODE !== "garantia") COV = "";
   r.cliente = nom; r.telefono = tel10(tel);
   if (EDIT_COT) CUR_REF = doc(db, "cotizaciones", EDIT_COT.id);
   else { const { msg, tbl, lbl, ...dd } = r; const k = JSON.stringify(dd); if (k !== curKey || !CUR_REF || CUR_REF.id === (LAST_SENT || "")) { curKey = k; CUR_REF = doc(collection(db, "cotizaciones")); } }
@@ -386,6 +397,7 @@ function calc() {
   $("r-lbl").textContent = r.lbl; $("r-pago").textContent = mxn2(r.pago); $("r-m").textContent = mxn(r.monto); $("r-i").textContent = mxn(r.intereses); $("r-t").textContent = mxn(r.total);
   $("r-tbl").innerHTML = r.tbl; $("r-msg").textContent = r.msg; $("b-wa").href = waTo(tel, r.msg);
   prepImg(r);
+  if (!COV && $("r-toast").classList.contains("err")) { $("r-toast").className = "toast"; $("r-toast").textContent = ""; }
   function err(m) { LAST = null; $("r-err").hidden = false; $("r-err").textContent = m; }
 }
 /* ---------- Imagen de la corrida para mandar al cliente ---------- */
@@ -1084,21 +1096,38 @@ function solicitudCard() {
     <label for="s-uni">En<select id="s-uni"><option value="meses">Meses</option><option value="semanas">Semanas</option></select></label></div>
     <div class="row"><label for="s-gar">Garantía<select id="s-gar">${Object.entries(GARANTIAS).filter(([k]) => k !== "ff").map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}<option value="aval">Sin garantía (con aval)</option></select></label>
     <label for="s-desc">Descripción de la garantía<input id="s-desc" placeholder="Ej. Jetta 2019, Rolex Submariner"></label></div>
+    <label for="s-val" id="s-val-l">Valor de tu garantía<input id="s-val" inputmode="numeric" placeholder="Ej. 150,000"></label>
+    <p class="cov" id="s-cov">Tu garantía debe valer al menos el doble de lo que pides (2 a 1). Si el plazo es mayor a 12 meses, el triple (3 a 1).</p>
     <label for="s-nota">Comentarios (opcional)<input id="s-nota" placeholder="Ej. Lo necesito para el viernes"></label>
     <p class="err" id="s-err" hidden></p>
     <button class="btn primary" type="submit">Enviar solicitud por WhatsApp</button></form>`;
 }
 function solicitudForm() {
   const f = $("sol"); if (!f) return;
-  $("s-monto").addEventListener("input", (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; });
+  ["s-monto", "s-val"].forEach((id) => $(id).addEventListener("input", (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; }));
+  const meses = () => { const n = parseInt($("s-plazo").value, 10) || 0; return $("s-uni").value === "semanas" ? Math.ceil(n / 4.33) : n; };
+  const cob = () => {
+    const g = $("s-gar").value, aval = g === "aval", m = num($("s-monto").value), v = num($("s-val").value), fx = factorGarantia(meses()), req = m * fx, box = $("s-cov");
+    $("s-val-l").hidden = aval; $("s-desc").closest("label").hidden = aval; box.hidden = aval;
+    if (aval) { $("s-uni").value = "semanas"; return ""; }
+    if (!m) return "Escribe el monto.";
+    if (!v) { box.className = "cov"; box.textContent = `Para ${mxn(m)} tu garantía debe valer al menos ${mxn(req)} (${fx} a 1).`; return `Escribe cuánto vale tu garantía: debe ser al menos ${mxn(req)} (${fx} a 1).`; }
+    if (v >= req) { box.className = "cov ok"; box.textContent = `Tu garantía cubre el préstamo (${fx} a 1).`; return ""; }
+    box.className = "cov bad"; box.textContent = `Tu garantía no alcanza: debe valer al menos ${mxn(req)} (${fx} a 1), porque pedimos que valga ${fx === 2 ? "el doble" : "el triple"} del préstamo. Con ${mxn(v)} puedes pedir hasta ${mxn(Math.floor(v / fx / 1000) * 1000)}.`;
+    return `Tu garantía debe valer al menos ${mxn(req)} (${fx} a 1). Ajusta el monto o el valor de tu garantía.`;
+  };
+  ["s-monto", "s-val", "s-plazo", "s-uni", "s-gar"].forEach((id) => $(id).addEventListener(id === "s-gar" || id === "s-uni" ? "change" : "input", cob));
+  cob();
   f.onsubmit = (e) => {
     e.preventDefault();
     const m = num($("s-monto").value), n = parseInt($("s-plazo").value, 10) || 0, g = $("s-gar").value;
     if (!m || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe el monto y el plazo."; return; }
-    const gar = g === "aval" ? "Sin garantía (con aval)" : GARANTIAS[g] + ($("s-desc").value.trim() ? ": " + $("s-desc").value.trim() : "");
+    const ce = cob(); if (ce) { $("s-err").hidden = false; $("s-err").textContent = ce; return; }
+    $("s-err").hidden = true;
+    const gar = g === "aval" ? "Sin garantía (con aval)" : GARANTIAS[g] + ($("s-desc").value.trim() ? ": " + $("s-desc").value.trim() : "") + " (valor " + mxn(num($("s-val").value)) + ")";
     const msg = `Hola, quiero solicitar ${PRES.length ? "otro " : "un "}préstamo.\n\nNombre: ${USER.nombre || ""}\nCorreo: ${ME.email || ""}${USER.telefono ? "\nWhatsApp: " + USER.telefono : ""}\nMonto: ${mxn(m)}\nPlazo: ${n} ${$("s-uni").value}\nPagos: ${$("s-uni").value === "semanas" ? "semanales" : "mensuales"}\nGarantía: ${gar}${$("s-nota").value.trim() ? "\nComentarios: " + $("s-nota").value.trim() : ""}`;
     avisar("Nueva solicitud de préstamo", `${mxn(m)} a ${n} ${$("s-uni").value} (cliente con cuenta). Ábrela en la app.`);
-    addDoc(collection(db, "solicitudes"), { nombre: (USER.nombre || "").slice(0, 80), telefono: USER.telefono || "", monto: m, plazo: n, unidad: $("s-uni").value, garantia: g, desc: $("s-desc").value.trim().slice(0, 200), valor: 0, nota: $("s-nota").value.trim().slice(0, 300), fecha: new Date().toISOString(), origen: "cliente", uid: ME.uid, email: (ME.email || "").toLowerCase(), estado: "nueva" }).catch(() => {});
+    addDoc(collection(db, "solicitudes"), { nombre: (USER.nombre || "").slice(0, 80), telefono: USER.telefono || "", monto: m, plazo: n, unidad: $("s-uni").value, garantia: g, desc: $("s-desc").value.trim().slice(0, 200), valor: g === "aval" ? 0 : num($("s-val").value), nota: $("s-nota").value.trim().slice(0, 300), fecha: new Date().toISOString(), origen: "cliente", uid: ME.uid, email: (ME.email || "").toLowerCase(), estado: "nueva" }).catch(() => {});
     window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
   };
 }

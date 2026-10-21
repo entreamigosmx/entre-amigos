@@ -154,3 +154,4 @@ details.rep{border-top:1px solid var(--line);padding-top:10px}
 .step{margin:4px 0 -4px;font:700 13px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
 label.inline{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
 label.inline select{width:auto;font-size:14px;padding:5px 8px}
+.toast.err{color:var(--warn)}

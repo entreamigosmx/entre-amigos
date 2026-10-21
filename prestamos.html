@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=2">
+<link rel="stylesheet" href="css/estilo.css?v=6">
 </head>
 <body>
 <header class="top g"><div class="in">
@@ -36,12 +36,19 @@
       <p class="muted" style="margin:0">Llena estos datos y te mandamos tu cotización por WhatsApp.</p>
       <div class="row2"><label for="s-nom">Nombre<input id="s-nom" autocomplete="name" placeholder="Tu nombre"></label>
       <label for="s-tel">WhatsApp<input id="s-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label></div>
-      <label for="s-monto">Monto que necesitas<input id="s-monto" inputmode="numeric" autocomplete="off" placeholder="Ej. 50,000"></label>
-      <div class="row2"><label for="s-plazo">Plazo<input id="s-plazo" inputmode="numeric" autocomplete="off" placeholder="Ej. 3"></label>
-      <label for="s-uni">En<select id="s-uni"><option value="meses">Meses (pagos mensuales)</option><option value="semanas">Semanas (pagos semanales)</option></select></label></div>
-      <div class="row2"><label for="s-gar">Garantía<select id="s-gar"><option value="auto">Auto</option><option value="reloj">Reloj</option><option value="oro">Oro</option><option value="monedas">Monedas</option><option value="otro">Otra prenda</option><option value="aval">Sin garantía (con aval)</option></select></label>
-      <label for="s-val">Valor aproximado (opcional)<input id="s-val" inputmode="numeric" autocomplete="off" placeholder="Ej. 250,000"></label></div>
-      <label for="s-desc">Descripción de la garantía<input id="s-desc" autocomplete="off" placeholder="Ej. Jetta 2019, Rolex Submariner, 5 centenarios"></label>
+      <fieldset class="tipo-p"><legend>¿Qué tipo de préstamo buscas?</legend>
+        <label class="opt-p"><input type="radio" name="tipo" value="garantia" checked><span><b>Con garantía · pagos mensuales</b>Dejas en garantía tu auto, reloj, oro, monedas u otra prenda.</span></label>
+        <label class="opt-p"><input type="radio" name="tipo" value="semanal"><span><b>Semanal con aval · pagos semanales</b>Sin garantía, con un aval que firme contigo.</span></label>
+      </fieldset>
+      <div class="row2"><label for="s-monto">Monto que necesitas<input id="s-monto" inputmode="numeric" autocomplete="off" placeholder="Ej. 50,000"></label>
+      <label for="s-plazo"><span id="s-plazo-l">Plazo en meses</span><input id="s-plazo" inputmode="numeric" autocomplete="off" placeholder="Ej. 6"></label></div>
+      <div id="s-gar-box" class="gbox">
+        <div class="row2"><label for="s-gar">Garantía<select id="s-gar"><option value="auto">Auto</option><option value="reloj">Reloj</option><option value="oro">Oro</option><option value="monedas">Monedas</option><option value="otro">Otra prenda</option></select></label>
+        <label for="s-val">Valor de tu garantía<input id="s-val" inputmode="numeric" autocomplete="off" placeholder="Ej. 150,000"></label></div>
+        <label for="s-desc">Descripción de la garantía<input id="s-desc" autocomplete="off" placeholder="Ej. Jetta 2019, Rolex Submariner, 5 centenarios"></label>
+        <p class="cov" id="s-cov">Tu garantía debe valer al menos el doble de lo que pides (2 a 1). Si el plazo es mayor a 12 meses, el triple (3 a 1).</p>
+      </div>
+      <p class="note" id="s-aval" hidden style="margin:0">Requisitos: aval, pagaré, INE vigente y comprobante de domicilio.</p>
       <label for="s-nota">Comentarios (opcional)<input id="s-nota" autocomplete="off" placeholder="Ej. Lo necesito para el viernes"></label>
       <p class="err" id="s-err" hidden></p>
       <button class="btn primary" type="submit">Enviar solicitud por WhatsApp</button>
@@ -61,8 +68,31 @@ const GAR = { auto: "Auto", reloj: "Reloj", oro: "Oro", monedas: "Monedas", otro
 const num = (v) => Number(String(v || "").replace(/[^0-9.]/g, "")) || 0;
 const fmt = (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; };
 $("s-monto").addEventListener("input", fmt); $("s-val").addEventListener("input", fmt);
-const aval = () => { const a = $("s-gar").value === "aval"; $("s-val").closest("label").hidden = a; $("s-desc").closest("label").hidden = a; };
-$("s-gar").addEventListener("change", aval); aval();
+const tipo = () => document.querySelector('input[name="tipo"]:checked').value;
+const factor = (meses) => (meses > 12 ? 3 : 2);
+// Regla de garantía: 2 a 1 hasta 12 meses, 3 a 1 si el plazo es mayor.
+function cobertura() {
+  const m = num($("s-monto").value), n = parseInt($("s-plazo").value, 10) || 0, v = num($("s-val").value), box = $("s-cov");
+  if (tipo() !== "garantia") return { ok: true };
+  const fx = factor(n), req = m * fx, max = Math.floor(v / fx / 1000) * 1000;
+  if (!m) { box.className = "cov"; box.textContent = "Tu garantía debe valer al menos el doble de lo que pides (2 a 1). Si el plazo es mayor a 12 meses, el triple (3 a 1)."; return { ok: false }; }
+  if (!v) { box.className = "cov"; box.textContent = `Para pedir $${m.toLocaleString("es-MX")}${n ? " a " + n + " meses" : ""}, tu garantía debe valer al menos $${req.toLocaleString("es-MX")} (${fx} a 1). Escribe cuánto vale.`; return { ok: false, req, fx }; }
+  if (v >= req) { box.className = "cov ok"; box.textContent = `Tu garantía cubre el préstamo (${fx} a 1).`; return { ok: true, req, fx }; }
+  box.className = "cov bad";
+  box.innerHTML = `Tu garantía no alcanza. Para $${m.toLocaleString("es-MX")}${n ? " a " + n + " meses" : ""} debe valer al menos <b>$${req.toLocaleString("es-MX")}</b> (${fx} a 1), porque pedimos que la garantía valga ${fx === 2 ? "el doble" : "el triple"} del préstamo.` + (max > 0 ? ` Con una garantía de $${v.toLocaleString("es-MX")} puedes pedir hasta <b>$${max.toLocaleString("es-MX")}</b>. <button type="button" class="link" id="s-fit">Pedir $${max.toLocaleString("es-MX")}</button>` : "");
+  const fit = document.getElementById("s-fit"); if (fit) fit.onclick = () => { $("s-monto").value = max.toLocaleString("es-MX"); cobertura(); };
+  return { ok: false, req, fx, max };
+}
+function cambiaTipo() {
+  const g = tipo() === "garantia";
+  $("s-gar-box").hidden = !g; $("s-aval").hidden = g;
+  $("s-plazo-l").textContent = g ? "Plazo en meses" : "Plazo en semanas";
+  $("s-plazo").placeholder = g ? "Ej. 6" : "Ej. 14";
+  cobertura();
+}
+document.querySelectorAll('input[name="tipo"]').forEach((r) => r.addEventListener("change", cambiaTipo));
+["s-monto", "s-plazo", "s-val"].forEach((id) => $(id).addEventListener("input", cobertura));
+cambiaTipo();
 // Guarda la solicitud en la app de préstamos para responderla desde ahí.
 let guardar = null;
 Promise.all([
@@ -75,8 +105,13 @@ Promise.all([
 }).catch(() => {});
 $("sol").addEventListener("submit", (e) => {
   e.preventDefault();
-  const nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = $("s-uni").value, g = $("s-gar").value;
-  if (!nom || !monto || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe tu nombre, el monto y el plazo."; return; }
+  const nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = tipo() === "semanal" ? "semanas" : "meses", g = tipo() === "semanal" ? "aval" : $("s-gar").value;
+  const fail = (t) => { $("s-err").hidden = false; $("s-err").textContent = t; $("s-err").scrollIntoView({ block: "center" }); };
+  if (!nom || !monto || !n) return fail("Escribe tu nombre, el monto y el plazo.");
+  if (g !== "aval") {
+    if (!num($("s-val").value)) return fail("Escribe cuánto vale tu garantía.");
+    const c = cobertura(); if (!c.ok) return fail(`Tu garantía debe valer al menos $${c.req.toLocaleString("es-MX")} (${c.fx} a 1) para este préstamo. Ajusta el monto o el valor de tu garantía.`);
+  }
   $("s-err").hidden = true;
   const tel = $("s-tel").value.replace(/\D/g, "").slice(-10), desc = g === "aval" ? "" : $("s-desc").value.trim(), val = g === "aval" ? 0 : num($("s-val").value), nota = $("s-nota").value.trim();
   const L = ["Hola, quiero solicitar un préstamo.", "", "Nombre: " + nom];

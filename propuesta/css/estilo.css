@@ -342,3 +342,15 @@ details.ficha .desc{margin:0;padding:0 18px 18px}
 
 .aviso-sim{border:1px solid var(--warn);background:rgba(255,210,122,.08);color:var(--ink);border-radius:12px;padding:14px 16px;font-size:15px;margin-bottom:var(--gap)}
 .aviso-sim b{color:var(--warn)}
+.aviso-sim b{color:var(--warn)}
+.tipo-p{border:0;margin:0;padding:0;display:grid;gap:8px}
+.tipo-p legend{font-size:14px;font-weight:600;color:var(--soft);margin-bottom:6px;padding:0}
+.opt-p{display:flex;gap:12px;align-items:flex-start;background:var(--panel-2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;font-weight:400}
+.opt-p:has(input:checked){border-color:var(--lime);background:rgba(182,226,31,.07)}
+.opt-p input{width:20px;height:20px;margin-top:2px;accent-color:var(--lime);flex:none}
+.opt-p span{display:grid;gap:2px;color:var(--muted);font-size:14px}.opt-p b{color:var(--ink);font-size:16px}
+.gbox{display:grid;gap:14px}
+.cov{font-size:14px;color:var(--soft);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0}
+.cov.ok{border-color:var(--lime);color:var(--ink)}
+.cov.bad{border-color:var(--warn);color:var(--ink)}
+.cov .link{background:none;border:0;padding:0;color:var(--lime);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
