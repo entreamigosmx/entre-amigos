@@ -230,7 +230,9 @@ footer a{color:var(--soft)}
   .hero .in>*{max-width:min(640px,calc(100vw - 560px))}
 }
 
-/* ===== v3: qué necesitas, simulador, ficha, filtros ===== */
+/* ===== Propuesta ===== */
+.preview-bar{background:var(--warn);color:#1a1400;font-size:14px;font-weight:600;text-align:center;padding:8px 16px}
+.preview-bar a{color:#1a1400}
 /* tarjeta con acciones */
 .car{display:flex;flex-direction:column}
 .car .cl{display:grid;grid-template-rows:auto 1fr;text-decoration:none;color:inherit;flex:1}
@@ -340,6 +342,7 @@ details.ficha .desc{margin:0;padding:0 18px 18px}
 
 .aviso-sim{border:1px solid var(--warn);background:rgba(255,210,122,.08);color:var(--ink);border-radius:12px;padding:14px 16px;font-size:15px;margin-bottom:var(--gap)}
 .aviso-sim b{color:var(--warn)}
+.aviso-sim b{color:var(--warn)}
 .tipo-p{border:0;margin:0;padding:0;display:grid;gap:8px}
 .tipo-p legend{font-size:14px;font-weight:600;color:var(--soft);margin-bottom:6px;padding:0}
 .opt-p{display:flex;gap:12px;align-items:flex-start;background:var(--panel-2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;font-weight:400}
@@ -351,3 +354,85 @@ details.ficha .desc{margin:0;padding:0 18px 18px}
 .cov.ok{border-color:var(--lime);color:var(--ink)}
 .cov.bad{border-color:var(--warn);color:var(--ink)}
 .cov .link{background:none;border:0;padding:0;color:var(--lime);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+/* Vender mi auto */
+.vsteps{display:grid;gap:var(--gap)}
+.vstep{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,3vw,26px);display:grid;gap:14px}
+.vstep h2{font-size:clamp(24px,4vw,30px);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vstep h2>span{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--lime);color:var(--lime-ink);font-size:18px}
+.vstep h2 small{font:600 14px var(--body);color:var(--warn);margin-left:auto}
+.vstep h2 small.ok{color:var(--lime)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.slots.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.slot{display:grid;gap:6px;cursor:pointer;font-weight:600;color:var(--soft);font-size:13px;line-height:1.25;text-align:center}
+.slot .ph{aspect-ratio:4/3;border-radius:10px;border:1.5px dashed #4a5045;background:var(--panel-2) center/cover no-repeat;display:grid;place-items:center;position:relative}
+.slot .ph::after{content:"+";font:300 30px var(--body);color:var(--muted)}
+.slot.done .ph{border:2px solid var(--lime)}
+.slot.done .ph::after{content:"✓";position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:var(--lime);color:var(--lime-ink);font:700 14px/22px var(--body);text-align:center}
+.slot.busy .ph{opacity:.5}
+.slot.extra{grid-template-columns:auto 1fr;align-items:center;text-align:left}
+.slot.extra .ph{width:64px;aspect-ratio:1}
+.extras{display:flex;flex-wrap:wrap;gap:8px}.extras .ph{width:64px;height:64px;border-radius:8px;background:center/cover}
+.chk2{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;color:var(--soft)}.chk2 input{width:22px;height:22px;flex:none;accent-color:var(--lime);margin-top:1px}
+.prog{position:relative;height:30px;border-radius:8px;background:var(--panel-2);overflow:hidden}
+.prog i{position:absolute;inset:0 auto 0 0;width:0;background:rgba(182,226,31,.35);transition:width .3s}
+.prog span{position:relative;display:block;text-align:center;line-height:30px;font-size:14px;font-weight:600}
+#v-done{background:var(--panel);border:1px solid var(--lime);border-radius:var(--r);padding:24px;display:grid;gap:14px}
+.sellcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,3vw,26px);display:grid;gap:14px;align-content:start}
+/* Categorías rápidas */
+.catchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:-8px 0 18px;scrollbar-width:none}
+.catchips::-webkit-scrollbar{display:none}
+.catchips a{flex:none;text-decoration:none;font:600 15px var(--body);color:var(--soft);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 16px}
+.catchips a:last-child{border-color:var(--lime);color:var(--lime)}
+.swipe-hint{display:none}
+/* ===== Celular: menos texto, más visual ===== */
+@media (max-width:760px){
+  section.blk{padding-block:44px}
+  section.blk.tight{padding-block:36px}
+  .head{gap:6px;margin-bottom:18px}
+  .head .lead,.head-row .head .lead{display:none}
+  .head h2{font-size:34px}
+  .head-row{margin-bottom:14px}
+  .head-row>.btn{display:none}
+  /* Portada a pantalla completa con lo esencial */
+  .hero .in{min-height:calc(100svh - 120px);align-content:end;padding-block:40px 34px;gap:16px}
+  .hero .lead,.hero .trust{display:none}
+  .hero h1{font-size:46px}
+  .hero .motto{font-size:20px}
+  .hero .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hero .btns .btn{padding:12px 10px}
+  /* Autos en carrusel deslizable */
+  .cars.swipe{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin-inline:-16px;padding:0 16px 6px;scrollbar-width:none}
+  .cars.swipe::-webkit-scrollbar{display:none}
+  .cars.swipe>*{flex:0 0 84%;scroll-snap-align:center}
+  .cars.swipe .skel{min-height:380px}
+  .swipe-hint{display:block;text-align:center;font-size:13px;color:var(--muted);margin:8px 0 0}
+  /* Opciones y razones: solo icono y título */
+  .need{gap:10px}
+  .need a{padding:16px;gap:6px}
+  .need span{display:none}
+  .need b{font-size:16px}
+  .why{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .why div{padding-top:10px;gap:4px}
+  .why h3{font-size:19px}
+  .why p{font-size:13px;line-height:1.35}
+  .quote{font-size:22px}
+  /* Servicios en cuadrícula compacta */
+  .svc{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .svc div{padding:14px}
+  .svc p{display:none}
+  .svc h3{font-size:16px}
+  .sellcard ol{display:none}
+  .cta-fin{padding:20px}
+  .cta-fin .lead{display:none}
+  .cta-fin .btn{width:100%}
+  .loan-link p{font-size:15px}
+}
+@media (max-width:760px){
+  .why p{display:none}
+  .why h3{font-size:17px}
+  .sellways{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none;font-size:0}
+  .sellways li{margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+  .sellways li::before{display:none}
+  .sellways b{font-size:15px}
+  .sellcard h3{display:none}
+}
