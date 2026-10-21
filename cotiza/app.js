@@ -8,14 +8,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido, desglosePagos } from "./calc.js?v=8";
 
-const app = initializeApp({
+const CONF = {
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
   authDomain: "entre-amigos-financiera.firebaseapp.com",
   projectId: "entre-amigos-financiera",
   storageBucket: "entre-amigos-financiera.firebasestorage.app",
   messagingSenderId: "244817036834",
   appId: "1:244817036834:web:7dd1a54f4825a318a2ac7b",
-});
+};
+const app = initializeApp(CONF);
 const auth = getAuth(app);
 auth.languageCode = "es";
 // Al confirmar el correo o cambiar la contraseña, el cliente regresa directo a la app.
@@ -1281,6 +1282,9 @@ function vPersonas() {
     <div class="item"><div class="item-top"><b>Colaboradores</b><span>${esc(linkC)}</span></div>
       <div class="actions"><a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mE)}">Mandar por WhatsApp</a><button class="btn sm" type="button" data-cp="e">Copiar enlace</button></div></div>
   </div>
+  <form class="card" id="bc-f" novalidate><h2>Borrar una cuenta</h2><p class="muted" style="margin:0">Borra por completo el acceso, el perfil y los documentos de una persona para que pueda registrarse de nuevo. Sus préstamos y cotizaciones se conservan. La primera vez Google te pide permiso con tu cuenta de administrador.</p>
+    <div class="row"><label for="bc-mail">Correo de la cuenta<input id="bc-mail" type="email" inputmode="email" placeholder="cliente@correo.com"></label><button class="btn danger" type="submit" id="bc-b" style="align-self:end">Borrar cuenta</button></div>
+    <p class="toast" id="bc-t"></p></form>
   <div class="card"><h2>Personas</h2><div class="list">${list.length ? list.map((u) => `<div class="item">
     <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}</b><span>${esc(u.email)}</span></div>
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
@@ -1299,14 +1303,54 @@ function vPersonas() {
   $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
   if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true);
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
-  // Borra los datos de la persona en la app (perfil y documentos). Sus préstamos y cotizaciones se conservan.
-  $("panel").querySelectorAll("[data-udel]").forEach((b) => (b.onclick = async () => {
-    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: se borra su cuenta y podrá registrarse de nuevo"; return; }
-    b.disabled = true; const uid = b.dataset.udel, u = USERS.find((x) => x.uid === uid) || {};
-    if (u.email) await setDoc(doc(db, "borrados", u.email.toLowerCase()), { fecha: new Date().toISOString(), nombre: u.nombre || "" }).catch(() => {});
-    await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", uid, "archivos", k)).catch(() => {})));
-    await deleteDoc(doc(db, "usuarios", uid)).catch(() => { b.disabled = false; b.textContent = "No se pudo borrar"; });
+  // Borrar una cuenta por completo: acceso (usuario y contraseña), perfil y documentos. Sus préstamos y cotizaciones se conservan.
+  $("panel").querySelectorAll("[data-udel]").forEach((b) => (b.onclick = () => {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para borrar su cuenta"; return; }
+    const u = USERS.find((x) => x.uid === b.dataset.udel) || {};
+    borrarCuenta(u.email, u.uid, b);
   }));
+  $("bc-f").onsubmit = (e) => { e.preventDefault(); const m = $("bc-mail").value.trim().toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(m)) { $("bc-t").textContent = "Escribe un correo válido."; return; } borrarCuenta(m, (USERS.find((x) => (x.email || "").toLowerCase() === m) || {}).uid, $("bc-b")); };
+}
+// Permiso temporal de Google (1 hora) para que el administrador borre accesos desde la app, sin entrar a Firebase.
+let GTOKEN = null, GTOKEN_T = 0, ADM_APP = null;
+async function tokenAdmin() {
+  if (GTOKEN && Date.now() - GTOKEN_T < 50 * 60e3) return GTOKEN;
+  ADM_APP = ADM_APP || initializeApp(CONF, "permiso");
+  const a2 = getAuth(ADM_APP), p = new GoogleAuthProvider();
+  p.addScope("https://www.googleapis.com/auth/cloud-platform");
+  p.setCustomParameters({ login_hint: ADMINS[0], prompt: "select_account" });
+  const r = await signInWithPopup(a2, p);
+  const tk = GoogleAuthProvider.credentialFromResult(r)?.accessToken, mail = (r.user.email || "").toLowerCase();
+  signOut(a2).catch(() => {});
+  if (!ADMINS.includes(mail)) throw Object.assign(new Error("cuenta"), { code: "otra-cuenta" });
+  GTOKEN = tk; GTOKEN_T = Date.now(); return tk;
+}
+async function idt(path, body, tk) {
+  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${CONF.projectId}/${path}`, { method: "POST", headers: { Authorization: "Bearer " + tk, "Content-Type": "application/json", "X-Goog-User-Project": CONF.projectId }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(j.error?.message || "error"), { code: j.error?.message || r.status }); return j;
+}
+async function borrarCuenta(email, uid, btn) {
+  const t = $("bc-t"), msg = (x) => { if (t) t.textContent = x; };
+  const tkP = tokenAdmin(); // se pide primero para que el iPad no bloquee la ventana de Google
+  if (btn) { btn.disabled = true; btn.textContent = "Borrando…"; }
+  let acceso = false;
+  try {
+    const tk = await tkP;
+    if (email) {
+      const L = await idt("accounts:lookup", { email: [email] }, tk);
+      for (const us of L.users || []) { await idt("accounts:delete", { localId: us.localId }, tk); acceso = true; uid = uid || us.localId; }
+    }
+  } catch (e) {
+    msg(e.code === "otra-cuenta" ? "Elige tu cuenta de administrador en la ventana de Google." : e.code === "auth/popup-closed-by-user" ? "Cerraste la ventana de Google; el acceso no se borró." : "No se pudo borrar el acceso con Google (" + (e.code || e.message) + "). Se marcó para borrarse cuando la persona vuelva a entrar.");
+  }
+  if (email) await setDoc(doc(db, "borrados", email.toLowerCase()), { fecha: new Date().toISOString() }).catch(() => {});
+  if (uid) {
+    await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", uid, "archivos", k)).catch(() => {})));
+    await deleteDoc(doc(db, "usuarios", uid)).catch(() => {});
+  }
+  if (acceso) { await deleteDoc(doc(db, "borrados", email.toLowerCase())).catch(() => {}); msg(`Listo: la cuenta de ${email} quedó borrada por completo. Ya puede registrarse de nuevo.`); }
+  if (btn) { btn.disabled = false; btn.textContent = btn.id === "bc-b" ? "Borrar cuenta" : "Borrar registro"; btn.dataset.sure = ""; }
+  if ($("bc-mail") && acceso) $("bc-mail").value = "";
 }
 
 /* ---------- Tasas (admin) ---------- */
