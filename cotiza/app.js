@@ -273,8 +273,10 @@ function vCotizar() {
     <div class="big"><span id="r-lbl">Pago</span><b id="r-pago">$0</b></div>
     <div class="facts"><div><span>Prestado</span><b id="r-m">$0</b></div><div><span>Intereses</span><b id="r-i">$0</b></div><div><span>Total a pagar</span><b id="r-t">$0</b></div></div>
     <p class="err" id="r-err" hidden></p>
-    <div class="actions"><a class="btn primary" id="b-wa" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a><button class="btn" type="button" id="b-copy">Copiar</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="b-img">Enviar con imagen de la corrida</button><a class="btn" id="b-wa" href="#" target="_blank" rel="noopener">Solo texto por WhatsApp</a><button class="btn" type="button" id="b-copy">Copiar</button></div>
+    <p class="note" style="margin:0">"Enviar con imagen" abre el menú de compartir de tu iPhone: elige WhatsApp y luego al cliente. Le llega la imagen con la corrida y el mensaje.</p>
     <p class="toast" id="r-toast"></p>
+    <details><summary>Ver imagen que se envía</summary><img id="r-img" alt="Imagen de la cotización" style="width:100%;border-radius:10px;margin-top:8px"></details>
     <details><summary>Ver corrida completa</summary><div class="tbl"><table id="r-tbl"></table></div></details>
     <details><summary>Mensaje que se envía</summary><pre id="r-msg"></pre></details>
     <p class="note">Las cotizaciones que envías o copias se guardan en tu historial.</p>
@@ -286,6 +288,14 @@ function vCotizar() {
   $("fq").addEventListener("submit", (e) => e.preventDefault());
   bindPick("q", $("fq"));
   $("b-wa").addEventListener("click", (e) => { if (!LAST) { e.preventDefault(); return; } saveCot(); });
+  $("b-img").onclick = () => {
+    if (!LAST) return;
+    if (!IMG.file || IMG.key !== IMG.want) { $("r-toast").textContent = "Preparando la imagen, toca otra vez en un segundo."; return; }
+    saveCot();
+    const f = IMG.file;
+    if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], text: LAST.msg }).catch(() => {});
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); $("r-toast").textContent = "Se descargó la imagen. Mándala por WhatsApp junto con el mensaje (botón Solo texto)."; }
+  };
   $("b-copy").onclick = () => {
     if (!LAST) return; saveCot();
     const ok = () => ($("r-toast").textContent = "Cotización copiada. Pégala en el chat del cliente.");
@@ -333,7 +343,85 @@ function calc() {
   LAST = r; $("r-err").hidden = true;
   $("r-lbl").textContent = r.lbl; $("r-pago").textContent = mxn2(r.pago); $("r-m").textContent = mxn(r.monto); $("r-i").textContent = mxn(r.intereses); $("r-t").textContent = mxn(r.total);
   $("r-tbl").innerHTML = r.tbl; $("r-msg").textContent = r.msg; $("b-wa").href = waTo(tel, r.msg);
+  prepImg(r);
   function err(m) { LAST = null; $("r-err").hidden = false; $("r-err").textContent = m; }
+}
+/* ---------- Imagen de la corrida para mandar al cliente ---------- */
+let IMG = { key: "", want: "", file: null }, imgT = null, LOGO = null;
+function prepImg(r) {
+  const key = JSON.stringify([r.tipo, r.monto, r.tasa, r.plazo, r.inicio, r.cliente, r.garantia, r.desc]);
+  IMG.want = key; clearTimeout(imgT);
+  imgT = setTimeout(async () => {
+    try {
+      const blob = await corridaPNG(r);
+      if (IMG.want !== key) return;
+      IMG = { key, want: key, file: new File([blob], "cotizacion-entre-amigos.png", { type: "image/png" }) };
+      const el = $("r-img"); if (el) { if (el.src.startsWith("blob:")) URL.revokeObjectURL(el.src); el.src = URL.createObjectURL(blob); }
+    } catch (e) {}
+  }, 250);
+}
+function loadLogo() {
+  if (LOGO) return LOGO;
+  LOGO = new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = "../assets/img/logo-mark.png"; });
+  return LOGO;
+}
+async function corridaPNG(r) {
+  const sem = r.tipo === "semanal";
+  const c = sem ? corridaSemanal(r.monto, r.plazo, r.tasa) : corridaMensual(r.monto, r.tasa, r.plazo);
+  const rows = c.filas, W = 1080, P = 60, RH = 46, head = 600, foot = 170;
+  const H = head + 60 + rows.length * RH + foot;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d");
+  if (!g.roundRect) g.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+  const F = "-apple-system, 'Helvetica Neue', Arial, sans-serif";
+  const LIME = "#b6e21f", INK = "#f2f2ee", MUTED = "#9a9d94", PANEL = "#16181a", LINE = "#2a2d2a";
+  g.fillStyle = "#0a0b0a"; g.fillRect(0, 0, W, H);
+  const logo = await loadLogo();
+  let x = P;
+  if (logo) { const h = 64, w = (logo.width / logo.height) * h; g.drawImage(logo, P, 52, w, h); x = P + w + 18; }
+  g.fillStyle = INK; g.font = `800 46px ${F}`; g.fillText("ENTRE", x, 100); const wE = g.measureText("ENTRE ").width;
+  g.fillStyle = LIME; g.fillText("AMIGOS", x + wE, 100);
+  g.fillStyle = MUTED; g.font = `500 26px ${F}`; g.textAlign = "right";
+  g.fillText(new Date().toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }), W - P, 96); g.textAlign = "left";
+  g.fillStyle = INK; g.font = `700 40px ${F}`; g.fillText("Cotización de préstamo", P, 190);
+  if (r.cliente) { g.fillStyle = MUTED; g.font = `500 30px ${F}`; g.fillText("Para: " + r.cliente, P, 236); }
+  // tarjetas
+  const box = (bx, by, bw, lbl, val, hl) => {
+    g.fillStyle = PANEL; g.beginPath(); g.roundRect(bx, by, bw, 140, 18); g.fill();
+    g.fillStyle = MUTED; g.font = `600 24px ${F}`; g.fillText(lbl.toUpperCase(), bx + 26, by + 46);
+    g.fillStyle = hl ? LIME : INK; g.font = `800 ${hl ? 46 : 40}px ${F}`; g.fillText(val, bx + 26, by + 108);
+  };
+  const bw = (W - 2 * P - 40) / 3;
+  box(P, 280, bw, "Monto", mxn(r.monto));
+  box(P + bw + 20, 280, bw, sem ? "Pago semanal" : "Pago mensual", mxn2(c.pago), true);
+  box(P + 2 * (bw + 20), 280, bw, "Total a pagar", mxn2(c.total));
+  g.fillStyle = INK; g.font = `500 28px ${F}`;
+  const det = sem ? `${r.plazo} pagos semanales` : `${r.plazo} pagos mensuales · interés ${r.tasa}% mensual sobre saldo`;
+  g.fillText(det, P, 480);
+  if (!sem && r.garantia && r.garantia !== "ff") { g.fillStyle = MUTED; g.fillText("Garantía: " + (r.desc || GARANTIAS[r.garantia] || ""), P, 524); }
+  // tabla
+  const cols = sem ? [["Semana", 0.14, "l"], ["Fecha", 0.40, "l"], ["Pago", 0.23, "r"], ["Resta", 0.23, "r"]]
+    : [["Mes", 0.10, "l"], ["Pago", 0.24, "r"], ["Interés", 0.22, "r"], ["Capital", 0.22, "r"], ["Saldo", 0.22, "r"]];
+  const TW = W - 2 * P; let ty = head;
+  g.fillStyle = LIME; g.beginPath(); g.roundRect(P, ty, TW, 56, 12); g.fill();
+  const cellX = (i) => P + 20 + cols.slice(0, i).reduce((s, k) => s + k[1], 0) * (TW - 40);
+  const cellR = (i) => cellX(i) + cols[i][1] * (TW - 40);
+  g.fillStyle = "#11140a"; g.font = `700 24px ${F}`;
+  cols.forEach((k, i) => { g.textAlign = k[2] === "r" ? "right" : "left"; g.fillText(k[0].toUpperCase(), k[2] === "r" ? cellR(i) : cellX(i), ty + 37); });
+  ty += 60;
+  rows.forEach((f, j) => {
+    if (j % 2 === 0) { g.fillStyle = PANEL; g.fillRect(P, ty, TW, RH); }
+    g.fillStyle = INK; g.font = `500 25px ${F}`;
+    const vals = sem ? [String(f.n), r.inicio ? fcorta(fechaPago(r.inicio, f.n, "semanal")) : "", mxn2(f.pago), mxn2(f.saldo)]
+      : [String(f.n), mxn2(f.pago), mxn2(f.interes), mxn2(f.capital), mxn2(f.saldo)];
+    vals.forEach((v, i) => { g.textAlign = cols[i][2] === "r" ? "right" : "left"; g.fillText(v, cols[i][2] === "r" ? cellR(i) : cellX(i), ty + 32); });
+    ty += RH;
+  });
+  g.textAlign = "left"; g.fillStyle = LINE; g.fillRect(P, ty + 20, TW, 2);
+  g.fillStyle = MUTED; g.font = `500 23px ${F}`;
+  g.fillText(sem ? "Cotización informativa, sujeta a aprobación." : "Cotización informativa, sujeta a aprobación. Si adelantas pagos, pagas menos interés.", P, ty + 66);
+  g.fillStyle = INK; g.font = `600 25px ${F}`; g.fillText("ventaentreamigos.com  ·  WhatsApp 33 3306 3319", P, ty + 110);
+  return new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no()), "image/png"));
 }
 function saveCot() {
   if (!LAST) return;
@@ -881,6 +969,13 @@ function schedule(p, a, edit) {
 /* ---------- Mis préstamos (cliente) ---------- */
 const COT_ID = new URLSearchParams(location.search).get("c") || "";
 let MYCOTS = [];
+function corridaCliente(c) {
+  if (c.tipo === "auto" || !c.monto || !c.plazo) return "";
+  const sem = c.tipo === "semanal", k = sem ? corridaSemanal(c.monto, c.plazo, c.tasa) : corridaMensual(c.monto, c.tasa, c.plazo);
+  return `<details open><summary>Tu corrida de pagos</summary><div class="tbl"><table>${sem
+    ? "<tr><th>Semana</th><th>Fecha</th><th>Pago</th><th>Resta</th></tr>" + k.filas.map((f) => `<tr><td>${f.n}</td><td>${c.inicio ? fcorta(fechaPago(c.inicio, f.n, "semanal")) : ""}</td><td>${mxn2(f.pago)}</td><td>${mxn2(f.saldo)}</td></tr>`).join("")
+    : "<tr><th>Mes</th><th>Pago</th><th>Interés</th><th>Capital</th><th>Saldo</th></tr>" + k.filas.map((f) => `<tr><td>${f.n}</td><td>${mxn2(f.pago)}</td><td>${mxn2(f.interes)}</td><td>${mxn2(f.capital)}</td><td>${mxn2(f.saldo)}</td></tr>`).join("")}</table></div></details>`;
+}
 async function cotBox() {
   const box = $("cot-box"); if (!box) return;
   const ids = new Set(MYCOTS.map((c) => c.id));
@@ -894,6 +989,7 @@ async function cotBox() {
     return `<div class="card"><h2>Tu cotización</h2>
       <div class="big"><span>Monto del préstamo</span><b>${mxn(c.monto)}</b></div>
       <p>${detalle}</p><p class="muted">Total a pagar: ${mxn2(c.total)}${c.tipo !== "semanal" && c.garantia && c.garantia !== "ff" ? " · Garantía: " + esc(c.desc || GARANTIAS[c.garantia]) : ""}</p>
+      ${corridaCliente(c)}
       ${c.estado === "negado" && (mine || !c.aceptadoPor) ? `<p class="muted">Por el momento no nos es posible aprobar esta solicitud. Si quieres revisar otra opción, escríbenos por WhatsApp.</p>`
         : mine ? `<p class="ok">Confirmaste esta cotización. Te avisaremos por WhatsApp cuando tu préstamo esté listo y la fecha de tu primer pago.</p>`
         : libre ? `<button class="btn primary" type="button" data-acc="${c.id}">Confirmar cotización</button><p class="note">Al confirmar, Entre Amigos prepara tu préstamo y te indica la fecha de inicio.</p>`
