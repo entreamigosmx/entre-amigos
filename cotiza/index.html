@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=13">
+<link rel="stylesheet" href="app.css?v=14">
 </head>
 <body>
 <div class="wrap">
@@ -39,7 +39,8 @@
       <label for="l-nom" id="l-nom-l" hidden>Nombre completo<input id="l-nom" autocomplete="name" placeholder="Nombre y apellidos"></label>
       <label for="l-tel" id="l-tel-l" hidden>Tu WhatsApp (para avisarte)<input id="l-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label>
       <label for="l-mail">Correo<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com"></label>
-      <label for="l-pass">Contraseña<input id="l-pass" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres"></label>
+      <label for="l-pass">Contraseña<span class="pw"><input id="l-pass" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres"><button type="button" class="eye" data-eye aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 20L20 4"/></svg></button></span></label>
+      <label for="l-pass2" id="l-pass2-l" hidden>Confirma tu contraseña<span class="pw"><input id="l-pass2" type="password" autocomplete="new-password" placeholder="Escríbela otra vez"><button type="button" class="eye" data-eye aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 20L20 4"/></svg></button></span></label>
       <p class="err" id="l-err" hidden></p>
       <button class="btn primary" type="submit" id="b-login">Entrar</button>
     </form>
@@ -61,6 +62,6 @@
     <div id="panel"></div>
   </section>
 </div>
-<script type="module" src="app.js?v=28"></script>
+<script type="module" src="app.js?v=29"></script>
 </body>
 </html>

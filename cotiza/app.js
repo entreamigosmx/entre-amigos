@@ -48,8 +48,15 @@ function setSignup(v) {
   $("l-q").textContent = v ? "¿Ya tienes cuenta?" : "¿Primera vez?";
   $("b-swap").textContent = v ? "Entra aquí" : "Crea tu cuenta";
   $("l-pass").autocomplete = v ? "new-password" : "current-password";
+  $("l-pass2-l").hidden = !v;
   $("l-err").hidden = true;
 }
+// Ojito para ver u ocultar la contraseña (cambia las dos casillas a la vez).
+document.querySelectorAll("[data-eye]").forEach((b) => (b.onclick = () => {
+  const ver = b.getAttribute("aria-pressed") !== "true";
+  document.querySelectorAll("[data-eye]").forEach((x) => { x.setAttribute("aria-pressed", String(ver)); x.setAttribute("aria-label", ver ? "Ocultar contraseña" : "Mostrar contraseña"); });
+  ["l-pass", "l-pass2"].forEach((id) => ($(id).type = ver ? "text" : "password"));
+}));
 $("b-swap").onclick = () => { setSignup(!signup); if (typeof INV !== "undefined" && INV.length) $("l-tipo-w").hidden = true; };
 let TIPO = "cliente";
 function setTipo(t) { TIPO = t; document.querySelectorAll("#l-tipo button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tipo === t))); }
@@ -86,6 +93,7 @@ $("f-login").addEventListener("submit", async (e) => {
   e.preventDefault();
   const mail = $("l-mail").value.trim(), pass = $("l-pass").value, nom = $("l-nom").value.trim();
   if (signup && !nom) { showErr({ code: "x" }); $("l-err").textContent = "Escribe tu nombre completo."; return; }
+  if (signup && pass !== $("l-pass2").value) { showErr({ code: "x" }); $("l-err").textContent = "Las contraseñas no coinciden. Escríbelas otra vez."; return; }
   if (signup && nom.split(/\s+/).length < 2) { showErr({ code: "x" }); $("l-err").textContent = "Escribe tu nombre completo: nombre y apellidos."; return; }
   $("b-login").disabled = true;
   try {
