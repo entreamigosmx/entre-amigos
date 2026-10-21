@@ -135,3 +135,19 @@ form.edit{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:12p
 .chk{display:flex;gap:8px;align-items:center;font-weight:600}
 .chk input{width:auto}
 details.rep{border-top:1px solid var(--line);padding-top:10px}
+/* Calendario con tareas dentro del día */
+.cal{gap:3px}
+.day{aspect-ratio:auto;min-height:74px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:2px;padding:3px 2px;text-align:left;overflow:hidden}
+.day .dn{font-size:13px;font-weight:700;text-align:center;line-height:1.2}
+.day em{display:block;font-style:normal;font-size:9.5px;line-height:1.25;padding:1px 3px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--line);color:var(--ink)}
+.day em.due{background:#3a3d36;color:var(--ink)}
+.day em.late{background:var(--warn);color:var(--bg)}
+.day em.paid{background:var(--lime);color:var(--lime-ink)}
+.day em.msg{background:#2f4f66;color:#e8f4ff}
+.day em.more{background:transparent;color:var(--muted);padding:0 3px}
+.day.sel em{outline:1px solid rgba(0,0,0,.2)}
+@media (min-width:700px){.day{min-height:96px}.day em{font-size:11px}}
+.tasks{display:grid;gap:6px}
+.task{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border-radius:9px;background:var(--panel-2);border-left:4px solid var(--line);font-size:14px}
+.task.late{border-left-color:var(--warn)}.task.due{border-left-color:var(--soft)}.task.paid{border-left-color:var(--lime)}.task.msg{border-left-color:#4fc3f7}
+.task .btn{flex:none}

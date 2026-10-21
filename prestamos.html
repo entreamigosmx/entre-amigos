@@ -39,7 +39,7 @@
       <label for="s-monto">Monto que necesitas<input id="s-monto" inputmode="numeric" autocomplete="off" placeholder="Ej. 50,000"></label>
       <div class="row2"><label for="s-plazo">Plazo<input id="s-plazo" inputmode="numeric" autocomplete="off" placeholder="Ej. 3"></label>
       <label for="s-uni">En<select id="s-uni"><option value="meses">Meses (pagos mensuales)</option><option value="semanas">Semanas (pagos semanales)</option></select></label></div>
-      <div class="row2"><label for="s-gar">Garantía<select id="s-gar"><option>Auto</option><option>Reloj</option><option>Oro</option><option>Monedas</option><option>Otra prenda</option><option value="aval">Sin garantía (con aval)</option></select></label>
+      <div class="row2"><label for="s-gar">Garantía<select id="s-gar"><option value="auto">Auto</option><option value="reloj">Reloj</option><option value="oro">Oro</option><option value="monedas">Monedas</option><option value="otro">Otra prenda</option><option value="aval">Sin garantía (con aval)</option></select></label>
       <label for="s-val">Valor aproximado (opcional)<input id="s-val" inputmode="numeric" autocomplete="off" placeholder="Ej. 250,000"></label></div>
       <label for="s-desc">Descripción de la garantía<input id="s-desc" autocomplete="off" placeholder="Ej. Jetta 2019, Rolex Submariner, 5 centenarios"></label>
       <label for="s-nota">Comentarios (opcional)<input id="s-nota" autocomplete="off" placeholder="Ej. Lo necesito para el viernes"></label>
@@ -55,27 +55,39 @@
   <span>Entre Amigos · Av. Aztecas 1021, Monraz, Guadalajara · 33 3306 3319</span>
   <span><a href="prestamos.html">Préstamos con garantía</a> · <a href="cotiza/">Acceso clientes y colaboradores</a></span>
 </div></footer>
-<script>
-(function () {
-  var $ = function (i) { return document.getElementById(i); };
-  var fmt = function (e) { var v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; };
-  $("s-monto").addEventListener("input", fmt); $("s-val").addEventListener("input", fmt);
-  var aval = function () { var a = $("s-gar").value === "aval"; $("s-val").closest("label").hidden = a; $("s-desc").closest("label").hidden = a; };
-  $("s-gar").addEventListener("change", aval); aval();
-  $("sol").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = $("s-uni").value, g = $("s-gar").value;
-    if (!nom || !monto || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe tu nombre, el monto y el plazo."; return; }
-    $("s-err").hidden = true;
-    var L = ["Hola, quiero solicitar un préstamo.", "", "Nombre: " + nom];
-    if ($("s-tel").value.trim()) L.push("WhatsApp: " + $("s-tel").value.trim());
-    L.push("Monto: $" + monto, "Plazo: " + n + " " + uni, "Pagos: " + (uni === "semanas" ? "semanales" : "mensuales"));
-    if (g === "aval") L.push("Garantía: sin garantía (con aval)");
-    else { L.push("Garantía: " + g + ($("s-desc").value.trim() ? " - " + $("s-desc").value.trim() : "")); if ($("s-val").value.trim()) L.push("Valor aproximado: $" + $("s-val").value.trim()); }
-    if ($("s-nota").value.trim()) L.push("Comentarios: " + $("s-nota").value.trim());
-    window.open("https://wa.me/523333063319?text=" + encodeURIComponent(L.join("\n")), "_blank", "noopener");
-  });
-})();
+<script type="module">
+const $ = (i) => document.getElementById(i);
+const GAR = { auto: "Auto", reloj: "Reloj", oro: "Oro", monedas: "Monedas", otro: "Otra prenda" };
+const num = (v) => Number(String(v || "").replace(/[^0-9.]/g, "")) || 0;
+const fmt = (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; };
+$("s-monto").addEventListener("input", fmt); $("s-val").addEventListener("input", fmt);
+const aval = () => { const a = $("s-gar").value === "aval"; $("s-val").closest("label").hidden = a; $("s-desc").closest("label").hidden = a; };
+$("s-gar").addEventListener("change", aval); aval();
+// Guarda la solicitud en la app de préstamos para responderla desde ahí.
+let guardar = null;
+Promise.all([
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
+]).then(([A, F]) => {
+  const app = A.initializeApp({ apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8", authDomain: "entre-amigos-financiera.firebaseapp.com", projectId: "entre-amigos-financiera", appId: "1:244817036834:web:7dd1a54f4825a318a2ac7b" });
+  const db = F.getFirestore(app);
+  guardar = (d) => F.addDoc(F.collection(db, "solicitudes"), d);
+}).catch(() => {});
+$("sol").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = $("s-uni").value, g = $("s-gar").value;
+  if (!nom || !monto || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe tu nombre, el monto y el plazo."; return; }
+  $("s-err").hidden = true;
+  const tel = $("s-tel").value.replace(/\D/g, "").slice(-10), desc = g === "aval" ? "" : $("s-desc").value.trim(), val = g === "aval" ? 0 : num($("s-val").value), nota = $("s-nota").value.trim();
+  const L = ["Hola, quiero solicitar un préstamo.", "", "Nombre: " + nom];
+  if (tel) L.push("WhatsApp: " + $("s-tel").value.trim());
+  L.push("Monto: $" + monto, "Plazo: " + n + " " + uni, "Pagos: " + (uni === "semanas" ? "semanales" : "mensuales"));
+  if (g === "aval") L.push("Garantía: sin garantía (con aval)");
+  else { L.push("Garantía: " + GAR[g] + (desc ? " - " + desc : "")); if (val) L.push("Valor aproximado: $" + val.toLocaleString("es-MX")); }
+  if (nota) L.push("Comentarios: " + nota);
+  try { guardar && guardar({ nombre: nom.slice(0, 80), telefono: tel, monto: num(monto), plazo: n, unidad: uni, garantia: g, desc: desc.slice(0, 200), valor: val, nota: nota.slice(0, 300), fecha: new Date().toISOString(), origen: "web", estado: "nueva" }).catch(() => {}); } catch (er) {}
+  window.open("https://wa.me/523333063319?text=" + encodeURIComponent(L.join("\n")), "_blank", "noopener");
+});
 </script>
 </body>
 </html>

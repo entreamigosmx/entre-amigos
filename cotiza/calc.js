@@ -1,4 +1,5 @@
 // Cálculos puros: corridas y avance de préstamos.
+const hoyLocal = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 export const num = (v) => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return isFinite(n) ? n : 0; };
 export const mxn = (n) => "$" + Math.round(n || 0).toLocaleString("es-MX");
 export const mxn2 = (n) => "$" + (n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -84,7 +85,7 @@ export function avanceInteres(p, hoyISO) {
   const intPagado = r2(pagos.filter((x) => x.tipo !== "capital").reduce((s, x) => s + (x.monto || 0), 0));
   const capPagado = r2(caps.reduce((s, x) => s + (x.monto || 0), 0));
   const capital = Math.max(0, r2(p.monto - capPagado));
-  const hoy = hoyISO || new Date().toISOString().slice(0, 10);
+  const hoy = hoyISO || hoyLocal();
   const lim = new Date(hoy + "T12:00:00"); lim.setDate(lim.getDate() + 35);
   const filas = [];
   for (let n = 1; n <= 600 && p.inicio; n++) {
@@ -108,7 +109,7 @@ export function avanceInteres(p, hoyISO) {
 
 // Lo que el cliente tiene vencido hoy (pagos con fecha pasada que no ha cubierto).
 export function vencido(p, a, hoyISO) {
-  const hoy = hoyISO || new Date().toISOString().slice(0, 10);
+  const hoy = hoyISO || hoyLocal();
   if (a.liquidado || !p.inicio) return 0;
   if (p.tipo === "interes") return a.interesAdeudado || 0;
   const debido = a.corrida.filas.filter((f) => fechaPago(p.inicio, f.n, p.tipo).toISOString().slice(0, 10) < hoy).reduce((s, f) => s + f.pago, 0);

@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido, desglosePagos } from "./calc.js?v=6";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido, desglosePagos } from "./calc.js?v=7";
 
 const app = initializeApp({
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -26,8 +26,8 @@ const WA = "523333063319";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const today = () => new Date().toISOString().slice(0, 10);
-const plusDays = (d) => { const x = new Date(); x.setDate(x.getDate() + d); return x.toISOString().slice(0, 10); };
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const plusDays = (d) => { const x = new Date(); x.setDate(x.getDate() + d); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
 const tel10 = (t) => String(t || "").replace(/\D/g, "").slice(-10);
 const waTo = (t, msg) => "https://wa.me/" + (tel10(t).length === 10 ? "52" + tel10(t) : "") + "?text=" + encodeURIComponent(msg);
 function show(id) { ["v-load", "v-login", "v-pend", "v-app"].forEach((v) => ($(v).hidden = v !== id)); }
@@ -154,7 +154,7 @@ const TABS = () => isAdmin()
   : isTeam() ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"], ["prestamos", "Mis clientes"]]
   : [["mis", "Mis préstamos"]];
 
-let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {}, REP = {}, ENT = [];
+let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {}, REP = {}, ENT = [], SOLS = [];
 function startApp() {
   show("v-app");
   if (isTeam()) unsubs.push(onSnapshot(doc(db, "config", "tasas"), (s) => { CFG = s.data() || {}; if (TAB === "cotizar" && !touched) applyCfg(); if (TAB === "tasas") draw(); }, () => {}));
@@ -177,6 +177,7 @@ function startApp() {
   }
   if (isAdmin()) {
     unsubs.push(onSnapshot(collection(db, "repartos"), (s) => { REP = {}; s.docs.forEach((d) => (REP[d.id] = d.data())); if (TAB === "cuentas" || TAB === "prestamos") draw(); }, () => {}));
+    unsubs.push(onSnapshot(collection(db, "solicitudes"), (s) => { SOLS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); drawTabs(); if (TAB === "cotizaciones" || TAB === "agenda") draw(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "entregas"), (s) => { ENT = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); }, () => {}));
   }
   if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos" || TAB === "agenda") draw(); drawTabs(); }, () => {}));
@@ -185,7 +186,7 @@ function startApp() {
 const isNew = (u) => u.rol !== "admin" && u.creado && Date.now() - new Date(u.creado).getTime() < 3 * 864e5 && !u.visto;
 function drawTabs() {
   const pend = USERS.filter((u) => isNew(u) || (u.rol === "cliente" && u.solicita === "equipo")).length;
-  const conf = COTS.filter((c) => c.aceptadoPor && !PRES.some((p) => p.cotId === c.id)).length;
+  const conf = COTS.filter((c) => c.aceptadoPor && !PRES.some((p) => p.cotId === c.id)).length + SOLS.filter((x) => x.estado === "nueva").length;
   $("tabs").innerHTML = TABS().map(([k, t]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}${k === "personas" && pend ? " (" + pend + ")" : ""}${k === "cotizaciones" && conf ? " (" + conf + ")" : ""}</button>`).join("");
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
@@ -245,7 +246,7 @@ function bindPick(pre, form) {
 /* ---------- Cotizar ---------- */
 let MODE = "garantia", touched = false, LAST = null, lastKey = "", curKey = "", CUR_REF = null;
 function vCotizar() {
-  touched = false;
+  touched = false; SOL_ID = "";
   if (MODE === "auto") return vCotAuto();
   $("panel").innerHTML = `
   <div class="card">
@@ -338,7 +339,58 @@ function saveCot() {
   if (!LAST) return;
   const { msg, tbl, lbl, ...d } = LAST;
   if (CUR_REF.id === lastKey) return; lastKey = CUR_REF.id;
+  if (SOL_ID) d.solId = SOL_ID;
   setDoc(CUR_REF, { ...d, por: ME.uid, fecha: new Date().toISOString(), estado: "cotizado" }).catch(() => (lastKey = ""));
+  if (SOL_ID) { updateDoc(doc(db, "solicitudes", SOL_ID), { estado: "cotizada", cotId: CUR_REF.id, cotizadaEn: new Date().toISOString() }).catch(() => {}); SOL_ID = ""; }
+}
+
+/* ---------- Solicitudes que llegan de la página ---------- */
+let SOL_ID = "", SOL_VER = false;
+const SEST = { nueva: "Nueva", cotizada: "Cotizada", invitada: "Invitada a registrarse", descartada: "Descartada" };
+function solTxt(x) {
+  const g = x.garantia === "aval" ? "Sin garantía (con aval)" : (GARANTIAS[x.garantia] || x.garantia || "") + (x.desc ? " · " + esc(x.desc) : "") + (x.valor ? " · valor aprox. " + mxn(x.valor) : "");
+  return `${mxn(x.monto)} a ${x.plazo} ${x.unidad === "semanas" ? "semanas" : "meses"} · ${g}`;
+}
+function solInv(x) {
+  return `Hola ${x.nombre}, gracias por tu solicitud de préstamo por ${mxn(x.monto)}.\n\nPara darte tu cotización y avanzar más rápido, crea tu cuenta aquí y sube tus documentos (INE y comprobante de domicilio):\n${SITE}/clientes\n\nEn cuanto la revisemos te contactamos.\n\nEntre Amigos`;
+}
+function solicitudesCard(limit) {
+  const nuevas = SOLS.filter((x) => x.estado === "nueva"), rest = SOLS.filter((x) => x.estado !== "nueva");
+  const L = SOL_VER ? SOLS : nuevas;
+  if (!SOLS.length) return "";
+  if (limit && !nuevas.length) return "";
+  return `<div class="card"><div class="head"><h2>Solicitudes de préstamo${nuevas.length ? " (" + nuevas.length + " nuevas)" : ""}</h2>${!limit && rest.length ? `<button class="link" type="button" id="sol-ver">${SOL_VER ? "Solo nuevas" : "Ver todas (" + SOLS.length + ")"}</button>` : ""}</div>
+    <div class="list">${L.length ? L.slice(0, limit || 999).map((x) => `<div class="item">
+      <div class="item-top"><b>${esc(x.nombre)}</b><span>${x.estado === "nueva" ? `<span class="pill warn">Nueva</span>` : `<span class="pill">${SEST[x.estado] || esc(x.estado)}</span>`} ${fhora(x.fecha)}</span></div>
+      <div class="item-mid">${solTxt(x)}${x.nota ? `<br>"${esc(x.nota)}"` : ""}</div>
+      <div class="item-bot">${x.telefono ? `<a href="https://wa.me/52${esc(x.telefono)}" target="_blank" rel="noopener">${esc(x.telefono)}</a>` : `<span>Sin WhatsApp</span>`}${x.origen === "cliente" ? `<span class="pill ok">Ya es cliente</span>` : ""}</div>
+      ${x.estado === "descartada" ? "" : `<div class="actions"><button class="btn sm primary" type="button" data-solcot="${x.id}">Cotizar y enviar</button>${x.telefono && x.origen !== "cliente" ? `<a class="btn sm" href="${waTo(x.telefono, solInv(x))}" target="_blank" rel="noopener" data-solinv="${x.id}">Solo invitar a registrarse</a>` : ""}<button class="btn sm" type="button" data-soldes="${x.id}">Descartar</button></div>`}
+    </div>`).join("") : `<p class="muted">No hay solicitudes nuevas.</p>`}</div></div>`;
+}
+function bindSolicitudes(rerender) {
+  const P = $("panel");
+  $("sol-ver") && ($("sol-ver").onclick = () => { SOL_VER = !SOL_VER; rerender(); });
+  P.querySelectorAll("[data-solcot]").forEach((b) => (b.onclick = () => cotizarSolicitud(SOLS.find((x) => x.id === b.dataset.solcot))));
+  P.querySelectorAll("[data-solinv]").forEach((a) => a.addEventListener("click", () => updateDoc(doc(db, "solicitudes", a.dataset.solinv), { estado: "invitada" }).catch(() => {})));
+  P.querySelectorAll("[data-soldes]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "¿Descartar?"; return; } updateDoc(doc(db, "solicitudes", b.dataset.soldes), { estado: "descartada" }); }));
+}
+function cotizarSolicitud(x) {
+  if (!x) return;
+  const semanal = x.unidad === "semanas" || x.garantia === "aval";
+  MODE = semanal ? "semanal" : "garantia";
+  go("cotizar");
+  SOL_ID = x.id;
+  const set = (id, v) => { const el = $(id); if (el && v !== undefined && v !== null && v !== "") el.value = v; };
+  set("q-nom", x.nombre); set("q-tel", x.telefono); set("q-monto", Number(x.monto).toLocaleString("es-MX"));
+  if (semanal) set("q-sem", x.unidad === "semanas" ? x.plazo : x.plazo * 4);
+  else {
+    if (GARANTIAS[x.garantia]) { $("q-gar").value = x.garantia; $("q-gar").dispatchEvent(new Event("change", { bubbles: true })); }
+    set("q-plazo", x.plazo); if ($("q-plazo")) $("q-plazo").dataset.t = "1";
+    set("q-desc", x.desc); if (x.valor) set("q-val", Number(x.valor).toLocaleString("es-MX"));
+  }
+  $("fq").dispatchEvent(new Event("input", { bubbles: true }));
+  const c = $("fq").closest(".card");
+  c.insertAdjacentHTML("afterbegin", `<p class="cov ok" style="margin:0">Cotizando la solicitud de ${esc(x.nombre)}. Revisa la tasa y toca "Enviar por WhatsApp": le llega su cotización con el enlace para crear su cuenta y confirmarla.</p>`);
 }
 
 /* ---------- Cotizaciones ---------- */
@@ -355,7 +407,7 @@ function vCotizaciones() {
   const acc = rows.filter((r) => r.estado === "aceptado"), sum = (l) => l.reduce((s, r) => s + (r.monto || 0), 0);
   const people = [...new Set(COTS.map((r) => r.por))];
   const viejas = rows.filter((r) => canDel(r) && (r.estado === "descartado" || r.estado === "negado"));
-  $("panel").innerHTML = `<div class="card">
+  $("panel").innerHTML = (isAdmin() ? solicitudesCard() : "") + `<div class="card">
     <div class="head"><h2>${isAdmin() ? "Cotizaciones" : "Mis cotizaciones"}</h2>
     ${isAdmin() ? `<label for="c-f">Quién cotizó<select id="c-f"><option value="">Todos</option>${people.map((p) => `<option value="${esc(p)}"${p === FILT ? " selected" : ""}>${esc(nameOf(p))}</option>`).join("")}</select></label>` : ""}</div>
     ${viejas.length ? `<div class="actions" style="margin-bottom:10px"><button class="btn sm" type="button" id="c-clean">Borrar descartadas y no aprobadas (${viejas.length})</button></div>` : ""}
@@ -370,6 +422,7 @@ function vCotizaciones() {
         ${r.telefono ? `<a href="https://wa.me/52${esc(r.telefono)}" target="_blank" rel="noopener">${esc(r.telefono)}</a>` : ""}${canDel(r) ? `<button class="link del" type="button" data-del="${r.id}">Borrar</button>` : ""}</div></div>`;
     }).join("") : `<p class="muted">Todavía no hay cotizaciones. Cuando envíes o copies una desde "Cotizar", aparece aquí.</p>`}</div></div>`;
   $("c-f") && ($("c-f").onchange = (e) => { FILT = e.target.value; vCotizaciones(); });
+  bindSolicitudes(vCotizaciones);
   const twice = (b, txt, fn) => (b.onclick = async () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = txt; return; } b.disabled = true; try { await fn(); } catch (e) { b.disabled = false; b.textContent = "No se pudo borrar"; } });
   $("panel").querySelectorAll("[data-del]").forEach((b) => twice(b, "Toca otra vez para borrar", () => deleteDoc(doc(db, "cotizaciones", b.dataset.del))));
   $("c-clean") && twice($("c-clean"), `Toca otra vez para borrar ${viejas.length}`, () => Promise.all(viejas.map((r) => deleteDoc(doc(db, "cotizaciones", r.id)))));
@@ -883,6 +936,7 @@ function solicitudForm() {
     if (!m || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe el monto y el plazo."; return; }
     const gar = g === "aval" ? "Sin garantía (con aval)" : GARANTIAS[g] + ($("s-desc").value.trim() ? ": " + $("s-desc").value.trim() : "");
     const msg = `Hola, quiero solicitar ${PRES.length ? "otro " : "un "}préstamo.\n\nNombre: ${USER.nombre || ""}\nCorreo: ${ME.email || ""}${USER.telefono ? "\nWhatsApp: " + USER.telefono : ""}\nMonto: ${mxn(m)}\nPlazo: ${n} ${$("s-uni").value}\nPagos: ${$("s-uni").value === "semanas" ? "semanales" : "mensuales"}\nGarantía: ${gar}${$("s-nota").value.trim() ? "\nComentarios: " + $("s-nota").value.trim() : ""}`;
+    addDoc(collection(db, "solicitudes"), { nombre: (USER.nombre || "").slice(0, 80), telefono: USER.telefono || "", monto: m, plazo: n, unidad: $("s-uni").value, garantia: g, desc: $("s-desc").value.trim().slice(0, 200), valor: 0, nota: $("s-nota").value.trim().slice(0, 300), fecha: new Date().toISOString(), origen: "cliente", uid: ME.uid, email: (ME.email || "").toLowerCase(), estado: "nueva" }).catch(() => {});
     window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
   };
 }
@@ -1226,6 +1280,23 @@ function pagoRow(r) {
     <div class="item-bot"><span>Registrado ${r.reg ? "el " + fhora(r.reg) : ""}${quien ? " por " + esc(quien) : ""}${r.editado ? " · Corregido el " + fhora(r.editado) : ""}</span><span>Capital ${mxn2(r.capital)} · Interés ${mxn2(r.interes)}</span></div>
   </div>`;
 }
+// Tareas de un día, como en un calendario: cobrar, recordar, dar seguimiento, responder.
+const nom1 = (n) => String(n || "").trim().split(/\s+/)[0];
+function tareasDia(k, all, rcv) {
+  const hoy = today(), T = [];
+  const man = iso(new Date(new Date(k + "T12:00:00").getTime() + 864e5));
+  all.filter((c) => c.fecha === k).forEach((c) => T.push(c.pagada ? { t: "pago", cls: "paid", txt: "Pagó " + c.p.cliente, c }
+    : { t: "cobrar", cls: k < hoy ? "late" : "due", txt: "Cobrar a " + c.p.cliente + " " + mxn(c.debe), c }));
+  if (k >= hoy) all.filter((c) => c.fecha === man && !c.pagada).forEach((c) => T.push({ t: "msg", cls: "msg", txt: "Recordar a " + c.p.cliente + " que paga mañana", c }));
+  if (k === hoy) all.filter((c) => c.atrasada).forEach((c) => T.push({ t: "seg", cls: "late", txt: "Seguimiento: " + c.p.cliente + " (atrasado " + mxn(c.debe) + ")", c }));
+  (rcv[k] || []).forEach((r) => { if (!T.some((x) => x.t === "pago" && x.c.p.id === r.p.id)) T.push({ t: "entro", cls: "paid", txt: "Entró " + mxn(r.monto) + " de " + r.p.cliente, r }); });
+  if (isAdmin()) SOLS.filter((x) => x.estado === "nueva" && (x.fecha || "").slice(0, 10) <= k && k === hoy).forEach((x) => T.push({ t: "sol", cls: "msg", txt: "Responder solicitud de " + x.nombre, x }));
+  return T;
+}
+function tareaRow(x) {
+  const wa = x.c && x.c.p.telefono ? waTo(x.c.p.telefono, x.t === "msg" ? `Hola ${x.c.p.cliente}, te recordamos que mañana ${fcorta(new Date(x.c.fecha + "T12:00:00"))} toca tu pago ${x.c.p.tipo === "interes" ? "de interés" : x.c.n + " de " + x.c.total} por ${mxn2(x.c.debe)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos` : recMsg(x.c)) : "";
+  return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Cotizar</button>` : ""}</div>`;
+}
 function vAgenda() {
   const all = cuotas(), hoy = today();
   const en7 = iso(new Date(Date.now() + 7 * 864e5));
@@ -1240,21 +1311,23 @@ function vAgenda() {
   const off = (first.getDay() + 6) % 7; // lunes primero
   const mes = iso(first).slice(0, 7);
   const byDay = {}; all.forEach((c) => { if (c.fecha.startsWith(mes)) (byDay[c.fecha] = byDay[c.fecha] || []).push(c); });
-  const rcv = {}; LED.forEach((r) => { if (r.fecha.startsWith(mes)) (rcv[r.fecha] = rcv[r.fecha] || []).push(r); });
+  const rcv = {}; LED.forEach((r) => (rcv[r.fecha] = rcv[r.fecha] || []).push(r));
   const delMes = LED.filter((r) => r.fecha.startsWith(mes)).sort((a, b) => (a.fecha === b.fecha ? ((a.reg || "") < (b.reg || "") ? 1 : -1) : a.fecha < b.fecha ? 1 : -1));
   let cells = ""; for (let i = 0; i < off; i++) cells += `<span></span>`;
   for (let d = 1; d <= days; d++) {
     const k = iso(new Date(y, m, d)), l = byDay[k] || [];
     const cls = !l.length ? "" : l.some((c) => c.atrasada) ? "late" : l.every((c) => c.pagada) ? "paid" : "due";
-    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}">${d}${l.length ? `<i>${l.length}</i><u>${[...new Set(l.map((c) => ownerOf(c.p)))].slice(0, 4).map((o) => `<b style="background:${ownerColor(o)}"></b>`).join("")}</u>` : ""}</button>`;
+    const T = tareasDia(k, all, rcv).filter((x) => x.t === "cobrar" || x.t === "pago" || x.t === "entro");
+    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "entro" ? nom1(x.r.p.cliente) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
-  $("panel").innerHTML = `
+  $("panel").innerHTML = (isAdmin() ? solicitudesCard(3) : "") + `
   <div class="card">
     <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
     ${legend()}
     <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
+  ${(() => { const T = tareasDia(hoy, all, rcv); return T.length ? `<div class="card"><h2>Tareas de hoy</h2><div class="tasks">${T.map(tareaRow).join("")}</div></div>` : ""; })()}
   ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${atr.map((c) => cuotaRow(c, true)).join("")}</div></div>` : ""}
   <div class="card"><h2>Pagos de hoy</h2><div class="list">${deHoy.length ? deHoy.map((c) => cuotaRow(c, false)).join("") : `<p class="muted">No hay pagos programados para hoy.</p>`}</div></div>
   <div class="card"><h2>Próximos 7 días</h2><div class="list">${prox.length ? prox.map((c) => cuotaRow(c, true)).join("") : `<p class="muted">Sin pagos en los próximos 7 días.</p>`}</div></div>
@@ -1263,6 +1336,7 @@ function vAgenda() {
     <div class="cal"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>${cells}</div>
     <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día</p>
     ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3>
+      ${(() => { const T = tareasDia(AG_DAY, all, rcv); return T.length ? `<p class="lbl">Tareas del día</p><div class="tasks">${T.map(tareaRow).join("")}</div>` : ""; })()}
       ${sel.length ? `<p class="lbl">Pagos que tocaban ese día</p><div class="list">${sel.map((c) => cuotaRow(c, false)).join("")}</div>` : ""}
       ${(rcv[AG_DAY] || []).length ? `<p class="lbl">Pagos recibidos ese día</p><div class="list">${rcv[AG_DAY].map(pagoRow).join("")}</div>` : ""}
       ${!sel.length && !(rcv[AG_DAY] || []).length ? `<p class="muted">Sin movimientos ese día.</p>` : ""}` : `<p class="muted">Toca un día para ver qué pagos tocaban y cuáles se recibieron.</p>`}
@@ -1279,5 +1353,6 @@ function vAgenda() {
   $("panel").querySelectorAll("[data-day]").forEach((b) => (b.onclick = () => { AG_DAY = AG_DAY === b.dataset.day ? "" : b.dataset.day; vAgenda(); }));
   $("m-prev").onclick = () => { AG_MONTH = new Date(y, m - 1, 1); AG_DAY = ""; vAgenda(); };
   $("m-next").onclick = () => { AG_MONTH = new Date(y, m + 1, 1); AG_DAY = ""; vAgenda(); };
+  bindSolicitudes(vAgenda);
 
 }
