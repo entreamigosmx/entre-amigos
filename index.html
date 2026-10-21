@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=4">
+<link rel="stylesheet" href="css/estilo.css?v=5">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"AutoDealer","name":"Entre Amigos","slogan":"Más que clientes, amigos","url":"https://ventaentreamigos.com/","telephone":"+52 33 3306 3319","image":"https://ventaentreamigos.com/assets/img/og.jpg","address":{"@type":"PostalAddress","streetAddress":"Av. Aztecas 1021, Col. Monraz","postalCode":"44670","addressLocality":"Guadalajara","addressRegion":"Jalisco","addressCountry":"MX"},"sameAs":["https://instagram.com/entreamigosmx"]}</script>
 </head>
 <body>
@@ -29,7 +29,7 @@
 
 <main>
 <!-- 1. Portada -->
-<section class="hero g">
+<section class="hero g" id="inicio">
   <img class="bg" src="assets/img/portada-fondo.jpg" alt="" aria-hidden="true">
   <video class="vid" id="hv" autoplay muted loop playsinline preload="auto" poster="assets/img/portada-video.jpg" aria-label="Video: detallado y presentación de una Rolls-Royce Cullinan en Entre Amigos"><source src="assets/video/portada.mp4" type="video/mp4"></video>
   <div class="in">
@@ -154,9 +154,16 @@
   <span>Entre Amigos · Más que clientes, amigos · Av. Aztecas 1021, Monraz, Guadalajara</span>
   <span><a href="prestamos.html">Préstamos con garantía</a> · <a href="cotiza/">Acceso clientes y colaboradores</a></span>
 </div></footer>
+<nav class="rail" id="rail" aria-label="Secciones de la página">
+  <div class="rtrack" id="rtrack"><i class="rfill" id="rfill"></i></div>
+  <div class="rdots" id="rdots"></div>
+  <button class="rthumb" id="rthumb" type="button" aria-haspopup="true" aria-expanded="false"><span id="rname">Inicio</span></button>
+  <div class="rmenu" id="rmenu" hidden></div>
+</nav>
 <a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
 
-<script type="module" src="js/inicio.js?v=3"></script>
+<script type="module" src="js/inicio.js?v=5"></script>
+<script src="js/rail.js?v=5" defer></script>
 <script>if(matchMedia("(prefers-reduced-motion: reduce)").matches)document.querySelectorAll("video[autoplay]").forEach(v=>{v.removeAttribute("autoplay");v.pause()});</script>
 </body>
 </html>

@@ -1,8 +1,11 @@
-import { autos, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=3";
+import { autos, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=5";
 
 const $ = (id) => document.getElementById(id);
 $("fixwa") && ($("fixwa").innerHTML = WA_ICON);
-$("r-wa").insertAdjacentHTML("afterbegin", WA_ICON);
+$("r-wa").insertAdjacentHTML("afterbegin", WA_ICON); $("r-wa2").insertAdjacentHTML("afterbegin", WA_ICON);
+let TODO = false;
+$("t-mas").onclick = () => { TODO = !TODO; calc(); };
+["c-nom2", "c-tel2"].forEach((id) => $(id).addEventListener("input", calc));
 const num = (v) => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || 0;
 const fmt = (n) => (n ? Math.round(n).toLocaleString("es-MX") : "");
 const mxn2 = (n) => "$" + (n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -44,12 +47,31 @@ function calc() {
   $("r-plazo").textContent = PLAZO + " meses"; $("r-total").textContent = f && t ? mxn(Math.round(e + m * PLAZO)) : "Pendiente";
   $("mb-men").textContent = $("r-men").textContent; $("mb-wa").href = $("r-wa").href;
   const a = LIST.find((x) => x.slug === $("c-auto").value);
-  const nom = $("c-nom").value.trim();
+  const nom = $("c-nom").value.trim() || $("c-nom2").value.trim(), tel = $("c-tel2").value.trim();
+  corrida(f, t, m);
   const L = [`Hola${nom ? ", soy " + nom : ""}. Quiero cotizar un crédito${a ? " para el " + a.title : ""}.`, "", "Precio: " + mxn(p), `Enganche: ${mxn(e)} (${Math.round(ENGP)}%)`, "Monto a financiar: " + mxn(f), "Plazo: " + PLAZO + " meses"];
   if (f && t) L.push("Mensualidad de ejemplo del simulador" + (MIN && t <= CFG.tasaAnual ? " desde " : ": ") + mxn2(m) + " (tasa " + (MIN && t <= CFG.tasaAnual ? "desde " : "de referencia ") + t + "% anual)");
   L.push("", "¿Me ayudan con una cotización formal?");
   $("r-wa").href = wa(L.join("\n"));
+  const L2 = L.slice(0, -1); if (tel) L2.splice(1, 0, "Mi WhatsApp: " + tel);
+  L2.push("Quiero mi cotización real. Quedo atento.");
+  $("r-wa2").href = wa(L2.join("\n"));
   const u = new URL(location); a ? u.searchParams.set("a", a.slug) : u.searchParams.delete("a"); history.replaceState(null, "", u);
+}
+// Corrida de ejemplo: interés sobre saldo + IVA del interés, pago fijo.
+function corrida(f, t, m) {
+  const tb = $("t-corr"), sec = $("corr");
+  if (!f || !t || !m) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const r = t / 100 / 12, iva = CFG.ivaSobreIntereses ? 0.16 : 0;
+  let saldo = f; const rows = [];
+  for (let n = 1; n <= PLAZO; n++) {
+    const int = saldo * r, iv = int * iva, pago = n === PLAZO ? saldo + int + iv : m, cap = pago - int - iv;
+    saldo = Math.max(0, saldo - cap); rows.push([n, pago, int + iv, cap, saldo]);
+  }
+  const show = TODO ? rows : rows.slice(0, 12);
+  tb.innerHTML = `<tr><th>Mes</th><th>Pago</th><th>Interés${iva ? " + IVA" : ""}</th><th>Capital</th><th>Saldo</th></tr>` + show.map((x) => `<tr><td>${x[0]}</td><td>${mxn2(x[1])}</td><td>${mxn2(x[2])}</td><td>${mxn2(x[3])}</td><td>${mxn2(x[4])}</td></tr>`).join("");
+  $("t-mas").hidden = rows.length <= 12; $("t-mas").textContent = TODO ? "Ver menos" : `Ver los ${rows.length} meses`;
 }
 function plazos() {
   $("c-plazos").innerHTML = CFG.plazos.map((n) => `<button type="button" data-n="${n}" aria-pressed="${n === PLAZO}">${n}</button>`).join("");

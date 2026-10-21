@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=4">
+<link rel="stylesheet" href="css/estilo.css?v=5">
 </head>
 <body>
 <header class="top g"><div class="in">
@@ -51,6 +51,20 @@
       <p class="note"><b>Ejemplo, no es cotización.</b> Incluye IVA sobre intereses. <b>No incluye</b> comisión por apertura, seguro de vida, seguro de daños ni otros cargos que algunas financieras cobran. La tasa, el CAT y las condiciones finales te los da la financiera con tu cotización real, sujeta a aprobación de crédito.</p>
     </div>
   </div>
+  <section class="corr" id="corr" style="margin-top:clamp(28px,4vw,44px)">
+    <div class="card">
+      <div class="head" style="margin:0"><span class="eyebrow">Corrida de ejemplo</span><h2 style="font-size:clamp(28px,4vw,40px)">Así quedarían tus pagos</h2></div>
+      <p class="pending" style="margin:0">Esto es un <b>ejemplo</b> con los datos que elegiste, no es una cotización. Tu tasa, tus pagos y las condiciones finales dependen de tu historial crediticio y de la financiera.</p>
+      <div class="tbl"><table id="t-corr"></table></div>
+      <button class="btn quiet" type="button" id="t-mas" hidden>Ver todos los meses</button>
+    </div>
+    <div class="card cta-real">
+      <h2 style="font-size:clamp(28px,4vw,40px)">¿Quieres tu cotización real?</h2>
+      <p class="muted">Mándanos tus datos y te respondemos por WhatsApp con la tasa y los pagos que te corresponden.</p>
+      <div class="row2"><label for="c-nom2">Tu nombre<input id="c-nom2" autocomplete="name"></label><label for="c-tel2">Tu WhatsApp<input id="c-tel2" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label></div>
+      <a class="btn primary wa" id="r-wa2" href="#" target="_blank" rel="noopener">Pedir mi cotización real</a>
+    </div>
+  </section>
   <div class="two" style="margin-top:clamp(36px,5vw,56px)">
     <div><h2 style="font-size:clamp(28px,3.6vw,40px)">Qué necesitas para tu crédito</h2>
       <ul class="req" style="margin-top:14px"><li>INE vigente</li><li>Comprobante de ingresos de los últimos 3 meses</li><li>Comprobante de domicilio</li><li>Constancia de situación fiscal</li></ul></div>
@@ -64,6 +78,6 @@
 </div></footer>
 <div class="mbar" aria-hidden="true"><div><span>Ejemplo de mensualidad</span><b id="mb-men"></b></div><a class="btn primary" id="mb-wa" href="#" target="_blank" rel="noopener" tabindex="-1">Solicitar</a></div>
 <a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
-<script type="module" src="js/creditos.js?v=6"></script>
+<script type="module" src="js/creditos.js?v=5"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import { autos, card, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=3";
+import { autos, card, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=5";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 document.getElementById("wa-sell").insertAdjacentHTML("afterbegin", WA_ICON);
