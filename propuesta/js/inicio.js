@@ -1,7 +1,6 @@
 import { autos, card, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=p1";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
-document.getElementById("wa-sell").insertAdjacentHTML("afterbegin", WA_ICON);
 
 /* Destacados */
 autos().then((list) => {
@@ -13,21 +12,6 @@ autos().then((list) => {
   document.getElementById("all-top").textContent = t;
 }).catch(() => {
   document.getElementById("cars").innerHTML = `<p class="empty">No pudimos cargar el inventario. Recarga la página o escríbenos por WhatsApp al 33 3306 3319.</p>`;
-});
-
-/* Vende tu auto: pocos datos y WhatsApp con todo escrito */
-const $ = (id) => document.getElementById(id);
-["v-km"].forEach((id) => $(id).addEventListener("input", (e) => { const d = e.target.value.replace(/\D/g, ""); e.target.value = d ? Number(d).toLocaleString("es-MX") : ""; }));
-$("vf").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const v = (id) => $(id).value.trim();
-  const err = !v("v-marca") || !v("v-modelo") || !v("v-anio") ? "Escribe marca, modelo y año." : !v("v-nom") ? "Escribe tu nombre." : "";
-  $("v-err").hidden = !err; $("v-err").textContent = err; if (err) return;
-  const L = ["Hola, quiero vender mi auto.", "", "Auto: " + v("v-marca") + " " + v("v-modelo") + " " + v("v-anio")];
-  if (v("v-km")) L.push("Kilometraje: " + v("v-km") + " km");
-  L.push("Nombre: " + v("v-nom")); if (v("v-tel")) L.push("WhatsApp: " + v("v-tel"));
-  L.push("Me interesa: " + $("v-como").value, "", "En seguida les mando fotos.");
-  location.href = wa(L.join("\n"));
 });
 
 /* Opiniones que rotan */

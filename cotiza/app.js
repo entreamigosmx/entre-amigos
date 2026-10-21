@@ -162,11 +162,11 @@ onAuthStateChanged(auth, async (u) => {
 /* ---------------- App ---------------- */
 let TAB = "";
 const TABS = () => isAdmin()
-  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["cuentas", "Cuentas"], ["personas", "Personas"], ["tasas", "Tasas"]]
+  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["autos", "Autos ofrecidos"], ["cuentas", "Cuentas"], ["personas", "Personas"], ["tasas", "Tasas"]]
   : isTeam() ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"], ["prestamos", "Mis clientes"]]
   : [["mis", "Mis préstamos"]];
 
-let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {}, REP = {}, ENT = [], SOLS = [];
+let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {}, REP = {}, ENT = [], SOLS = [], VENTAS = [];
 function startApp() {
   show("v-app");
   if (isTeam()) unsubs.push(onSnapshot(doc(db, "config", "tasas"), (s) => { CFG = s.data() || {}; if (TAB === "cotizar" && !touched) applyCfg(); if (TAB === "tasas") draw(); }, () => {}));
@@ -191,6 +191,7 @@ function startApp() {
   if (isAdmin()) {
     unsubs.push(onSnapshot(collection(db, "repartos"), (s) => { REP = {}; s.docs.forEach((d) => (REP[d.id] = d.data())); if (TAB === "cuentas" || TAB === "prestamos") draw(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "solicitudes"), (s) => { SOLS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); drawTabs(); if (TAB === "cotizaciones" || TAB === "agenda") draw(); }, () => {}));
+    unsubs.push(onSnapshot(collection(db, "ventas"), (s) => { VENTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); drawTabs(); if (TAB === "autos" || TAB === "agenda") draw(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "entregas"), (s) => { ENT = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); }, () => {}));
   }
   if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos" || TAB === "agenda") draw(); drawTabs(); }, () => {}));
@@ -200,7 +201,7 @@ const isNew = (u) => u.rol !== "admin" && u.creado && Date.now() - new Date(u.cr
 function drawTabs() {
   const pend = USERS.filter((u) => isNew(u) || (u.rol === "cliente" && u.solicita === "equipo")).length;
   const conf = COTS.filter((c) => c.aceptadoPor && !PRES.some((p) => p.cotId === c.id)).length + SOLS.filter((x) => x.estado === "nueva").length;
-  $("tabs").innerHTML = TABS().map(([k, t]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}${k === "personas" && pend ? " (" + pend + ")" : ""}${k === "cotizaciones" && conf ? " (" + conf + ")" : ""}</button>`).join("");
+  $("tabs").innerHTML = TABS().map(([k, t]) => `<button type="button" role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}${k === "personas" && pend ? " (" + pend + ")" : ""}${k === "cotizaciones" && conf ? " (" + conf + ")" : ""}${k === "autos" && VENTAS.some((v) => v.estado === "nueva") ? " (" + VENTAS.filter((v) => v.estado === "nueva").length + ")" : ""}</button>`).join("");
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
 function go(t) { TAB = t; drawTabs(); draw(); window.scrollTo(0, 0); }
@@ -221,7 +222,7 @@ function drawNotice() {
   $("n-copy").onclick = () => navigator.clipboard?.writeText(n.msg).catch(() => {});
 }
 const PORTAL = () => location.origin + location.pathname;
-function draw() { const f = { agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, cuentas: vCuentas, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
+function draw() { const f = { agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, autos: vAutos, cuentas: vCuentas, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
 const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
 
 /* ---------- Clientes que ya tengo (para no volver a capturarlos) ---------- */
@@ -910,6 +911,46 @@ function repartoHandlers(twice) {
   });
 }
 
+/* ---------- Autos ofrecidos (los manda la gente desde "Vende tu auto") ---------- */
+const VEST = { nueva: "Nuevo", revision: "En revisión", propuesta: "Propuesta enviada", comprado: "Comprado", consignacion: "En consignación", descartado: "Descartado" };
+let VOPEN = "", VFOTOS = {}, VVER = false;
+function cargaFotos(id) {
+  if (VFOTOS[id]) return;
+  VFOTOS[id] = "cargando";
+  const un = onSnapshot(collection(db, "ventas", id, "fotos"), (s) => { VFOTOS[id] = s.docs.map((d) => d.data()).sort((a, b) => a.i - b.i); un && un(); if (TAB === "autos") vAutos(); }, () => { VFOTOS[id] = []; });
+}
+const SLOTN = { frente: "Frente", atras: "Atrás", izq: "Costado izq.", der: "Costado der.", int1: "Interior del.", int2: "Interior tras.", tablero: "Kilometraje", motor: "Motor", serie: "No. de serie", llanta: "Llantas", factura: "Factura", tarjeta: "Tarjeta circ." };
+function vAutos() {
+  const L = VVER ? VENTAS : VENTAS.filter((v) => !["comprado", "descartado"].includes(v.estado));
+  $("panel").innerHTML = `<div class="card"><div class="head"><h2>Autos ofrecidos</h2>${VENTAS.length !== L.length || VVER ? `<button class="link" type="button" id="v-ver">${VVER ? "Solo activos" : "Ver todos (" + VENTAS.length + ")"}</button>` : ""}</div>
+    <p class="muted">Autos que la gente te ofrece desde "Vende tu auto" en la página, con sus fotos y factura.</p>
+    <div class="list">${L.length ? L.map((v) => {
+      const open = VOPEN === v.id; if (open) cargaFotos(v.id);
+      const F = open && Array.isArray(VFOTOS[v.id]) ? VFOTOS[v.id] : null;
+      const msg = `Hola ${v.nombre}, gracias por mandarnos los datos y fotos de tu ${v.marca} ${v.modelo} ${v.anio}. Lo estamos revisando y en breve te mandamos nuestra propuesta.\n\nEntre Amigos`;
+      return `<div class="item">
+        <div class="item-top"><b>${esc(v.marca)} ${esc(v.modelo)} ${esc(v.anio)}</b><span class="pill${v.estado === "nueva" ? " warn" : v.estado === "descartado" ? " no" : ""}">${VEST[v.estado] || esc(v.estado)}</span></div>
+        <div class="item-mid">${Number(v.km || 0).toLocaleString("es-MX")} km · ${esc(v.como)}${v.precio ? " · espera " + mxn(v.precio) : ""} · ${v.nFotos} fotos</div>
+        <div class="item-bot"><span>${esc(v.nombre)} · ${fhora(v.fecha)}</span>${v.telefono ? `<a href="${waTo(v.telefono, msg)}" target="_blank" rel="noopener">WhatsApp ${esc(v.telefono)}</a>` : ""}</div>
+        <div class="actions" style="margin-top:6px"><button class="btn sm${open ? "" : " primary"}" type="button" data-vopen="${v.id}">${open ? "Ocultar fotos" : "Ver fotos y factura"}</button>
+          <label class="inline">Estado <select data-vest="${v.id}">${Object.entries(VEST).map(([k, t]) => `<option value="${k}"${k === v.estado ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+          <button class="btn sm danger" type="button" data-vdel="${v.id}">Borrar</button></div>
+        ${open ? (F ? `<div class="vgal">${F.map((f) => `<a href="${f.data}" target="_blank" rel="noopener" data-vimg><img src="${f.data}" alt="${esc(SLOTN[f.slot] || f.slot)}" loading="lazy"><span>${esc(SLOTN[f.slot] || "Extra")}</span></a>`).join("")}</div>` : `<p class="muted">Cargando fotos…</p>`) : ""}
+      </div>`;
+    }).join("") : `<p class="muted">Todavía no hay autos ofrecidos.</p>`}</div></div>`;
+  $("v-ver") && ($("v-ver").onclick = () => { VVER = !VVER; vAutos(); });
+  $("panel").querySelectorAll("[data-vopen]").forEach((b) => (b.onclick = () => { VOPEN = VOPEN === b.dataset.vopen ? "" : b.dataset.vopen; vAutos(); }));
+  $("panel").querySelectorAll("select[data-vest]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "ventas", s.dataset.vest), { estado: s.value })));
+  $("panel").querySelectorAll("[data-vimg]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); const w = window.open(); if (w) { w.document.write(`<title>Foto</title><body style="margin:0;background:#000"><img src="${a.querySelector("img").src}" style="width:100%">`); } }));
+  $("panel").querySelectorAll("[data-vdel]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para borrarlo con sus fotos"; return; }
+    b.disabled = true; const id = b.dataset.vdel;
+    const fotos = await new Promise((ok) => { const un = onSnapshot(collection(db, "ventas", id, "fotos"), (s) => { ok(s.docs.map((d) => d.id)); un && un(); }, () => ok([])); });
+    await Promise.all(fotos.map((f) => deleteDoc(doc(db, "ventas", id, "fotos", f)).catch(() => {})));
+    await deleteDoc(doc(db, "ventas", id)); delete VFOTOS[id];
+  }));
+}
+
 /* ---------- Cuentas (admin) ---------- */
 let CU_MONTH = null, CU_OPEN = "", ENTEDIT = "";
 function movimientos() {
@@ -1489,6 +1530,7 @@ function tareasDia(k, all, rcv) {
     const dias = (f) => Math.max(0, Math.round((new Date(hoy + "T12:00:00") - new Date(String(f).slice(0, 10) + "T12:00:00")) / 864e5));
     const hace = (d) => (d === 0 ? "llegó hoy" : d === 1 ? "lleva 1 día" : "lleva " + d + " días");
     if (isAdmin()) SOLS.filter((x) => x.estado === "nueva").forEach((x) => { const d = dias(x.fecha); T.push({ t: "sol", cls: d >= 2 ? "late" : "msg", txt: `Revisar solicitud de ${x.nombre}: ${mxn(x.monto)} a ${x.plazo} ${x.unidad === "semanas" ? "semanas" : "meses"} (${hace(d)})`, x }); });
+    if (isAdmin()) VENTAS.filter((v) => v.estado === "nueva").forEach((v) => { const d = dias(v.fecha); T.push({ t: "venta", cls: d >= 2 ? "late" : "msg", txt: `Revisar auto ofrecido: ${v.marca} ${v.modelo} ${v.anio} de ${v.nombre} (${hace(d)})`, v }); });
     COTS.filter((c) => c.estado === "cotizado" && !c.aceptadoPor && c.tipo !== "auto" && dias(c.fecha) >= 3 && dias(c.fecha) <= 30 && !PRES.some((p) => p.cotId === c.id))
       .forEach((c) => T.push({ t: "segcot", cls: "msg", txt: `Dar seguimiento: ${c.cliente || "cliente"} no ha confirmado su cotización de ${mxn(c.monto)} (${hace(dias(c.fecha))})`, c2: c }));
   }
@@ -1497,7 +1539,7 @@ function tareasDia(k, all, rcv) {
 function tareaRow(x) {
   const wa = x.c && x.c.p.telefono ? waTo(x.c.p.telefono, x.t === "msg" ? `Hola ${x.c.p.cliente}, te recordamos que mañana ${fcorta(new Date(x.c.fecha + "T12:00:00"))} toca tu pago ${x.c.p.tipo === "interes" ? "de interés" : x.c.n + " de " + x.c.total} por ${mxn2(x.c.debe)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos` : recMsg(x.c)) : "";
   const wa2 = x.t === "segcot" && x.c2.telefono ? waTo(x.c2.telefono, `Hola ${x.c2.cliente || ""}, ¿pudiste revisar la cotización de tu préstamo por ${mxn(x.c2.monto)}? Si tienes dudas o quieres ajustar el monto o el plazo, con gusto te ayudo.\n\nPara confirmarla entra aquí:\n${PORTAL()}?c=${x.c2.id}\n\nEntre Amigos`) : "";
-  return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}</div>`;
+  return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}</div>`;
 }
 function vAgenda() {
   const all = cuotas(), hoy = today();
@@ -1520,7 +1562,7 @@ function vAgenda() {
     const k = iso(new Date(y, m, d)), l = byDay[k] || [];
     const cls = !l.length ? "" : l.some((c) => c.atrasada) ? "late" : l.every((c) => c.pagada) ? "paid" : "due";
     const T = tareasDia(k, all, rcv).filter((x) => x.t === "cobrar" || x.t === "pago" || x.t === "entro");
-    if (k === hoy) { const ns = tareasDia(k, all, rcv).filter((x) => x.t === "sol" || x.t === "segcot").length; if (ns) T.unshift({ t: "solchip", cls: "msg", n: ns }); }
+    if (k === hoy) { const ns = tareasDia(k, all, rcv).filter((x) => x.t === "sol" || x.t === "segcot" || x.t === "venta").length; if (ns) T.unshift({ t: "solchip", cls: "msg", n: ns }); }
     cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
@@ -1557,5 +1599,6 @@ function vAgenda() {
   $("m-prev").onclick = () => { AG_MONTH = new Date(y, m - 1, 1); AG_DAY = ""; vAgenda(); };
   $("m-next").onclick = () => { AG_MONTH = new Date(y, m + 1, 1); AG_DAY = ""; vAgenda(); };
   bindSolicitudes(vAgenda);
+  $("panel").querySelectorAll("[data-goventa]").forEach((b) => (b.onclick = () => { VOPEN = b.dataset.goventa; go("autos"); }));
 
 }

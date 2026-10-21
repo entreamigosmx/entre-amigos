@@ -56,6 +56,23 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'email']));
       allow read, delete: if admin();
     }
+    match /ventas/{id} {
+      allow create: if request.resource.data.estado == 'nueva'
+        && request.resource.data.keys().hasOnly(['marca', 'modelo', 'anio', 'km', 'precio', 'como', 'nombre', 'telefono', 'nFotos', 'fecha', 'estado'])
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() > 0 && request.resource.data.nombre.size() <= 80
+        && request.resource.data.marca is string && request.resource.data.marca.size() <= 40
+        && request.resource.data.modelo is string && request.resource.data.modelo.size() <= 60
+        && request.resource.data.nFotos is number && request.resource.data.nFotos <= 25;
+      allow read, update, delete: if admin();
+      match /fotos/{f} {
+        allow create: if f.matches('^[0-9]{2}$') && int(f) < 25
+          && exists(/databases/$(database)/documents/ventas/$(id))
+          && get(/databases/$(database)/documents/ventas/$(id)).data.estado == 'nueva'
+          && request.resource.data.keys().hasOnly(['slot', 'i', 'data'])
+          && request.resource.data.data is string && request.resource.data.data.size() < 1000000;
+        allow read, delete: if admin();
+      }
+    }
     match /repartos/{id} {
       allow read, write: if admin();
     }

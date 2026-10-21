@@ -155,3 +155,4 @@ details.rep{border-top:1px solid var(--line);padding-top:10px}
 label.inline{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
 label.inline select{width:auto;font-size:14px;padding:5px 8px}
 .toast.err{color:var(--warn)}
+.vgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}.vgal a{display:grid;gap:3px;text-decoration:none;color:var(--muted);font-size:11px;text-align:center}.vgal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
