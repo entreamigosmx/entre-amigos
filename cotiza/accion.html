@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b0c0a">
+<title>Entre Amigos | Confirmación</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="app.css?v=15">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img src="../assets/img/logo-mark.png" alt="" width="58" height="37">
+    <div class="wm"><b>Entre <i>Amigos</i></b><span>Préstamos y cotizaciones</span></div>
+  </header>
+  <section class="card" id="box"><h1 id="t">Un momento…</h1><p class="muted" id="m">Estamos revisando tu enlace.</p></section>
+  <form class="card" id="fr" hidden novalidate>
+    <h1>Nueva contraseña</h1>
+    <p class="muted" id="fr-mail"></p>
+    <label for="p1">Nueva contraseña<span class="pw"><input id="p1" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><button type="button" class="eye" data-eye aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 20L20 4"/></svg></button></span></label>
+    <label for="p2">Confírmala<span class="pw"><input id="p2" type="password" autocomplete="new-password" placeholder="Escríbela otra vez"><button type="button" class="eye" data-eye aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 20L20 4"/></svg></button></span></label>
+    <p class="err" id="fr-err" hidden></p>
+    <button class="btn primary" type="submit">Guardar contraseña</button>
+  </form>
+</div>
+<script type="module">
+// Página propia para los enlaces que manda Firebase por correo (confirmar correo y cambiar contraseña).
+// Al terminar, regresa sola a la app para que el cliente siga donde iba.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, applyActionCode, verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const app = initializeApp({ apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8", authDomain: "entre-amigos-financiera.firebaseapp.com", projectId: "entre-amigos-financiera", appId: "1:244817036834:web:7dd1a54f4825a318a2ac7b" });
+const auth = getAuth(app); auth.languageCode = "es";
+const $ = (id) => document.getElementById(id), Q = new URLSearchParams(location.search);
+const mode = Q.get("mode"), code = Q.get("oobCode") || "";
+const APP = "./";
+const show = (t, m, btn) => { $("t").textContent = t; $("m").textContent = m; if (btn) $("box").insertAdjacentHTML("beforeend", `<a class="btn primary" href="${APP}">${btn}</a>`); };
+const vuelve = (url, ms) => setTimeout(() => location.replace(url), ms);
+document.querySelectorAll("[data-eye]").forEach((b) => (b.onclick = () => { const v = b.getAttribute("aria-pressed") !== "true"; document.querySelectorAll("[data-eye]").forEach((x) => x.setAttribute("aria-pressed", String(v))); ["p1", "p2"].forEach((id) => ($(id).type = v ? "text" : "password")); }));
+try {
+  if (mode === "verifyEmail") {
+    await applyActionCode(auth, code);
+    show("Correo confirmado", "Listo. Te regresamos a tu cuenta en un momento…", "Ir a mi cuenta");
+    vuelve(APP + "?verificado=1", 1800);
+  } else if (mode === "resetPassword") {
+    const mail = await verifyPasswordResetCode(auth, code);
+    $("box").hidden = true; $("fr").hidden = false; $("fr-mail").textContent = "Para la cuenta " + mail;
+    $("fr").onsubmit = async (e) => {
+      e.preventDefault();
+      const a = $("p1").value, b = $("p2").value, err = (t) => { $("fr-err").hidden = false; $("fr-err").textContent = t; };
+      if (a.length < 6) return err("La contraseña debe tener al menos 6 caracteres.");
+      if (a !== b) return err("Las contraseñas no coinciden.");
+      try { await confirmPasswordReset(auth, code, a); $("fr").hidden = true; $("box").hidden = false; show("Contraseña cambiada", "Ya puedes entrar con tu nueva contraseña. Te llevamos a la app…", "Entrar"); vuelve(APP, 2000); }
+      catch (er) { err("No se pudo cambiar. Pide otro correo desde la app e inténtalo de nuevo."); }
+    };
+  } else if (mode === "recoverEmail") {
+    await applyActionCode(auth, code);
+    show("Correo restablecido", "Tu correo anterior quedó restablecido. Si no pediste este cambio, cambia tu contraseña.", "Ir a la app");
+  } else {
+    show("Enlace no válido", "Este enlace no es correcto. Entra a la app para continuar.", "Ir a la app");
+  }
+} catch (e) {
+  const usado = e && (e.code === "auth/invalid-action-code" || e.code === "auth/expired-action-code");
+  show(usado ? "Este enlace ya se usó o venció" : "No pudimos completar", usado ? "Si ya habías confirmado tu correo, solo entra a tu cuenta. Si no, pide otro correo desde la app." : "Revisa tu conexión e intenta de nuevo.", "Ir a mi cuenta");
+}
+</script>
+</body>
+</html>

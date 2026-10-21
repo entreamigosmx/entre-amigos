@@ -18,6 +18,8 @@ const app = initializeApp({
 });
 const auth = getAuth(app);
 auth.languageCode = "es";
+// Al confirmar el correo o cambiar la contraseña, el cliente regresa directo a la app.
+const ACS = { url: "https://ventaentreamigos.com/cotiza/?verificado=1" };
 const db = getFirestore(app);
 
 // Administradores: también están en las reglas de Firestore (las reglas son las que mandan).
@@ -101,7 +103,7 @@ $("f-login").addEventListener("submit", async (e) => {
       PEND_NAME = nom; PEND_TEL = tel10($("l-tel").value);
       const c = await createUserWithEmailAndPassword(auth, mail, pass);
       await updateProfile(c.user, { displayName: nom });
-      sendEmailVerification(c.user).catch(() => {});
+      sendEmailVerification(c.user, ACS).catch(() => sendEmailVerification(c.user).catch(() => {}));
     } else await signInWithEmailAndPassword(auth, mail, pass);
   } catch (err) { showErr(err); }
   $("b-login").disabled = false;
@@ -119,7 +121,7 @@ getRedirectResult(auth).catch(() => {});
 $("b-forgot").onclick = async () => {
   const mail = $("l-mail").value.trim();
   if (!mail) { showErr({ code: "x" }); $("l-err").textContent = "Escribe tu correo arriba y vuelve a tocar \"Olvidé mi contraseña\"."; return; }
-  try { await sendPasswordResetEmail(auth, mail); $("l-err").hidden = false; $("l-err").className = "ok"; $("l-err").textContent = "Te mandamos un correo para cambiar tu contraseña."; }
+  try { await sendPasswordResetEmail(auth, mail, { url: "https://ventaentreamigos.com/cotiza/" }).catch(() => sendPasswordResetEmail(auth, mail)); $("l-err").hidden = false; $("l-err").className = "ok"; $("l-err").textContent = "Te mandamos un correo para cambiar tu contraseña."; }
   catch (err) { showErr(err); }
 };
 $("b-out").onclick = () => signOut(auth);
@@ -1185,11 +1187,19 @@ function solicitudForm() {
     window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
   };
 }
+let VERI_T = null;
 function vMis() {
-  const ver = ME.emailVerified ? "" : `<div class="card"><h3>Confirma tu correo</h3><p class="muted">Te mandamos un enlace a ${esc(ME.email)}. Ábrelo para que aparezcan tus préstamos, y luego toca "Ya lo confirmé". Revisa también la carpeta de spam.</p><div class="actions"><button class="btn primary" type="button" id="b-ver">Ya lo confirmé</button><button class="btn" type="button" id="b-rev">Reenviar correo</button></div><p class="toast" id="ver-t"></p></div>`;
+  const okv = QS.has("verificado") && ME.emailVerified ? `<div class="card"><p class="ok" style="margin:0">Tu correo quedó confirmado. Ya puedes ver tus préstamos y seguir con tu solicitud.</p></div>` : "";
+  if (QS.has("verificado")) history.replaceState(null, "", location.pathname);
+  const ver = ME.emailVerified ? okv : `<div class="card"><h3>Confirma tu correo</h3><p class="muted">Te mandamos un enlace a ${esc(ME.email)}. Ábrelo para que aparezcan tus préstamos, y luego toca "Ya lo confirmé". Revisa también la carpeta de spam.</p><div class="actions"><button class="btn primary" type="button" id="b-ver">Ya lo confirmé</button><button class="btn" type="button" id="b-rev">Reenviar correo</button></div><p class="toast" id="ver-t"></p></div>`;
+  if (!ME.emailVerified && !VERI_T) {
+    const chk = async () => { try { await auth.currentUser.reload(); if (auth.currentUser.emailVerified) { clearInterval(VERI_T); await auth.currentUser.getIdToken(true); location.reload(); } } catch (e) {} };
+    VERI_T = setInterval(() => { if (!document.hidden) chk(); }, 5000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); });
+  }
   setTimeout(() => {
     $("b-ver") && ($("b-ver").onclick = async () => { await ME.reload(); if (auth.currentUser.emailVerified) { await auth.currentUser.getIdToken(true); location.reload(); } else $("ver-t").textContent = "Todavía no aparece confirmado. Abre el enlace del correo e intenta de nuevo."; });
-    $("b-rev") && ($("b-rev").onclick = () => sendEmailVerification(auth.currentUser).then(() => ($("ver-t").textContent = "Correo reenviado."), () => ($("ver-t").textContent = "Espera un momento antes de reenviar.")));
+    $("b-rev") && ($("b-rev").onclick = () => sendEmailVerification(auth.currentUser, ACS).then(() => ($("ver-t").textContent = "Correo reenviado."), () => ($("ver-t").textContent = "Espera un momento antes de reenviar.")));
   });
   setTimeout(cotBox);
   setTimeout(() => { const f = $("my-tel"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const t = tel10($("my-tel-i").value); if (t.length !== 10) return; await updateDoc(doc(db, "usuarios", ME.uid), { telefono: t }); USER.telefono = t; vMis(); }; });
