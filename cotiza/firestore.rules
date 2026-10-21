@@ -73,6 +73,10 @@ service cloud.firestore {
         allow read, delete: if admin();
       }
     }
+    match /borrados/{email} {
+      allow get, delete: if admin() || (signed() && request.auth.token.email != null && request.auth.token.email.lower() == email);
+      allow create, update, list: if admin();
+    }
     match /repartos/{id} {
       allow read, write: if admin();
     }

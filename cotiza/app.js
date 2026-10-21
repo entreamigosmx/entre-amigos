@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification, deleteUser,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
@@ -101,9 +101,17 @@ $("f-login").addEventListener("submit", async (e) => {
   try {
     if (signup) {
       PEND_NAME = nom; PEND_TEL = tel10($("l-tel").value);
-      const c = await createUserWithEmailAndPassword(auth, mail, pass);
-      await updateProfile(c.user, { displayName: nom });
-      sendEmailVerification(c.user, ACS).catch(() => sendEmailVerification(c.user).catch(() => {}));
+      try {
+        const c = await createUserWithEmailAndPassword(auth, mail, pass);
+        await updateProfile(c.user, { displayName: nom });
+        sendEmailVerification(c.user, ACS).catch(() => sendEmailVerification(c.user).catch(() => {}));
+      } catch (err) {
+        if (err.code !== "auth/email-already-in-use") throw err;
+        // El correo ya tenía cuenta: si el administrador la borró, se elimina y se crea de nuevo.
+        RECREATE = { mail, pass, nom, tel: PEND_TEL };
+        try { await signInWithEmailAndPassword(auth, mail, pass); }
+        catch (e2) { RECREATE = null; showErr({ code: "x" }); $("l-err").textContent = "Ese correo ya tiene una cuenta. Toca \"Entra aquí\" abajo, o \"Olvidé mi contraseña\" si no la recuerdas."; }
+      }
     } else await signInWithEmailAndPassword(auth, mail, pass);
   } catch (err) { showErr(err); }
   $("b-login").disabled = false;
@@ -127,7 +135,7 @@ $("b-forgot").onclick = async () => {
 $("b-out").onclick = () => signOut(auth);
 
 /* ---------------- Sesión ---------------- */
-let ME = null, USER = null, unsubs = [], PEND_NAME = "", PEND_TEL = "";
+let ME = null, USER = null, unsubs = [], PEND_NAME = "", PEND_TEL = "", RECREATE = null, AVISO_BORRADO = "";
 const isAdmin = () => !!ME && ADMINS.includes((ME.email || "").toLowerCase());
 const isTeam = () => isAdmin() || USER?.rol === "equipo";
 
@@ -145,8 +153,29 @@ onAuthStateChanged(auth, async (u) => {
   unsubs.forEach((f) => f()); unsubs = [];
   ME = u; USER = null;
   $("b-out").hidden = !u;
-  if (!u) { $("who").textContent = "Préstamos y cotizaciones"; show("v-login"); return; }
+  if (!u) {
+    $("who").textContent = "Préstamos y cotizaciones"; show("v-login");
+    if (AVISO_BORRADO) { setSignup(true); $("l-tipo-w").hidden = true; $("l-mail").value = AVISO_BORRADO; $("l-err").hidden = false; $("l-err").className = "ok"; $("l-err").textContent = "Tu cuenta anterior fue eliminada. Crea una cuenta nueva (o toca Continuar con Google)."; AVISO_BORRADO = ""; }
+    return;
+  }
   show("v-load");
+  // Si el administrador borró esta cuenta, se elimina el acceso por completo y la persona puede registrarse de nuevo.
+  const em = (u.email || "").toLowerCase();
+  if (em && !ADMINS.includes(em)) {
+    let fl = null; try { fl = await getDoc(doc(db, "borrados", em)); } catch (e) {}
+    if (fl && fl.exists()) {
+      await deleteDoc(doc(db, "borrados", em)).catch(() => {});
+      const R = RECREATE; RECREATE = null;
+      if (!R) AVISO_BORRADO = u.email || "";
+      try { await deleteUser(u); } catch (e) { await signOut(auth).catch(() => {}); }
+      if (R && R.mail.toLowerCase() === em) {
+        try { PEND_NAME = R.nom; PEND_TEL = R.tel; const c = await createUserWithEmailAndPassword(auth, R.mail, R.pass); await updateProfile(c.user, { displayName: R.nom }); sendEmailVerification(c.user, ACS).catch(() => sendEmailVerification(c.user).catch(() => {})); }
+        catch (e) { showErr(e); }
+      }
+      return;
+    }
+  }
+  RECREATE = null;
   try { USER = await ensureUser(u); } catch (e) { USER = { rol: "cliente", nombre: u.displayName || "" }; }
   $("who").textContent = (USER.nombre || u.email) + " · " + (isAdmin() ? "Administrador" : USER.rol === "equipo" ? "Colaborador" : "Cliente");
   const espera = !isAdmin() && USER.rol === "cliente" && USER.solicita === "equipo";
@@ -1272,8 +1301,9 @@ function vPersonas() {
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
   // Borra los datos de la persona en la app (perfil y documentos). Sus préstamos y cotizaciones se conservan.
   $("panel").querySelectorAll("[data-udel]").forEach((b) => (b.onclick = async () => {
-    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: se borran sus datos y documentos"; return; }
-    b.disabled = true; const uid = b.dataset.udel;
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: se borra su cuenta y podrá registrarse de nuevo"; return; }
+    b.disabled = true; const uid = b.dataset.udel, u = USERS.find((x) => x.uid === uid) || {};
+    if (u.email) await setDoc(doc(db, "borrados", u.email.toLowerCase()), { fecha: new Date().toISOString(), nombre: u.nombre || "" }).catch(() => {});
     await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", uid, "archivos", k)).catch(() => {})));
     await deleteDoc(doc(db, "usuarios", uid)).catch(() => { b.disabled = false; b.textContent = "No se pudo borrar"; });
   }));
