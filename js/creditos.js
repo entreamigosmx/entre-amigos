@@ -8,7 +8,7 @@ const fmt = (n) => (n ? Math.round(n).toLocaleString("es-MX") : "");
 const mxn2 = (n) => "$" + (n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 let CFG = { tasaAnual: null, ivaSobreIntereses: true, engancheMin: 20, engancheSugerido: 35, plazos: [12, 24, 36, 48, 60], plazoInicial: 48, precioMin: 50000, precioMax: 5000000 };
-let LIST = [], PLAZO = 48, ENGP = 35;
+let LIST = [], PLAZO = 48, ENGP = 35, MIN = false;
 
 // Mensualidad con interés sobre saldo (sistema francés). La tasa mensual incluye IVA si así se configura.
 function mensualidad(monto, tasaAnual, meses) {
@@ -46,7 +46,7 @@ function calc() {
   const a = LIST.find((x) => x.slug === $("c-auto").value);
   const nom = $("c-nom").value.trim();
   const L = [`Hola${nom ? ", soy " + nom : ""}. Quiero cotizar un crédito${a ? " para el " + a.title : ""}.`, "", "Precio: " + mxn(p), `Enganche: ${mxn(e)} (${Math.round(ENGP)}%)`, "Monto a financiar: " + mxn(f), "Plazo: " + PLAZO + " meses"];
-  if (f && t) L.push("Mensualidad estimada: " + mxn2(m) + " (tasa de referencia " + t + "% anual)");
+  if (f && t) L.push("Mensualidad estimada" + (MIN && t <= CFG.tasaAnual ? " desde " : ": ") + mxn2(m) + " (tasa " + (MIN && t <= CFG.tasaAnual ? "desde " : "de ") + t + "% anual)");
   L.push("", "¿Me ayudan con una cotización formal?");
   $("r-wa").href = wa(L.join("\n"));
   const u = new URL(location); a ? u.searchParams.set("a", a.slug) : u.searchParams.delete("a"); history.replaceState(null, "", u);
@@ -62,6 +62,7 @@ $("c-eng").addEventListener("input", (e) => { const v = num(e.target.value); e.t
 $("c-engp").addEventListener("change", (e) => setEngP(num(e.target.value), "txt%"));
 $("c-eng-r").addEventListener("input", (e) => setEngP(Number(e.target.value), "range"));
 $("c-tasa").addEventListener("input", calc);
+$("c-tasa").addEventListener("change", () => { if (MIN && num($("c-tasa").value) < CFG.tasaAnual) { $("c-tasa").value = CFG.tasaAnual; calc(); } });
 $("c-nom").addEventListener("input", calc);
 $("c-auto").addEventListener("change", () => { const a = LIST.find((x) => x.slug === $("c-auto").value); if (a) setPrecio(a.precio); else calc(); });
 
@@ -75,6 +76,12 @@ Promise.all([
   $("c-precio-r").min = CFG.precioMin; $("c-precio-r").max = CFG.precioMax;
   $("c-eng-r").min = 0; $("c-eng-r").max = 90;
   if (CFG.tasaAnual) $("c-tasa").value = CFG.tasaAnual;
+  MIN = !!CFG.tasaEsMinima;
+  if (MIN) {
+    $("r-men").previousElementSibling.textContent = "Mensualidad estimada desde";
+    $("c-tasa").closest(".field").querySelector(".note").textContent = "Desde " + CFG.tasaAnual + "%";
+    $("c-tasa-n").hidden = false; $("c-tasa-n").textContent = `La tasa empieza en ${CFG.tasaAnual}% anual y depende de tu historial crediticio y de la financiera. Si sabes que tu tasa es mayor, cámbiala aquí.`;
+  }
   else { $("c-tasa").closest(".field").hidden = true; $("r-men").classList.add("sm"); $("c-sin").hidden = false; }
   $("c-auto").innerHTML = `<option value="otro">Otro auto (escribe el precio)</option>` + list.filter((a) => !a.apartado).map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");
   const want = new URLSearchParams(location.search).get("a"), a = list.find((x) => x.slug === want);

@@ -1,11 +1,18 @@
 {
-  "tasaAnual": null,
+  "tasaAnual": 15,
   "tasaEsEjemplo": false,
   "ivaSobreIntereses": true,
   "engancheMin": 20,
   "engancheSugerido": 35,
-  "plazos": [12, 24, 36, 48, 60],
+  "plazos": [
+    12,
+    24,
+    36,
+    48,
+    60
+  ],
   "plazoInicial": 48,
   "precioMin": 50000,
-  "precioMax": 5000000
+  "precioMax": 5000000,
+  "tasaEsMinima": true
 }
