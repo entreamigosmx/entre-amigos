@@ -39,7 +39,7 @@ function calc() {
   $("c-eng-t").textContent = p ? `${mxn(e)} (${Math.round(ENGP)}%)` : "";
   $("c-plazo-t").textContent = PLAZO + " meses";
   $("c-eng-n").textContent = ENGP < CFG.engancheSugerido ? `Sugerimos desde ${CFG.engancheSugerido}%. Con buen historial crediticio puede aceptarse un enganche menor; lo decide la financiera.` : `Enganche sugerido: desde ${CFG.engancheSugerido}%.`;
-  $("r-men").textContent = f && t ? mxn2(m) : f ? "Escribe la tasa" : "$0";
+  $("r-men").textContent = f && t ? mxn2(m) : f ? (CFG.tasaAnual ? "Escribe la tasa" : "Te la cotizamos") : "$0";
   $("r-precio").textContent = mxn(p); $("r-eng").textContent = mxn(e); $("r-fin").textContent = mxn(f);
   $("r-plazo").textContent = PLAZO + " meses"; $("r-total").textContent = f && t ? mxn(Math.round(e + m * PLAZO)) : "Pendiente";
   $("mb-men").textContent = $("r-men").textContent; $("mb-wa").href = $("r-wa").href;
@@ -75,6 +75,7 @@ Promise.all([
   $("c-precio-r").min = CFG.precioMin; $("c-precio-r").max = CFG.precioMax;
   $("c-eng-r").min = 0; $("c-eng-r").max = 90;
   if (CFG.tasaAnual) $("c-tasa").value = CFG.tasaAnual;
+  else { $("c-tasa").closest(".field").hidden = true; $("r-men").classList.add("sm"); $("c-sin").hidden = false; }
   $("c-auto").innerHTML = `<option value="otro">Otro auto (escribe el precio)</option>` + list.filter((a) => !a.apartado).map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");
   const want = new URLSearchParams(location.search).get("a"), a = list.find((x) => x.slug === want);
   if (a) { $("c-auto").value = a.slug; setPrecio(a.precio); } else { $("c-auto").value = "otro"; setPrecio(400000); }

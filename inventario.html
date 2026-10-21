@@ -10,24 +10,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=2">
+<link rel="stylesheet" href="css/estilo.css?v=3">
 </head>
 <body>
 <header class="top g"><div class="in">
   <a class="brand" href="./" aria-label="Entre Amigos, inicio"><img src="assets/img/logo-mark.png" width="63" height="40" alt=""><span class="wm"><b>Entre <i>Amigos</i></b><span>Más que clientes, amigos</span></span></a>
-  <nav class="nav" aria-label="Principal"><a href="inventario.html" aria-current="page">Inventario</a><a href="./#como">Cómo trabajamos</a><a href="./#vende">Vende tu auto</a><a href="./#financiamiento">Financiamiento</a><a href="./#servicios">Servicios</a><a href="./#contacto">Contacto</a></nav>
+  <nav class="nav" aria-label="Principal"><a href="inventario.html" aria-current="page">Inventario</a><a href="./#como">Por qué nosotros</a><a href="./#vende">Vende tu auto</a><a href="creditos.html">Créditos</a><a href="./#servicios">Servicios</a><a href="./#contacto">Contacto</a></nav>
   <a class="btn primary" href="https://wa.me/523333063319" target="_blank" rel="noopener">WhatsApp</a>
 </div></header>
 
 <main class="blk g" style="padding-block:clamp(32px,5vw,56px) 80px"><div class="in">
   <div class="head"><span class="eyebrow">Inventario</span><h1 style="font-size:clamp(40px,6vw,64px)">Autos, motocicletas y trimotos</h1><p class="lead">Vehículos certificados por Entre Amigos. Toca cualquiera para ver sus fotos y su ficha completa.</p></div>
   <div class="chips" id="chips" role="group" aria-label="Categoría"></div>
-  <div class="filters">
-    <label for="f-pre">Presupuesto<select id="f-pre"><option value="">Cualquiera</option><option value="0-300000">Hasta $300,000</option><option value="300000-500000">$300,000 a $500,000</option><option value="500000-800000">$500,000 a $800,000</option><option value="800000-1200000">$800,000 a $1,200,000</option><option value="1200000-99999999">Más de $1,200,000</option></select></label>
+  <button class="btn quiet ftoggle" type="button" id="ftog" aria-expanded="false" aria-controls="filters">Filtrar vehículos</button>
+  <div class="filters" id="filters">
     <label for="f-marca">Marca<select id="f-marca"><option value="">Todas</option></select></label>
-    <label for="f-anio">Año<select id="f-anio"><option value="">Todos</option></select></label>
+    <label for="f-min">Precio desde<select id="f-min"><option value="">Sin mínimo</option><option value="200000">$200,000</option><option value="300000">$300,000</option><option value="400000">$400,000</option><option value="500000">$500,000</option><option value="700000">$700,000</option><option value="900000">$900,000</option><option value="1200000">$1,200,000</option><option value="1500000">$1,500,000</option><option value="2000000">$2,000,000</option></select></label>
+    <label for="f-max">Precio hasta<select id="f-max"><option value="">Sin máximo</option><option value="200000">$200,000</option><option value="300000">$300,000</option><option value="400000">$400,000</option><option value="500000">$500,000</option><option value="700000">$700,000</option><option value="900000">$900,000</option><option value="1200000">$1,200,000</option><option value="1500000">$1,500,000</option><option value="2000000">$2,000,000</option></select></label>
+    <label for="f-anio">Año desde<select id="f-anio"><option value="">Cualquiera</option></select></label>
     <label for="f-ord">Ordenar por<select id="f-ord"><option value="">Recomendados</option><option value="pa">Precio: menor a mayor</option><option value="pd">Precio: mayor a menor</option><option value="ad">Año: más reciente</option><option value="km">Menor kilometraje</option></select></label>
-    <label for="f-dis">Disponibilidad<select id="f-dis"><option value="">Todos</option><option value="d">Solo disponibles</option></select></label>
   </div>
   <p class="count" id="count" aria-live="polite"></p>
   <div class="cars" id="cars"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
@@ -38,6 +39,6 @@
   <span><a href="prestamos.html">Préstamos con garantía</a> · <a href="cotiza/">Acceso clientes y colaboradores</a></span>
 </div></footer>
 <a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
-<script type="module" src="js/inventario.js?v=1"></script>
+<script type="module" src="js/inventario.js?v=3"></script>
 </body>
 </html>

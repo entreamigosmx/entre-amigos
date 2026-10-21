@@ -1,43 +1,33 @@
-import { autos, card, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=1";
+import { autos, card, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=3";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 document.getElementById("wa-sell").insertAdjacentHTML("afterbegin", WA_ICON);
 
-/* Destacados y formulario de financiamiento */
-const sel = document.getElementById("f-auto");
-let LIST = [];
+/* Destacados */
 autos().then((list) => {
-  LIST = list;
   const dest = list.filter((a) => a.portada && !a.apartado).slice(0, 8);
   const pick = dest.length >= 6 ? dest : dest.concat(list.filter((a) => !a.portada && !a.apartado)).slice(0, 8);
   document.getElementById("cars").innerHTML = pick.map(card).join("");
   const t = `Ver todo el inventario (${list.length})`;
   document.getElementById("all-btn").textContent = t;
   document.getElementById("all-top").textContent = t;
-  sel.innerHTML = `<option value="">Elige un auto</option>` + list.map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("") + `<option value="otro">Otro auto</option>`;
-  const want = new URLSearchParams(location.search).get("auto");
-  if (want && list.some((a) => a.slug === want)) { sel.value = want; document.getElementById("financiamiento").scrollIntoView(); }
-  hint();
 }).catch(() => {
   document.getElementById("cars").innerHTML = `<p class="empty">No pudimos cargar el inventario. Recarga la página o escríbenos por WhatsApp al 33 3306 3319.</p>`;
-  sel.innerHTML = `<option value="otro">Otro auto</option>`;
 });
 
-const fe = document.getElementById("f-eng");
-function hint() {
-  const a = LIST.find((x) => x.slug === sel.value);
-  document.getElementById("f-hint").textContent = a
-    ? `Enganche sugerido para este auto: ${mxn(Math.ceil(a.precio * 0.35))} (35%). Puede ser menor según tu historial crediticio.`
-    : "Enganche sugerido: 35% del precio del auto.";
-}
-sel.onchange = hint;
-fe.addEventListener("input", () => { const d = fe.value.replace(/\D/g, ""); fe.value = d ? Number(d).toLocaleString("es-MX") : ""; });
-document.getElementById("fin").addEventListener("submit", (e) => {
+/* Vende tu auto: pocos datos y WhatsApp con todo escrito */
+const $ = (id) => document.getElementById(id);
+["v-km"].forEach((id) => $(id).addEventListener("input", (e) => { const d = e.target.value.replace(/\D/g, ""); e.target.value = d ? Number(d).toLocaleString("es-MX") : ""; }));
+$("vf").addEventListener("submit", (e) => {
   e.preventDefault();
-  const a = LIST.find((x) => x.slug === sel.value), eng = Number(fe.value.replace(/\D/g, "")), nom = document.getElementById("f-nom").value.trim(), plazo = document.getElementById("f-plazo").value;
-  const err = !sel.value ? "Elige el auto que te interesa." : !nom ? "Escribe tu nombre." : "";
-  const el = document.getElementById("f-err"); el.hidden = !err; el.textContent = err; if (err) return;
-  location.href = wa(`Hola, soy ${nom}. Quiero cotizar un crédito para ${a ? "el " + a.title + " (" + mxn(a.precio) + ")" : "un auto"}.${eng ? " Enganche: " + mxn(eng) + "." : ""} Plazo: ${plazo}.`);
+  const v = (id) => $(id).value.trim();
+  const err = !v("v-marca") || !v("v-modelo") || !v("v-anio") ? "Escribe marca, modelo y año." : !v("v-nom") ? "Escribe tu nombre." : "";
+  $("v-err").hidden = !err; $("v-err").textContent = err; if (err) return;
+  const L = ["Hola, quiero vender mi auto.", "", "Auto: " + v("v-marca") + " " + v("v-modelo") + " " + v("v-anio")];
+  if (v("v-km")) L.push("Kilometraje: " + v("v-km") + " km");
+  L.push("Nombre: " + v("v-nom")); if (v("v-tel")) L.push("WhatsApp: " + v("v-tel"));
+  L.push("Me interesa: " + $("v-como").value, "", "En seguida les mando fotos.");
+  location.href = wa(L.join("\n"));
 });
 
 /* Opiniones que rotan */

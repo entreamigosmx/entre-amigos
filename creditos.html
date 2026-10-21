@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de crédito automotriz | Entre Amigos</title>
+<meta name="description" content="Calcula en segundos el enganche y la mensualidad estimada del auto que te gusta. Entre Amigos, Guadalajara.">
+<meta name="theme-color" content="#0a0b0a">
+<link rel="icon" href="assets/img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/estilo.css?v=3">
+</head>
+<body>
+<header class="top g"><div class="in">
+  <a class="brand" href="./" aria-label="Entre Amigos, inicio"><img src="assets/img/logo-mark.png" width="63" height="40" alt=""><span class="wm"><b>Entre <i>Amigos</i></b><span>Más que clientes, amigos</span></span></a>
+  <nav class="nav" aria-label="Principal"><a href="inventario.html" >Inventario</a><a href="./#como">Por qué nosotros</a><a href="./#vende">Vende tu auto</a><a href="creditos.html" aria-current="page">Créditos</a><a href="./#servicios">Servicios</a><a href="./#contacto">Contacto</a></nav>
+  <a class="btn primary" href="https://wa.me/523333063319" target="_blank" rel="noopener">WhatsApp</a>
+</div></header>
+
+<main class="blk g" style="padding-block:clamp(28px,5vw,56px) 80px"><div class="in">
+  <div class="head"><span class="eyebrow">Crédito automotriz</span><h1 style="font-size:clamp(38px,6vw,60px)">¿Cuánto pagarías al mes?</h1><p class="lead">Mueve los valores y ve tu mensualidad estimada. No te pedimos datos para calcular.</p></div>
+  <p class="pending" id="c-demo" hidden style="margin-bottom:var(--gap)">Vista previa: la tasa de 15% anual es solo un ejemplo para que veas cómo funciona. Antes de publicar necesito la tasa real (o las de cada financiera) para que el cálculo sea correcto.</p>
+  <div class="sim">
+    <form class="card" id="sim" novalidate>
+      <label for="c-auto">Auto<select id="c-auto"><option value="">Cargando inventario…</option></select></label>
+      <div class="field"><div class="top2"><label for="c-precio" style="display:inline">Precio del auto</label><span id="c-precio-t"></span></div>
+        <input id="c-precio" inputmode="numeric" autocomplete="off">
+        <input type="range" id="c-precio-r" aria-label="Precio del auto" step="5000"></div>
+      <div class="field"><div class="top2"><span>Enganche</span><span id="c-eng-t"></span></div>
+        <div class="pair"><input id="c-eng" inputmode="numeric" autocomplete="off" aria-label="Enganche en pesos"><input id="c-engp" inputmode="decimal" autocomplete="off" aria-label="Enganche en porcentaje"></div>
+        <input type="range" id="c-eng-r" aria-label="Enganche en porcentaje" step="1">
+        <p class="note" id="c-eng-n"></p></div>
+      <div class="field"><div class="top2"><span>Plazo</span><span id="c-plazo-t"></span></div><div class="plazos" id="c-plazos" role="group" aria-label="Plazo en meses"></div></div>
+      <div class="field"><div class="top2"><label for="c-tasa" style="display:inline">Tasa de interés anual (%)</label><span class="note">De referencia</span></div><input id="c-tasa" inputmode="decimal" autocomplete="off"></div>
+    </form>
+    <div class="card res" aria-live="polite">
+      <div class="big"><span>Mensualidad estimada</span><b id="r-men">$0</b></div>
+      <dl class="rows">
+        <div><dt>Precio</dt><dd id="r-precio"></dd></div>
+        <div><dt>Enganche</dt><dd id="r-eng"></dd></div>
+        <div><dt>Monto a financiar</dt><dd id="r-fin"></dd></div>
+        <div><dt>Plazo</dt><dd id="r-plazo"></dd></div>
+        <div><dt>Total estimado (enganche + pagos)</dt><dd id="r-total"></dd></div>
+      </dl>
+      <label for="c-nom">Tu nombre (opcional)<input id="c-nom" autocomplete="name" placeholder="Para atenderte por tu nombre"></label>
+      <a class="btn primary wa" id="r-wa" href="#" target="_blank" rel="noopener">Solicitar mi cotización</a>
+      <p class="note" id="c-sin" hidden>Toca "Solicitar mi cotización" y te mandamos tu mensualidad exacta por WhatsApp según la financiera.</p>
+      <p class="note">Estimación informativa, sujeta a evaluación y aprobación crediticia. La mensualidad incluye IVA sobre intereses; no incluye seguros, comisiones ni otros cargos. El CAT y las condiciones finales te los entrega la financiera con tu cotización formal.</p>
+    </div>
+  </div>
+  <div class="two" style="margin-top:clamp(36px,5vw,56px)">
+    <div><h2 style="font-size:clamp(28px,3.6vw,40px)">Qué necesitas para tu crédito</h2>
+      <ul class="req" style="margin-top:14px"><li>INE vigente</li><li>Comprobante de ingresos de los últimos 3 meses</li><li>Comprobante de domicilio</li><li>Constancia de situación fiscal</li></ul></div>
+    <div><h2 style="font-size:clamp(28px,3.6vw,40px)">Cómo sigue</h2>
+      <ol class="req" style="margin-top:14px"><li>Nos mandas tu cotización por WhatsApp.</li><li>Te pedimos tus documentos por un medio seguro.</li><li>La financiera revisa y te da su respuesta y condiciones finales.</li></ol></div>
+  </div>
+</div></main>
+<footer class="g"><div class="in">
+  <span>Entre Amigos · Av. Aztecas 1021, Monraz, Guadalajara · 33 3306 3319</span>
+  <span><a href="prestamos.html">Préstamos con garantía</a> · <a href="cotiza/">Acceso clientes y colaboradores</a></span>
+</div></footer>
+<div class="mbar" aria-hidden="true"><div><span>Mensualidad estimada</span><b id="mb-men"></b></div><a class="btn primary" id="mb-wa" href="#" target="_blank" rel="noopener" tabindex="-1">Solicitar</a></div>
+<a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
+<script type="module" src="js/creditos.js?v=3"></script>
+</body>
+</html>

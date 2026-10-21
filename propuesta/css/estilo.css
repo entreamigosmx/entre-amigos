@@ -300,3 +300,4 @@ details.ficha .desc{margin:0;padding:0 18px 18px}
   .mbar~.fixwa{display:none}
   body:has(.mbar){padding-bottom:84px}
 }
+.res .big b.sm{font-size:clamp(32px,6vw,42px)}

@@ -1,6 +1,6 @@
 {
-  "tasaAnual": 15,
-  "tasaEsEjemplo": true,
+  "tasaAnual": null,
+  "tasaEsEjemplo": false,
   "ivaSobreIntereses": true,
   "engancheMin": 20,
   "engancheSugerido": 35,
