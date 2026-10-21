@@ -399,6 +399,7 @@ async function corridaPNG(r) {
   const det = sem ? `${r.plazo} pagos semanales` : `${r.plazo} pagos mensuales · interés ${r.tasa}% mensual sobre saldo`;
   g.fillText(det, P, 480);
   if (!sem && r.garantia && r.garantia !== "ff") { g.fillStyle = MUTED; g.fillText("Garantía: " + (r.desc || GARANTIAS[r.garantia] || ""), P, 524); }
+  if (sem) { g.fillStyle = MUTED; g.fillText("Requisitos: pagaré, aval, INE vigente y comprobante de domicilio.", P, 524); }
   // tabla
   const cols = sem ? [["Semana", 0.14, "l"], ["Fecha", 0.40, "l"], ["Pago", 0.23, "r"], ["Resta", 0.23, "r"]]
     : [["Mes", 0.10, "l"], ["Pago", 0.24, "r"], ["Interés", 0.22, "r"], ["Capital", 0.22, "r"], ["Saldo", 0.22, "r"]];
