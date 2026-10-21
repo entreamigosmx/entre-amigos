@@ -50,7 +50,7 @@ function calc() {
   const nom = $("c-nom").value.trim() || $("c-nom2").value.trim(), tel = $("c-tel2").value.trim();
   corrida(f, t, m);
   const L = [`Hola${nom ? ", soy " + nom : ""}. Quiero cotizar un crédito${a ? " para el " + a.title : ""}.`, "", "Precio: " + mxn(p), `Enganche: ${mxn(e)} (${Math.round(ENGP)}%)`, "Monto a financiar: " + mxn(f), "Plazo: " + PLAZO + " meses"];
-  if (f && t) L.push("Mensualidad estimada" + (MIN && t <= CFG.tasaAnual ? " desde " : ": ") + mxn2(m) + " (tasa " + (MIN && t <= CFG.tasaAnual ? "desde " : "de referencia ") + t + "% anual)");
+  if (f && t) L.push("Mensualidad de ejemplo del simulador" + (MIN && t <= CFG.tasaAnual ? " desde " : ": ") + mxn2(m) + " (tasa " + (MIN && t <= CFG.tasaAnual ? "desde " : "de referencia ") + t + "% anual)");
   L.push("", "¿Me ayudan con una cotización formal?");
   $("r-wa").href = wa(L.join("\n"));
   const L2 = L.slice(0, -1); if (tel) L2.splice(1, 0, "Mi WhatsApp: " + tel);
@@ -104,7 +104,7 @@ Promise.all([
     $("c-tasa-n").hidden = false; $("c-tasa-n").textContent = `Usamos ${CFG.tasaAnual}% anual como referencia. Tu tasa puede ser mayor o menor según tu historial crediticio y la financiera. Cámbiala para ver cómo cambia tu pago.`;
   }
   if (MIN) {
-    $("r-men").previousElementSibling.textContent = "Mensualidad estimada desde";
+    $("r-men").previousElementSibling.textContent = "Mensualidad de ejemplo desde";
     $("c-tasa").closest(".field").querySelector(".note").textContent = "Desde " + CFG.tasaAnual + "%";
     $("c-tasa-n").hidden = false; $("c-tasa-n").textContent = `La tasa empieza en ${CFG.tasaAnual}% anual y depende de tu historial crediticio y de la financiera. Si sabes que tu tasa es mayor, cámbiala aquí.`;
   }

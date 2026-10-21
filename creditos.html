@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=3">
+<link rel="stylesheet" href="css/estilo.css?v=4">
 </head>
 <body>
 <header class="top g"><div class="in">
@@ -20,7 +20,8 @@
 </div></header>
 
 <main class="blk g" style="padding-block:clamp(28px,5vw,56px) 80px"><div class="in">
-  <div class="head"><span class="eyebrow">Crédito automotriz</span><h1 style="font-size:clamp(38px,6vw,60px)">¿Cuánto pagarías al mes?</h1><p class="lead">Mueve los valores y ve tu mensualidad estimada. No te pedimos datos para calcular.</p></div>
+  <div class="head"><span class="eyebrow">Simulador de ejemplo · Crédito automotriz</span><h1 style="font-size:clamp(38px,6vw,60px)">¿Cuánto pagarías al mes?</h1><p class="lead">Mueve los valores y ve un ejemplo de tu mensualidad. No te pedimos datos para calcular.</p></div>
+  <div class="aviso-sim"><b>Esto es solo un ejemplo, no una cotización.</b> Cada banco y financiera tiene sus propios términos y condiciones: algunos cobran comisión por apertura, seguro de vida, seguro de daños u otros cargos, y otros no. La tasa depende de tu historial crediticio. Tu cotización real te la damos por WhatsApp.</div>
   <p class="pending" id="c-demo" hidden style="margin-bottom:var(--gap)">Vista previa: la tasa de 15% anual es solo un ejemplo para que veas cómo funciona. Antes de publicar necesito la tasa real (o las de cada financiera) para que el cálculo sea correcto.</p>
   <div class="sim">
     <form class="card" id="sim" novalidate>
@@ -36,7 +37,7 @@
       <div class="field"><div class="top2"><label for="c-tasa" style="display:inline">Tasa de interés anual (%)</label><span class="note">De referencia</span></div><input id="c-tasa" inputmode="decimal" autocomplete="off"><p class="note" id="c-tasa-n" hidden></p></div>
     </form>
     <div class="card res" aria-live="polite">
-      <div class="big"><span>Mensualidad estimada</span><b id="r-men">$0</b></div>
+      <div class="big"><span>Mensualidad de ejemplo</span><b id="r-men">$0</b></div>
       <dl class="rows">
         <div><dt>Precio</dt><dd id="r-precio"></dd></div>
         <div><dt>Enganche</dt><dd id="r-eng"></dd></div>
@@ -47,7 +48,7 @@
       <label for="c-nom">Tu nombre (opcional)<input id="c-nom" autocomplete="name" placeholder="Para atenderte por tu nombre"></label>
       <a class="btn primary wa" id="r-wa" href="#" target="_blank" rel="noopener">Solicitar mi cotización</a>
       <p class="note" id="c-sin" hidden>Toca "Solicitar mi cotización" y te mandamos tu mensualidad exacta por WhatsApp según la financiera.</p>
-      <p class="note">Estimación informativa, sujeta a evaluación y aprobación crediticia. La mensualidad incluye IVA sobre intereses; no incluye seguros, comisiones ni otros cargos. El CAT y las condiciones finales te los entrega la financiera con tu cotización formal.</p>
+      <p class="note"><b>Ejemplo, no es cotización.</b> Incluye IVA sobre intereses. <b>No incluye</b> comisión por apertura, seguro de vida, seguro de daños ni otros cargos que algunas financieras cobran. La tasa, el CAT y las condiciones finales te los da la financiera con tu cotización real, sujeta a aprobación de crédito.</p>
     </div>
   </div>
   <div class="two" style="margin-top:clamp(36px,5vw,56px)">
@@ -61,8 +62,8 @@
   <span>Entre Amigos · Av. Aztecas 1021, Monraz, Guadalajara · 33 3306 3319</span>
   <span><a href="prestamos.html">Préstamos con garantía</a> · <a href="cotiza/">Acceso clientes y colaboradores</a></span>
 </div></footer>
-<div class="mbar" aria-hidden="true"><div><span>Mensualidad estimada</span><b id="mb-men"></b></div><a class="btn primary" id="mb-wa" href="#" target="_blank" rel="noopener" tabindex="-1">Solicitar</a></div>
+<div class="mbar" aria-hidden="true"><div><span>Ejemplo de mensualidad</span><b id="mb-men"></b></div><a class="btn primary" id="mb-wa" href="#" target="_blank" rel="noopener" tabindex="-1">Solicitar</a></div>
 <a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
-<script type="module" src="js/creditos.js?v=5"></script>
+<script type="module" src="js/creditos.js?v=6"></script>
 </body>
 </html>
