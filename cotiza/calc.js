@@ -5,8 +5,8 @@ export const mxn = (n) => "$" + Math.round(n || 0).toLocaleString("es-MX");
 export const mxn2 = (n) => "$" + (n || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const r2 = (n) => Math.round(n * 100) / 100;
 
-export const GARANTIAS = { auto: "Auto", reloj: "Reloj", oro: "Oro", monedas: "Monedas", otro: "Otra prenda", ff: "Friends & family" };
-export const GN = { auto: "tu auto", reloj: "tu reloj", oro: "tu oro", monedas: "tus monedas", otro: "tu prenda", ff: "lo acordado" };
+export const GARANTIAS = { auto: "Auto", reloj: "Reloj", oro: "Oro", monedas: "Monedas", otro: "Otra prenda", ff: "Friends & family", sin: "Sin garantía" };
+export const GN = { auto: "tu auto", reloj: "tu reloj", oro: "tu oro", monedas: "tus monedas", otro: "tu prenda", ff: "lo acordado", sin: "sin garantía" };
 
 // Pagos mensuales fijos, interés sobre saldo.
 export function corridaMensual(monto, tasaMensualPct, meses, pagoFijo) {

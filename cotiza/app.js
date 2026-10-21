@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido, desglosePagos } from "./calc.js?v=7";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, vencido, desglosePagos } from "./calc.js?v=8";
 
 const app = initializeApp({
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -258,6 +258,8 @@ function bindPick(pre, form) {
 
 /* ---------- Cotizar ---------- */
 let COV = "", COV_OK_ONCE = "";
+// "Sin garantía" y "Friends & family" solo los decide el administrador.
+const garOpts = (sel) => Object.entries(GARANTIAS).filter(([k]) => isAdmin() || (k !== "ff" && k !== "sin")).map(([k, v]) => `<option value="${k}"${k === sel ? " selected" : ""}>${v}</option>`).join("");
 // Regla de garantía 2 a 1 (3 a 1 arriba de 12 meses): los colaboradores no pueden enviar si no se cumple; el administrador confirma con un segundo toque.
 function covGuard() {
   if (!COV) return true;
@@ -288,7 +290,7 @@ function vCotizar() {
       <div class="row"><label for="q-monto">Monto a prestar (MXN)<input id="q-monto" inputmode="numeric" value="${MODE === "garantia" ? "100,000" : "10,000"}"></label>
       ${MODE === "garantia"
         ? `<label for="q-tasa">Interés mensual (%)<input id="q-tasa" inputmode="decimal" value="5"></label></div>
-      <div class="row"><label for="q-gar">Garantía<select id="q-gar">${Object.entries(GARANTIAS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
+      <div class="row"><label for="q-gar">Garantía<select id="q-gar">${garOpts()}</select></label>
       <label for="q-desc">Descripción<input id="q-desc" autocomplete="off" placeholder="Ej. Jetta 2019"></label></div>
       <div class="row"><label for="q-plazo">Plazo (meses)<input id="q-plazo" inputmode="numeric" value="12"></label>
       <label for="q-val">Valor de la garantía<input id="q-val" inputmode="numeric" placeholder="Ej. 250,000"></label></div>
@@ -369,13 +371,14 @@ function calc() {
     const t = num($("q-tasa").value), n = parseInt($("q-plazo").value, 10), g = $("q-gar").value, desc = $("q-desc").value.trim(), val = num($("q-val").value);
     if (!M || !n) return err("Escribe el monto y el plazo en meses.");
     const c = corridaMensual(M, t, n), fx = factorGarantia(n), req = M * fx, cov = $("q-cov");
-    const ff = g === "ff";
+    const ff = g === "ff" || g === "sin";
     $("q-val").closest("label").hidden = ff;
     COV = ff || (val && val >= req) ? "" : !val ? `Falta el valor de la garantía. Para ${mxn(M)} a ${n} meses debe valer al menos ${mxn(req)} (${fx} a 1).` : `La garantía no cubre ${fx} a 1: para ${mxn(M)} a ${n} meses debe valer al menos ${mxn(req)}. Con ${mxn(val)} se puede prestar hasta ${mxn(Math.floor(val / fx))}.`;
-    if (ff) { cov.className = "cov"; cov.textContent = "Friends & family: tasa preferencial y garantía acordada. No aplica la regla 2 a 1 / 3 a 1."; }
+    if (g === "sin") { cov.className = "cov"; cov.textContent = "Sin garantía: préstamo autorizado por ti. No aplica la regla 2 a 1 / 3 a 1."; }
+    else if (ff) { cov.className = "cov"; cov.textContent = "Friends & family: tasa preferencial y garantía acordada. No aplica la regla 2 a 1 / 3 a 1."; }
     else if (val) { const ok = val >= req; cov.className = "cov " + (ok ? "ok" : "bad"); cov.textContent = ok ? `Garantía suficiente (${fx} a 1). Con este valor puedes prestar hasta ${mxn(Math.floor(val / fx))}.` : `Garantía insuficiente: para ${mxn(M)} a ${n} meses debe valer al menos ${mxn(req)} (${fx} a 1). Con este valor puedes prestar hasta ${mxn(Math.floor(val / fx))}.`; }
     else { cov.className = "cov"; cov.textContent = `Para ${mxn(M)} a ${n} meses, la garantía debe valer al menos ${mxn(req)} (${fx} a 1).`; }
-    const cierre = ff ? (desc ? "Garantía acordada: " + desc + "." : "La garantía es la que acordamos.") : g === "auto" ? "Puedes seguir usando tu auto; solo dejas la documentación endosada y una llave." : "Tu garantía queda bajo resguardo y se te devuelve al liquidar el préstamo.";
+    const cierre = g === "sin" ? "Este préstamo no requiere garantía." : ff ? (desc ? "Garantía acordada: " + desc + "." : "La garantía es la que acordamos.") : g === "auto" ? "Puedes seguir usando tu auto; solo dejas la documentación endosada y una llave." : "Tu garantía queda bajo resguardo y se te devuelve al liquidar el préstamo.";
     const msg = `Hola${nom ? " " + nom : ""}, te comparto la cotización de tu préstamo${ff ? "" : " con garantía de " + (desc || GN[g])}:\n\nMonto: ${mxn(M)}\nPlazo: ${n} meses\nInterés: ${t}% mensual sobre saldo\nPago mensual: ${mxn2(c.pago)}\nTotal a pagar: ${mxn2(c.total)}${ff ? "" : "\nGarantía requerida: con valor de al menos " + mxn(req)}\n\n${cierre} Si adelantas pagos, pagas menos interés.\n\nEntre Amigos`;
     r = { tipo: "garantia", garantia: g, desc, valor: ff ? null : val || null, monto: M, tasa: t, plazo: n, pago: c.pago, total: c.total, intereses: c.intereses, msg, lbl: "Pago mensual",
       tbl: "<tr><th>Mes</th><th>Pago</th><th>Interés</th><th>Capital</th><th>Saldo</th></tr>" + c.filas.map((f) => `<tr><td>${f.n}</td><td>${mxn2(f.pago)}</td><td>${mxn2(f.interes)}</td><td>${mxn2(f.capital)}</td><td>${mxn2(f.saldo)}</td></tr>`).join("") };
@@ -452,7 +455,7 @@ async function corridaPNG(r) {
   g.fillStyle = INK; g.font = `500 28px ${F}`;
   const det = sem ? `${r.plazo} pagos semanales` : `${r.plazo} pagos mensuales · interés ${r.tasa}% mensual sobre saldo`;
   g.fillText(det, P, 480);
-  if (!sem && r.garantia && r.garantia !== "ff") { g.fillStyle = MUTED; g.fillText("Garantía: " + (r.desc || GARANTIAS[r.garantia] || ""), P, 524); }
+  if (!sem && r.garantia && r.garantia !== "ff" && r.garantia !== "sin") { g.fillStyle = MUTED; g.fillText("Garantía: " + (r.desc || GARANTIAS[r.garantia] || ""), P, 524); }
   if (sem) { g.fillStyle = MUTED; g.fillText("Requisitos: pagaré, aval, INE vigente y comprobante de domicilio.", P, 524); }
   // tabla
   const cols = sem ? [["Semana", 0.14, "l"], ["Fecha", 0.40, "l"], ["Pago", 0.23, "r"], ["Resta", 0.23, "r"]]
@@ -509,7 +512,7 @@ function solNo(x) {
   return `Hola ${x.nombre}, gracias por tu solicitud de préstamo por ${mxn(x.monto)}. Por el momento no nos es posible aprobarla en esas condiciones.\n\nSi te interesa revisar otra opción (otro monto, plazo o garantía), con gusto te ayudamos. Tus datos quedan registrados para ofrecerte opciones más adelante.\n\nEntre Amigos`;
 }
 function solTxt(x) {
-  const g = x.garantia === "aval" ? "Sin garantía (con aval)" : (GARANTIAS[x.garantia] || x.garantia || "") + (x.desc ? " · " + esc(x.desc) : "") + (x.valor ? " · valor aprox. " + mxn(x.valor) : "");
+  const g = x.garantia === "aval" ? "Sin garantía (con aval)" : x.garantia === "sin" ? "<b>Sin garantía · tú decides</b>" : (GARANTIAS[x.garantia] || x.garantia || "") + (x.desc ? " · " + esc(x.desc) : "") + (x.valor ? " · valor aprox. " + mxn(x.valor) : "");
   return `${mxn(x.monto)} a ${x.plazo} ${x.unidad === "semanas" ? "semanas" : "meses"} · ${g}`;
 }
 function solInv(x) {
@@ -638,7 +641,7 @@ function vPrestamos() {
       <label for="e-n" data-f="n"><span id="e-n-l">Meses que le faltan</span><input id="e-n" inputmode="numeric" placeholder="Ej. 3"></label></div>
       <div class="row"><label for="e-ini">Fecha de su próximo pago<input id="e-ini" type="date" value="${plusDays(30)}"></label>
       <label for="e-mail">Correo (opcional)<input id="e-mail" type="email" inputmode="email" placeholder="cliente@correo.com"></label></div>
-      <div class="row" data-f="gar"><label for="e-gar">Garantía<select id="e-gar"><option value="">Sin garantía</option>${Object.entries(GARANTIAS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label>
+      <div class="row" data-f="gar"><label for="e-gar">Garantía<select id="e-gar"><option value="">Sin garantía</option>${garOpts().replace('<option value="sin">Sin garantía</option>', "")}</select></label>
       <label for="e-desc">Descripción<input id="e-desc" placeholder="Ej. Tahoe 2020, Rolex, 5 centenarios"></label></div>
       <p class="cov" id="e-prev"></p>
       <p class="err" id="e-err" hidden></p>
@@ -657,7 +660,7 @@ function vPrestamos() {
       <label for="p-tasa" id="p-tasa-l">${d.tipo === "semanal" ? "Pago por cada $1,000" : "Interés mensual (%)"}<input id="p-tasa" inputmode="decimal" value="${d.tasa ?? ""}"></label></div>
       <div class="row"><label for="p-plazo" id="p-plazo-l">${d.tipo === "semanal" ? "Semanas" : "Meses"}<input id="p-plazo" inputmode="numeric" value="${d.plazo ?? ""}"></label>
       <label for="p-ini">Fecha del primer pago<input id="p-ini" type="date" value="${d.inicio || plusDays(d.tipo === "semanal" ? 7 : 30)}"></label></div>
-      <div class="row" id="p-gar-row"${d.tipo === "semanal" ? " hidden" : ""}><label for="p-gar">Garantía<select id="p-gar">${Object.entries(GARANTIAS).map(([k, v]) => `<option value="${k}"${k === d.garantia ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+      <div class="row" id="p-gar-row"${d.tipo === "semanal" ? " hidden" : ""}><label for="p-gar">Garantía<select id="p-gar">${garOpts(d.garantia)}</select></label>
       <label for="p-desc">Descripción<input id="p-desc" value="${esc(d.desc || "")}"></label></div>
       <label for="p-fijo">Pago acordado (opcional, si es distinto al calculado)<input id="p-fijo" inputmode="decimal" placeholder="Opcional"></label>
       <p class="err" id="p-err" hidden></p>
@@ -976,7 +979,7 @@ function invMsg(p, id) {
 }
 const debeDe = (p, a) => (p.tipo === "capfijo" || p.tipo === "interes" ? a.capital : a.restante);
 function loanDesc(p, a) {
-  const g = p.garantia ? (p.garantia === "ff" ? "Friends & family" : "Garantía " + (GARANTIAS[p.garantia] || "")) + (p.desc ? " (" + esc(p.desc) + ")" : "") : "";
+  const g = p.garantia ? (p.garantia === "ff" ? "Friends & family" : p.garantia === "sin" ? "Sin garantía" : "Garantía " + (GARANTIAS[p.garantia] || "")) + (p.desc ? " (" + esc(p.desc) + ")" : "") : "";
   const parts = p.tipo === "interes" ? ["Solo interés", g, mxn(p.monto), "interés " + p.tasa + "% = " + mxn2(a.corrida.pago) + "/mes"]
     : p.tipo === "capfijo" ? ["Interés + capital", g, mxn(p.monto), p.tasa + "% + " + mxn(p.abono) + " a capital al mes"]
     : p.tipo === "semanal" ? ["Semanal", mxn(p.monto), "pago " + mxn2(a.corrida.pago)]
@@ -1065,7 +1068,7 @@ async function cotBox() {
     const detalle = c.tipo === "semanal" ? `${c.plazo} pagos semanales de ${mxn2(c.pago)}` : `${c.plazo} pagos mensuales de ${mxn2(c.pago)} · interés ${c.tasa}% mensual sobre saldo`;
     return `<div class="card"><h2>Tu cotización</h2>
       <div class="big"><span>Monto del préstamo</span><b>${mxn(c.monto)}</b></div>
-      <p>${detalle}</p><p class="muted">Total a pagar: ${mxn2(c.total)}${c.tipo !== "semanal" && c.garantia && c.garantia !== "ff" ? " · Garantía: " + esc(c.desc || GARANTIAS[c.garantia]) : ""}</p>
+      <p>${detalle}</p><p class="muted">Total a pagar: ${mxn2(c.total)}${c.tipo !== "semanal" && c.garantia && c.garantia !== "ff" && c.garantia !== "sin" ? " · Garantía: " + esc(c.desc || GARANTIAS[c.garantia]) : ""}</p>
       ${corridaCliente(c)}
       ${c.estado === "negado" && (mine || !c.aceptadoPor) ? `<p class="muted">Por el momento no nos es posible aprobar esta solicitud. Si quieres revisar otra opción, escríbenos por WhatsApp.</p>`
         : mine ? `<p class="ok">Confirmaste esta cotización. Te avisaremos por WhatsApp cuando tu préstamo esté listo y la fecha de tu primer pago.</p>`
@@ -1094,7 +1097,7 @@ function solicitudCard() {
     <label for="s-monto">Monto que necesitas<input id="s-monto" inputmode="numeric" placeholder="Ej. 50,000"></label>
     <div class="row"><label for="s-plazo">Plazo<input id="s-plazo" inputmode="numeric" placeholder="Ej. 3"></label>
     <label for="s-uni">En<select id="s-uni"><option value="meses">Meses</option><option value="semanas">Semanas</option></select></label></div>
-    <div class="row"><label for="s-gar">Garantía<select id="s-gar">${Object.entries(GARANTIAS).filter(([k]) => k !== "ff").map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}<option value="aval">Sin garantía (con aval)</option></select></label>
+    <div class="row"><label for="s-gar">Garantía<select id="s-gar">${Object.entries(GARANTIAS).filter(([k]) => k !== "ff" && k !== "sin").map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}<option value="sin">No tengo garantía (ustedes deciden)</option><option value="aval">Sin garantía (con aval)</option></select></label>
     <label for="s-desc">Descripción de la garantía<input id="s-desc" placeholder="Ej. Jetta 2019, Rolex Submariner"></label></div>
     <label for="s-val" id="s-val-l">Valor de tu garantía<input id="s-val" inputmode="numeric" placeholder="Ej. 150,000"></label>
     <p class="cov" id="s-cov">Tu garantía debe valer al menos el doble de lo que pides (2 a 1). Si el plazo es mayor a 12 meses, el triple (3 a 1).</p>
@@ -1107,9 +1110,10 @@ function solicitudForm() {
   ["s-monto", "s-val"].forEach((id) => $(id).addEventListener("input", (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; }));
   const meses = () => { const n = parseInt($("s-plazo").value, 10) || 0; return $("s-uni").value === "semanas" ? Math.ceil(n / 4.33) : n; };
   const cob = () => {
-    const g = $("s-gar").value, aval = g === "aval", m = num($("s-monto").value), v = num($("s-val").value), fx = factorGarantia(meses()), req = m * fx, box = $("s-cov");
+    const g = $("s-gar").value, aval = g === "aval" || g === "sin", m = num($("s-monto").value), v = num($("s-val").value), fx = factorGarantia(meses()), req = m * fx, box = $("s-cov");
     $("s-val-l").hidden = aval; $("s-desc").closest("label").hidden = aval; box.hidden = aval;
-    if (aval) { $("s-uni").value = "semanas"; return ""; }
+    if (g === "aval") { $("s-uni").value = "semanas"; return ""; }
+    if (g === "sin") return "";
     if (!m) return "Escribe el monto.";
     if (!v) { box.className = "cov"; box.textContent = `Para ${mxn(m)} tu garantía debe valer al menos ${mxn(req)} (${fx} a 1).`; return `Escribe cuánto vale tu garantía: debe ser al menos ${mxn(req)} (${fx} a 1).`; }
     if (v >= req) { box.className = "cov ok"; box.textContent = `Tu garantía cubre el préstamo (${fx} a 1).`; return ""; }
@@ -1124,10 +1128,10 @@ function solicitudForm() {
     if (!m || !n) { $("s-err").hidden = false; $("s-err").textContent = "Escribe el monto y el plazo."; return; }
     const ce = cob(); if (ce) { $("s-err").hidden = false; $("s-err").textContent = ce; return; }
     $("s-err").hidden = true;
-    const gar = g === "aval" ? "Sin garantía (con aval)" : GARANTIAS[g] + ($("s-desc").value.trim() ? ": " + $("s-desc").value.trim() : "") + " (valor " + mxn(num($("s-val").value)) + ")";
+    const gar = g === "aval" ? "Sin garantía (con aval)" : g === "sin" ? "No tengo garantía" : GARANTIAS[g] + ($("s-desc").value.trim() ? ": " + $("s-desc").value.trim() : "") + " (valor " + mxn(num($("s-val").value)) + ")";
     const msg = `Hola, quiero solicitar ${PRES.length ? "otro " : "un "}préstamo.\n\nNombre: ${USER.nombre || ""}\nCorreo: ${ME.email || ""}${USER.telefono ? "\nWhatsApp: " + USER.telefono : ""}\nMonto: ${mxn(m)}\nPlazo: ${n} ${$("s-uni").value}\nPagos: ${$("s-uni").value === "semanas" ? "semanales" : "mensuales"}\nGarantía: ${gar}${$("s-nota").value.trim() ? "\nComentarios: " + $("s-nota").value.trim() : ""}`;
     avisar("Nueva solicitud de préstamo", `${mxn(m)} a ${n} ${$("s-uni").value} (cliente con cuenta). Ábrela en la app.`);
-    addDoc(collection(db, "solicitudes"), { nombre: (USER.nombre || "").slice(0, 80), telefono: USER.telefono || "", monto: m, plazo: n, unidad: $("s-uni").value, garantia: g, desc: $("s-desc").value.trim().slice(0, 200), valor: g === "aval" ? 0 : num($("s-val").value), nota: $("s-nota").value.trim().slice(0, 300), fecha: new Date().toISOString(), origen: "cliente", uid: ME.uid, email: (ME.email || "").toLowerCase(), estado: "nueva" }).catch(() => {});
+    addDoc(collection(db, "solicitudes"), { nombre: (USER.nombre || "").slice(0, 80), telefono: USER.telefono || "", monto: m, plazo: n, unidad: $("s-uni").value, garantia: g, desc: $("s-desc").value.trim().slice(0, 200), valor: g === "aval" || g === "sin" ? 0 : num($("s-val").value), nota: $("s-nota").value.trim().slice(0, 300), fecha: new Date().toISOString(), origen: "cliente", uid: ME.uid, email: (ME.email || "").toLowerCase(), estado: "nueva" }).catch(() => {});
     window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
   };
 }
