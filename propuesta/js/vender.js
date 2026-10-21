@@ -56,7 +56,8 @@ $("vf").addEventListener("submit", async (e) => {
   if (!v("v-marca") || !v("v-modelo") || !v("v-anio") || !v("v-km")) return alert0("Paso 1: escribe marca, modelo, año y kilometraje.");
   const faltan = REQ.filter((s) => !FOTOS[s]);
   if (faltan.length) return alert0("Faltan fotos: " + faltan.map((s) => NOMBRE[s]).join(", ") + ".");
-  if (!v("v-nom") || num(v("v-tel")) < 1000000000) return alert0("Paso 4: escribe tu nombre y tu WhatsApp a 10 dígitos.");
+  if (!v("v-nom") || num(v("v-tel")) < 1000000000) return alert0("Paso 4: escribe tu nombre completo y tu WhatsApp a 10 dígitos.");
+  if (v("v-nom").split(/\s+/).length < 2) return alert0("Paso 4: escribe tu nombre completo, con nombre y apellidos.");
   if (!$("v-ok").checked) return alert0("Marca la casilla para aceptar el uso de tus datos.");
   if (!fb) return alert0("No pudimos conectar. Revisa tu internet e intenta de nuevo.");
   alert0("");

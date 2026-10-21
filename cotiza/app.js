@@ -85,7 +85,8 @@ const showErr = (e) => { $("l-err").hidden = false; $("l-err").className = "err"
 $("f-login").addEventListener("submit", async (e) => {
   e.preventDefault();
   const mail = $("l-mail").value.trim(), pass = $("l-pass").value, nom = $("l-nom").value.trim();
-  if (signup && !nom) { showErr({ code: "x" }); $("l-err").textContent = "Escribe tu nombre."; return; }
+  if (signup && !nom) { showErr({ code: "x" }); $("l-err").textContent = "Escribe tu nombre completo."; return; }
+  if (signup && nom.split(/\s+/).length < 2) { showErr({ code: "x" }); $("l-err").textContent = "Escribe tu nombre completo: nombre y apellidos."; return; }
   $("b-login").disabled = true;
   try {
     if (signup) {
@@ -285,7 +286,7 @@ function vCotizar() {
     <form id="fq" novalidate>
       <p class="step">1. Cliente</p>
       ${EDIT_COT ? "" : pickCliente("q")}
-      <div class="row"><label for="q-nom">Cliente<input id="q-nom" autocomplete="off" placeholder="Nombre del cliente"></label>
+      <div class="row"><label for="q-nom">Nombre completo del cliente<input id="q-nom" autocomplete="off" placeholder="Nombre y apellidos"></label>
       <label for="q-tel">WhatsApp del cliente<input id="q-tel" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label></div>
       <p class="step">2. Condiciones</p>
       <div class="row"><label for="q-monto">Monto a prestar (MXN)<input id="q-monto" inputmode="numeric" value="${MODE === "garantia" ? "100,000" : "10,000"}"></label>
@@ -629,7 +630,7 @@ function vPrestamos() {
     <form id="fe" novalidate style="margin-top:12px">
       <p class="note" style="margin:0 0 10px">Para clientes de antes: registras lo que te debe hoy y cómo te paga. Al guardar te aparece el mensaje para invitarlo por WhatsApp a ver su préstamo en línea.</p>
       ${pickCliente("e")}
-      <div class="row"><label for="e-nom">Cliente<input id="e-nom" placeholder="Nombre completo"></label>
+      <div class="row"><label for="e-nom">Nombre completo del cliente<input id="e-nom" placeholder="Nombre y apellidos"></label>
       <label for="e-tel">WhatsApp<input id="e-tel" inputmode="tel" placeholder="33 1234 5678"></label></div>
       ${isAdmin() && equipo.length ? `<label for="e-own">¿De quién es el cliente?<select id="e-own"><option value="${ME.uid}">Mío</option>${equipo.map((u) => `<option value="${u.uid}">${esc(u.nombre)}</option>`).join("")}</select></label>` : ""}
       <p class="lbl" style="margin:6px 0">¿Cómo te paga?</p>
@@ -653,7 +654,7 @@ function vPrestamos() {
       <div class="seg"><button type="button" data-pt="garantia" aria-pressed="${(d.tipo || "garantia") === "garantia"}">Con garantía</button><button type="button" data-pt="semanal" aria-pressed="${d.tipo === "semanal"}">Semanal</button><button type="button" data-pt="interes" aria-pressed="false">Solo interés</button></div>
       <input type="hidden" id="p-tipo" value="${d.tipo || "garantia"}">
       ${DRAFT ? "" : pickCliente("p")}
-      <div class="row"><label for="p-nom">Cliente<input id="p-nom" value="${esc(d.cliente || "")}" placeholder="Nombre"></label>
+      <div class="row"><label for="p-nom">Nombre completo del cliente<input id="p-nom" value="${esc(d.cliente || "")}" placeholder="Nombre y apellidos"></label>
       <label for="p-tel">WhatsApp<input id="p-tel" inputmode="tel" value="${esc(d.telefono || "")}" placeholder="33 1234 5678"></label></div>
       <label for="p-mail">Correo del cliente (con este correo verá su avance al crear su cuenta)<input id="p-mail" type="email" inputmode="email" value="${esc(d.email || "")}" placeholder="cliente@correo.com"></label>
       <label for="p-uid"${isAdmin() ? "" : " hidden"}>O elige su cuenta si ya la creó<select id="p-uid"><option value="">Todavía sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === d.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>

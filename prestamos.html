@@ -34,7 +34,7 @@
     <form class="card" id="sol" novalidate style="align-self:start">
       <h3>Solicita tu préstamo</h3>
       <p class="muted" style="margin:0">Llena estos datos y te mandamos tu cotización por WhatsApp.</p>
-      <div class="row2"><label for="s-nom">Nombre<input id="s-nom" autocomplete="name" placeholder="Tu nombre"></label>
+      <div class="row2"><label for="s-nom">Nombre completo<input id="s-nom" autocomplete="name" placeholder="Nombre y apellidos"></label>
       <label for="s-tel">WhatsApp<input id="s-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label></div>
       <fieldset class="tipo-p"><legend>¿Qué tipo de préstamo buscas?</legend>
         <label class="opt-p"><input type="radio" name="tipo" value="garantia" checked><span><b>Con garantía · pagos mensuales</b>Dejas en garantía tu auto, reloj, oro, monedas u otra prenda.</span></label>
@@ -116,7 +116,8 @@ $("sol").addEventListener("submit", (e) => {
   e.preventDefault();
   const nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = tipo() === "semanal" || (tipo() === "sin" && $("s-uni").value === "semanas") ? "semanas" : "meses", g = tipo() === "semanal" ? "aval" : tipo() === "sin" ? "sin" : $("s-gar").value;
   const fail = (t) => { $("s-err").hidden = false; $("s-err").textContent = t; $("s-err").scrollIntoView({ block: "center" }); };
-  if (!nom || !monto || !n) return fail("Escribe tu nombre, el monto y el plazo.");
+  if (!nom || !monto || !n) return fail("Escribe tu nombre completo, el monto y el plazo.");
+  if (nom.split(/\s+/).length < 2) return fail("Escribe tu nombre completo: nombre y apellidos.");
   if (g !== "aval" && g !== "sin") {
     if (!num($("s-val").value)) return fail("Escribe cuánto vale tu garantía.");
     const c = cobertura(); if (!c.ok) return fail(`Tu garantía debe valer al menos $${c.req.toLocaleString("es-MX")} (${c.fx} a 1) para este préstamo. Ajusta el monto o el valor de tu garantía.`);
