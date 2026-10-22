@@ -111,6 +111,9 @@ Promise.all([
   else { $("c-tasa").closest(".field").hidden = true; $("r-men").classList.add("sm"); $("c-sin").hidden = false; }
   $("c-auto").innerHTML = `<option value="otro">Otro auto (escribe el precio)</option>` + list.filter((a) => !a.apartado).map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");
   const want = new URLSearchParams(location.search).get("a"), a = list.find((x) => x.slug === want);
+  const qp = new URLSearchParams(location.search), qe = Number(qp.get("e")), qn = Number(qp.get("p"));
+  if (CFG.plazos.includes(qn)) PLAZO = qn;
+  if (qp.has("e") && qe >= 0 && qe <= 90) ENGP = qe;
   if (a) { $("c-auto").value = a.slug; setPrecio(a.precio); } else { $("c-auto").value = "otro"; setPrecio(400000); }
   plazos();
 });

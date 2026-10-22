@@ -8,7 +8,7 @@ export async function autos() {
   if (cache) return cache;
   const r = await fetch(BASE + "data/autos.json", { cache: "no-cache" });
   if (!r.ok) throw new Error("inventario");
-  cache = (await r.json()).filter((a) => a.disponible && !a.borrador).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+  cache = (await r.json()).filter((a) => a.disponible && (BASE === "" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
   return cache;
 }
 export function src(path, size) {
@@ -28,6 +28,7 @@ export const WA_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12
 export const credito = (a) => `creditos.html${a ? "?a=" + encodeURIComponent(a.slug) : ""}`;
 export function card(a) {
   const f = fotos(a)[0];
+  const vtag = a.video && !a.apartado ? `<span class="tag vid"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Video</span>` : "";
   const tag = a.apartado ? `<span class="tag res">Apartado</span>` : a.precioEspecial ? `<span class="tag">Precio especial</span>` : "";
   const img = f
     ? `<img src="${src(f, "t")}" srcset="${src(f, "t")} 640w, ${src(f)} 1200w" sizes="(min-width: 1100px) 280px, (min-width: 600px) 45vw, 92vw" loading="lazy" decoding="async" alt="${esc(a.title)}">`
@@ -35,7 +36,7 @@ export function card(a) {
   const meta = [a.anio, a.kilometraje ? km(a.kilometraje) : "Km a consultar", a.transmision].filter(Boolean);
   const prev = a.precioEspecial && a.precioAnterior ? `<s>${mxn(a.precioAnterior)}</s>` : "";
   return `<article class="car${a.apartado ? " is-res" : ""}">
-    <a class="cl" href="${ficha(a)}"><div class="ph">${img}${tag}</div>
+    <a class="cl" href="${ficha(a)}"><div class="ph">${img}${tag}${vtag}</div>
     <div class="cb"><h3>${esc(a.nombre || a.title)}</h3>${a.version ? `<p class="ver">${esc(a.version)}</p>` : ""}
       <div class="m">${meta.map((x) => `<span>${esc(x)}</span>`).join("")}</div>
       <div class="pr"><b>${mxn(a.precio)}</b>${prev}</div></div></a>

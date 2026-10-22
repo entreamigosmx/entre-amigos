@@ -10,16 +10,19 @@ function notFound() {
 }
 
 function render(a, list) {
-  const p = fotos(a), name = a.title;
+  const ph = fotos(a), name = a.title;
+  const p = a.video ? [{ v: a.video, poster: a.videoPoster || ph[0] }, ...ph] : ph;
+  const isV = (x) => x && typeof x === "object";
+  const thumb = (x) => (isV(x) ? x.poster : x);
   document.title = `${name} | Entre Amigos`;
   document.querySelector('meta[name="description"]').setAttribute("content", `${name} en ${mxn(a.precio)}. Fotos, kilometraje y equipamiento. Entre Amigos, Guadalajara.`);
   const specs = [["Versión", a.version || a.modelo], ["Año", a.anio], ["Kilometraje", a.kilometraje ? km(a.kilometraje) : "Consultar"], ["Transmisión", a.transmision], ["Combustible", a.combustible], ["Categoría", a.categoria]].filter(([, v]) => v);
   const prev = a.precioEspecial && a.precioAnterior ? `<s>${mxn(a.precioAnterior)}</s>` : "";
   const ask = wa(a.apartado ? `Hola, vi que el ${name} está apartado. ¿Tienen algo similar o me avisan si se libera?` : `Hola, me interesa el ${name} (${mxn(a.precio)}) que vi en su página: ${SITE}/auto.html?a=${encodeURIComponent(a.slug)}`);
   const visit = wa(`Hola, me gustaría agendar una visita para ver el ${name}. ¿Qué día y hora tienen disponible?`);
-  const stage = p.length ? `<div class="stage"><div class="blur" id="bl" style="background-image:url('${src(p[0], "t")}')"></div><img id="st" src="${src(p[0])}" alt="${esc(name)}, foto 1">
-      ${p.length > 1 ? `<button class="nav-ph prev" type="button" aria-label="Foto anterior">‹</button><button class="nav-ph next" type="button" aria-label="Foto siguiente">›</button>` : ""}<span class="cnt" id="cnt">1 / ${p.length}</span></div>
-    ${p.length > 1 ? `<div class="strip">${p.map((x, i) => `<button type="button" data-i="${i}" aria-current="${i === 0}" aria-label="Foto ${i + 1}"><img src="${src(x, "t")}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}`
+  const stage = p.length ? `<div class="stage"><div class="blur" id="bl" style="background-image:url('${src(thumb(p[0]), "t")}')"></div>${isV(p[0]) ? `<video id="vd" src="${src(p[0].v)}" poster="${src(p[0].poster)}" autoplay muted loop playsinline controls preload="metadata" aria-label="Video de ${esc(name)}"></video><img id="st" hidden alt="">` : `<img id="st" src="${src(p[0])}" alt="${esc(name)}, foto 1">`}
+      ${p.length > 1 ? `<button class="nav-ph prev" type="button" aria-label="Foto anterior">‹</button><button class="nav-ph next" type="button" aria-label="Foto siguiente">›</button>` : ""}<span class="cnt" id="cnt">${isV(p[0]) ? "Video" : "1 / " + p.length}</span></div>
+    ${p.length > 1 ? `<div class="strip">${p.map((x, i) => `<button type="button" data-i="${i}" aria-current="${i === 0}" aria-label="${isV(x) ? "Video" : "Foto " + i}"${isV(x) ? ' class="isv"' : ""}><img src="${src(thumb(x), "t")}" alt="" loading="lazy">${isV(x) ? '<span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>' : ""}</button>`).join("")}</div>` : ""}`
     : `<div class="stage"><p class="empty" style="position:absolute;inset:0;display:grid;place-items:center">Fotos próximamente</p></div>`;
   const similares = list.filter((x) => x.slug !== a.slug && x.categoria === a.categoria).slice(0, 4);
   const sub = [a.version, a.anio, a.kilometraje ? km(a.kilometraje) : ""].filter(Boolean).map(esc).join(" · ");
@@ -53,7 +56,7 @@ function render(a, list) {
     if (navigator.share) { try { await navigator.share({ title: name, text: `${name} en ${mxn(a.precio)} · Entre Amigos`, url }); } catch (e) {} }
     else { try { await navigator.clipboard.writeText(url); t.textContent = "Enlace copiado. Pégalo donde quieras compartirlo."; } catch (e) { t.textContent = url; } }
   };
-  const ld = { "@context": "https://schema.org", "@type": "Car", name, brand: { "@type": "Brand", name: a.marca }, model: a.modelo, vehicleModelDate: String(a.anio), url, image: p.slice(0, 5).map((x) => new URL(src(x), location.href).href),
+  const ld = { "@context": "https://schema.org", "@type": "Car", name, brand: { "@type": "Brand", name: a.marca }, model: a.modelo, vehicleModelDate: String(a.anio), url, image: ph.slice(0, 5).map((x) => new URL(src(x), location.href).href),
     offers: { "@type": "Offer", price: a.precio, priceCurrency: "MXN", availability: a.apartado ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock", seller: { "@type": "AutoDealer", name: "Entre Amigos" } } };
   if (a.kilometraje) ld.mileageFromOdometer = { "@type": "QuantitativeValue", value: a.kilometraje, unitCode: "KMT" };
   const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
@@ -63,8 +66,12 @@ function render(a, list) {
     const thumbs = [...root.querySelectorAll(".strip button")];
     const show = (n) => {
       i = (n + p.length) % p.length;
-      st.src = src(p[i]); st.alt = `${name}, foto ${i + 1}`; bl.style.backgroundImage = `url('${src(p[i], "t")}')`;
-      cnt.textContent = `${i + 1} / ${p.length}`;
+      const vd = document.getElementById("vd"), it = p[i];
+      if (vd) { vd.hidden = !isV(it); if (isV(it)) vd.play().catch(() => {}); else vd.pause(); }
+      st.hidden = isV(it);
+      if (!isV(it)) { st.src = src(it); st.alt = `${name}, foto ${a.video ? i : i + 1}`; }
+      bl.style.backgroundImage = `url('${src(thumb(it), "t")}')`;
+      cnt.textContent = isV(it) ? "Video" : a.video ? `${i} / ${ph.length}` : `${i + 1} / ${p.length}`;
       thumbs.forEach((b, k) => b.setAttribute("aria-current", String(k === i)));
       thumbs[i].scrollIntoView({ block: "nearest", inline: "nearest" });
     };
@@ -75,7 +82,7 @@ function render(a, list) {
     sg.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
     sg.addEventListener("touchend", (e) => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1)); x0 = null; });
     document.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") show(i - 1); if (e.key === "ArrowRight") show(i + 1); });
-    p.slice(1, 4).forEach((x) => { const im = new Image(); im.src = src(x); });
+    ph.slice(0, 3).forEach((x) => { const im = new Image(); im.src = src(x); });
   }
 }
 

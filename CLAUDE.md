@@ -3,7 +3,7 @@
 Página estática (GitHub Pages) del negocio Entre Amigos, Guadalajara. El dueño trabaja solo desde iPhone/iPad; Claude administra todo.
 
 ## Estructura
-- `index.html` portada (video), cómo trabajamos, inventario destacado, vende tu auto, financiamiento, opiniones, servicios, contacto.
+- `index.html` portada "Showroom" (css/portada.css + js/portada.js): carrusel a pantalla completa con video y autos `portada:true`, explora por tipo (íconos), recién llegados, confianza, opinión, mini simulador de crédito + vende tu auto, equipo, visítanos. Eslogan: "Autos seleccionados. Trato entre amigos." `nosotros.html`: por qué, qué necesitas, servicios, equipo. Redes: Instagram @entreamigosmx, Facebook (share/1KADt3UUoX), TikTok @ventaentreamigosmx.
 - `inventario.html` inventario con filtros; `auto.html?a=<slug>` ficha de cada auto (Me interesa, Cotizar financiamiento, Compartir); `creditos.html?a=<slug>` simulador de crédito (`/creditos/` redirige); `prestamos.html` préstamos con garantía; `vender.html` + `js/vender.js` Vende tu auto (10 fotos obligatorias + factura, se guarda en Firestore `ventas` y avisa por ntfy).
 - `data/credito.json` parámetros del simulador: tasaAnual (null = no se muestra mensualidad hasta que el dueño dé la tasa real; nunca inventar), enganche sugerido 35%, plazos.
 - `propuesta/` vista previa (noindex) para que el dueño revise cambios ANTES de publicarlos; copia del sitio con rutas `../`. Regla: todo cambio visible primero va ahí. Para publicar lo aprobado: `python3 tools/publicar.py` (copia a la raíz, quita barra y noindex, ajusta rutas).
