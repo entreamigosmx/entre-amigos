@@ -145,6 +145,12 @@ service cloud.firestore {
       allow read: if admin() || (emp() && miEmpresa() == id);
       allow write: if admin();
     }
+    // Préstamos que ya existían: la administradora los propone, solo el administrador los confirma.
+    match /altas/{id} {
+      allow read: if admin() || (emp() && resource.data.empresa == miEmpresa());
+      allow create: if emp() && request.resource.data.empresa == miEmpresa() && request.resource.data.por == request.auth.uid && request.resource.data.estado == 'pendiente';
+      allow update, delete: if admin();
+    }
     // Datos públicos del enlace de cada convenio (para la página del empleado). Solo se lee con el código exacto.
     match /convenios/{codigo} {
       allow get: if true;

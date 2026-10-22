@@ -220,10 +220,11 @@ function startApp() {
   const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); if (!isAdmin()) drawTabs(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
   if (isAdmin()) getDoc(doc(db, "config", "convenioInfo")).then((x) => { if (!x.exists() || x.data().v !== CONV_V) setDoc(doc(db, "config", "convenioInfo"), { v: CONV_V, html: CONV_HTML }); }).catch(() => {});
-  if (isAdmin()) { listenP("all", collection(db, "prestamos")); unsubs.push(onSnapshot(collection(db, "empresas"), (s) => { EMPS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nombre.localeCompare(b.nombre)); if (TAB === "empresas" || TAB === "prestamos") draw(); }, () => {})); }
+  if (isAdmin()) { listenP("all", collection(db, "prestamos")); unsubs.push(onSnapshot(collection(db, "altas"), (s) => { ALTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "empresas") draw(); }, () => {})); unsubs.push(onSnapshot(collection(db, "empresas"), (s) => { EMPS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nombre.localeCompare(b.nombre)); if (TAB === "empresas" || TAB === "prestamos") draw(); }, () => {})); }
   else if (USER.rol === "empresa" && USER.empresa) {
     listenP("emp", query(collection(db, "prestamos"), where("empresa", "==", USER.empresa)));
     unsubs.push(onSnapshot(query(collection(db, "solicitudes"), where("empresa", "==", USER.empresa)), (s) => { SOLS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "emp") draw(); }, () => {}));
+    unsubs.push(onSnapshot(query(collection(db, "altas"), where("empresa", "==", USER.empresa)), (s) => { ALTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "emp") draw(); }, () => {}));
     unsubs.push(onSnapshot(doc(db, "empresas", USER.empresa), (s) => { MIEMP = s.exists() ? { id: s.id, ...s.data() } : null; if (TAB === "emp") draw(); }, () => {}));
   }
   else if (isTeam()) listenP("mine", query(collection(db, "prestamos"), where("por", "==", ME.uid)));
@@ -1081,6 +1082,7 @@ function vEmpresas() {
       <div class="item-mid" style="margin:8px 0">Enlace: <a href="${convLink(e)}" target="_blank" rel="noopener">${esc(convLink(e))}</a> · ${(e.montos || []).map((m) => mxn(m) + " = " + mxn(m / 1000 * (e.porMil || 0)) + "/sem").join(" · ")} · ${(e.plazos || [14]).join(", ")} semanas</div>
       <div class="actions">${e.tel ? `<a class="btn sm primary" href="${waTo(e.tel, msgRH)}" target="_blank" rel="noopener">Mandar enlace a ${esc(e.contacto || "RH")}</a>` : ""}<button class="btn sm" type="button" data-ecopy="${e.id}">Copiar enlace</button><button class="btn sm" type="button" data-eopen="${e.id}">${open ? "Cerrar" : "Ver empleados"}</button><button class="btn sm" type="button" data-eedit="${e.id}">Editar</button><button class="btn sm" type="button" data-epausa="${e.id}">${e.activo === false ? "Reactivar enlace" : "Pausar enlace"}</button></div>
       ${EMP_FORM === e.id ? empForm(e) : ""}
+      ${altasAdmin(e)}
       <p class="lbl">Administradora</p>
       <div class="item-bot">${adm.length ? adm.map((u) => `<span class="pill ok">${esc(u.nombre)}</span><button class="link del" type="button" data-equit="${u.uid}">Quitar acceso</button>`).join("") : `<span class="muted">Sin administradora.</span>`}
         <select data-eadm="${e.id}"><option value="">Dar acceso a…</option>${USERS.filter((u) => u.rol === "cliente").map((u) => `<option value="${u.uid}">${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></div>
@@ -1115,6 +1117,58 @@ function vEmpresas() {
     } catch (er) { err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
   }));
   bindSolicitudes(vEmpresas);
+  altasHandlers(vEmpresas);
+}
+
+// Préstamos que ya existían antes de usar la app: la administradora (o tú) los carga con los pagos que ya lleva; tú confirmas.
+let ALTAS = [], ALTA_ED = "";
+function altaForm(id, x) {
+  x = x || {};
+  return `<form class="edit" data-altaf="${id || ""}" novalidate>${id ? "<h3>Corregir antes de confirmar</h3>" : ""}
+    <div class="row"><label>Nombre completo<input name="nombre" value="${esc(x.nombre || "")}" placeholder="Nombre y apellidos"></label><label>WhatsApp (opcional)<input name="tel" inputmode="tel" value="${esc(x.telefono || "")}"></label></div>
+    <div class="row"><label>Monto del préstamo<input name="monto" inputmode="numeric" value="${x.monto ? Number(x.monto).toLocaleString("es-MX") : ""}" placeholder="Ej. 10,000"></label><label>Pagos que ya hizo<input name="pagados" inputmode="numeric" value="${x.pagados ?? ""}" placeholder="Ej. 7"></label></div>
+    <label>Fecha de su próximo pago<input name="prox" type="date" value="${x.prox || ""}"></label>
+    <p class="err" hidden></p>
+    <div class="actions"><button class="btn primary" type="submit">${id ? "Guardar" : "Agregar"}</button>${id ? `<button class="btn" type="button" data-altax>Cancelar</button>` : ""}</div></form>`;
+}
+function leerAlta(f) {
+  const g = (n) => f.querySelector(`[name=${n}]`).value.trim();
+  const d = { nombre: g("nombre"), telefono: tel10(g("tel")), monto: num(g("monto")), pagados: parseInt(g("pagados"), 10), prox: g("prox") };
+  const err = f.querySelector(".err");
+  if (d.nombre.split(/\s+/).length < 2 || !d.monto || !(d.pagados >= 0) || !d.prox) { err.hidden = false; err.textContent = "Escribe nombre completo, monto, pagos que ya hizo y la fecha de su próximo pago."; return null; }
+  return d;
+}
+// Crea el préstamo semanal con los pagos que ya llevaba (marcados como carga inicial).
+async function confirmarAlta(x) {
+  const e = EMPS.find((z) => z.id === x.empresa) || {}, plazo = (e.plazos || [14])[0], porMil = e.porMil || 100, pago = Math.round((x.monto / 1000) * porMil * 100) / 100;
+  const ini = new Date(x.prox + "T12:00:00"); ini.setDate(ini.getDate() - 7 * x.pagados);
+  const pagos = Array.from({ length: Math.min(x.pagados, plazo) }, (_, i) => { const d = new Date(ini); d.setDate(d.getDate() + 7 * i); return { monto: pago, fecha: iso(d), reg: new Date().toISOString(), regPor: ME.uid, nota: "Carga inicial" }; });
+  const ref = await addDoc(collection(db, "prestamos"), { tipo: "semanal", cliente: x.nombre, telefono: x.telefono || "", clienteUid: "", clienteEmail: "", monto: x.monto, tasa: porMil, plazo, inicio: iso(ini), por: ME.uid, cotId: "", garantia: "", desc: "", pagos, creado: new Date().toISOString(), empresa: x.empresa, empresaNombre: e.nombre || x.empresaNombre || "" });
+  if (x.id) await updateDoc(doc(db, "altas", x.id), { estado: "confirmada", pid: ref.id });
+}
+function altasAdmin(e) {
+  const L = ALTAS.filter((x) => x.empresa === e.id && x.estado === "pendiente");
+  return `<p class="lbl">Préstamos que ya tenían${L.length ? ` <span class="pill warn">${L.length} por confirmar</span>` : ""}</p>
+    ${L.length ? `<div class="list">${L.map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span>${mxn(x.monto)} · lleva ${x.pagados} de ${(e.plazos || [14])[0]}</span></div>
+      <div class="item-mid">Próximo pago el ${fcorta(new Date(x.prox + "T12:00:00"))} · lo subió ${esc(nameOf(x.por))}</div>
+      <div class="actions"><button class="btn sm primary" type="button" data-altaok="${x.id}">Confirmar</button><button class="btn sm" type="button" data-altaed="${x.id}">${ALTA_ED === x.id ? "Cerrar" : "Corregir"}</button><button class="link del" type="button" data-altano="${x.id}">Rechazar</button></div>
+      ${ALTA_ED === x.id ? altaForm(x.id, x) : ""}</div>`).join("")}</div>` : ""}
+    <details><summary>Cargar yo un préstamo que ya tenía</summary>${altaForm("", null).replace('data-altaf=""', `data-altaf="" data-altae="${e.id}"`)}</details>`;
+}
+function altasHandlers(rerender) {
+  const P = $("panel");
+  P.querySelectorAll("[data-altaok]").forEach((b) => (b.onclick = async () => { b.disabled = true; const x = ALTAS.find((z) => z.id === b.dataset.altaok); if (x) await confirmarAlta(x); }));
+  P.querySelectorAll("[data-altaed]").forEach((b) => (b.onclick = () => { ALTA_ED = ALTA_ED === b.dataset.altaed ? "" : b.dataset.altaed; rerender(); }));
+  P.querySelectorAll("[data-altax]").forEach((b) => (b.onclick = () => { ALTA_ED = ""; rerender(); }));
+  P.querySelectorAll("[data-altano]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez"; return; } updateDoc(doc(db, "altas", b.dataset.altano), { estado: "rechazada" }); }));
+  P.querySelectorAll("form[data-altaf]").forEach((f) => (f.onsubmit = async (ev) => {
+    ev.preventDefault(); const d = leerAlta(f); if (!d) return; const id = f.dataset.altaf;
+    try {
+      if (isAdmin() && id) { await updateDoc(doc(db, "altas", id), d); ALTA_ED = ""; rerender(); }
+      else if (isAdmin()) { await confirmarAlta({ ...d, empresa: f.dataset.altae }); f.reset(); }
+      else { await addDoc(collection(db, "altas"), { ...d, empresa: USER.empresa, empresaNombre: MIEMP?.nombre || "", por: ME.uid, estado: "pendiente", fecha: new Date().toISOString() }); f.reset(); avisar("Préstamo existente por confirmar", `${USER.nombre || "La administradora"} cargó a ${d.nombre} (${mxn(d.monto)}, lleva ${d.pagados} pagos).`); }
+    } catch (er) { const err = f.querySelector(".err"); err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
+  }));
 }
 function solicitudesCardDe(L) { const keep = SOLS; SOLS = L; const h = solicitudesCard(0); SOLS = keep; return h; }
 // Lo que ve la administradora de cada empresa.
@@ -1122,10 +1176,13 @@ function vEmp() {
   const e = MIEMP;
   if (!e) { $("panel").innerHTML = `<div class="card"><p class="muted">Cargando…</p></div>`; return; }
   const st = empStats(e.id, PRES), sols = SOLS.slice(0, 30), EST2 = { nueva: "En revisión", aprobada: "Aprobada", negada: "No aprobada", descartada: "Cancelada", cotizada: "En revisión", invitada: "En revisión" };
+  setTimeout(() => altasHandlers(vEmp));
   $("panel").innerHTML = `<div class="card inv"><p class="hi">Convenio ${esc(e.nombre)}</p>
       <div class="tiles"><div><span>Colaboradores con préstamo</span><b>${st.act.length}</b></div><div><span>A juntar esta semana</span><b>${mxn(st.semana)}</b></div><div><span>Atrasados</span><b>${st.atr.length}</b></div></div></div>
     <div class="card"><h2>Dar de alta a un colaborador</h2><p class="muted">Abre el formulario, llénalo con sus datos y sube sus documentos. También puedes mandarle el enlace para que lo haga desde su celular.</p>
       <div class="actions"><a class="btn primary" href="${convLink(e)}" target="_blank" rel="noopener">Abrir formulario</a><a class="btn" href="https://wa.me/?text=${encodeURIComponent("Este es el enlace para pedir tu préstamo del convenio de " + e.nombre + " con Entre Amigos:\n" + convLink(e))}" target="_blank" rel="noopener">Mandar enlace por WhatsApp</a></div></div>
+    <div class="card"><h2>Colaboradores que ya tenían préstamo</h2><p class="muted">Si alguien ya tenía préstamo antes de usar la app, cárgalo aquí con los pagos que ya hizo. Entre Amigos lo revisa y lo confirma.</p>${altaForm("", null)}
+      ${ALTAS.length ? `<div class="list" style="margin-top:10px">${ALTAS.slice(0, 40).map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span class="pill${x.estado === "confirmada" ? " ok" : x.estado === "rechazada" ? " no" : " warn"}">${{ pendiente: "Por confirmar", confirmada: "Confirmado", rechazada: "No confirmado" }[x.estado] || ""}</span></div><div class="item-mid">${mxn(x.monto)} · lleva ${x.pagados} pagos · próximo el ${fcorta(new Date(x.prox + "T12:00:00"))}</div></div>`).join("")}</div>` : ""}</div>
     <div class="card"><h2>Colaboradores con préstamo</h2>${empleadosLista(st)}</div>
     <div class="card"><h2>Solicitudes</h2><div class="list">${sols.length ? sols.map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span class="pill${x.estado === "aprobada" ? " ok" : ""}">${EST2[x.estado] || "En revisión"}</span></div><div class="item-mid">${mxn(x.monto)} a ${x.plazo} semanas · ${fhora(x.fecha)}</div></div>`).join("") : `<p class="muted">Sin solicitudes todavía.</p>`}</div></div>
     <div class="card"><p class="muted">Los pagos se registran en Entre Amigos cuando se entrega el efectivo. Si ves algo que no cuadra, avísanos.</p><a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + " del convenio " + e.nombre + ".")}" target="_blank" rel="noopener">Escribir a Entre Amigos</a></div>`;
