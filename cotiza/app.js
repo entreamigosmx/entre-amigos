@@ -1126,16 +1126,18 @@ function altaForm(id, x) {
   x = x || {};
   return `<form class="edit" data-altaf="${id || ""}" novalidate>${id ? "<h3>Corregir antes de confirmar</h3>" : ""}
     <div class="row"><label>Nombre completo<input name="nombre" value="${esc(x.nombre || "")}" placeholder="Nombre y apellidos"></label><label>WhatsApp (opcional)<input name="tel" inputmode="tel" value="${esc(x.telefono || "")}"></label></div>
-    <div class="row"><label>Monto del préstamo<input name="monto" inputmode="numeric" value="${x.monto ? Number(x.monto).toLocaleString("es-MX") : ""}" placeholder="Ej. 10,000"></label><label>Pagos que ya hizo<input name="pagados" inputmode="numeric" value="${x.pagados ?? ""}" placeholder="Ej. 7"></label></div>
-    <label>Fecha de su próximo pago<input name="prox" type="date" value="${x.prox || ""}"></label>
+    <div class="row"><label>Monto del préstamo<input name="monto" inputmode="numeric" value="${x.monto ? Number(x.monto).toLocaleString("es-MX") : ""}" placeholder="Ej. 10,000"></label><label>¿Qué número de pago sigue?<input name="sigue" inputmode="numeric" value="${x.pagados >= 0 ? x.pagados + 1 : ""}" placeholder="Ej. 8"></label></div>
+    <label>Fecha de ese pago<input name="prox" type="date" value="${x.prox || ""}"></label>
+    <p class="note" data-sigtxt>Si el préstamo apenas empieza, pon 1: no pasa nada, empieza desde el primer pago.</p>
     <p class="err" hidden></p>
     <div class="actions"><button class="btn primary" type="submit">${id ? "Guardar" : "Agregar"}</button>${id ? `<button class="btn" type="button" data-altax>Cancelar</button>` : ""}</div></form>`;
 }
 function leerAlta(f) {
   const g = (n) => f.querySelector(`[name=${n}]`).value.trim();
-  const d = { nombre: g("nombre"), telefono: tel10(g("tel")), monto: num(g("monto")), pagados: parseInt(g("pagados"), 10), prox: g("prox") };
+  const sig = parseInt(g("sigue"), 10);
+  const d = { nombre: g("nombre"), telefono: tel10(g("tel")), monto: num(g("monto")), pagados: sig - 1, prox: g("prox") };
   const err = f.querySelector(".err");
-  if (d.nombre.split(/\s+/).length < 2 || !d.monto || !(d.pagados >= 0) || !d.prox) { err.hidden = false; err.textContent = "Escribe nombre completo, monto, pagos que ya hizo y la fecha de su próximo pago."; return null; }
+  if (d.nombre.split(/\s+/).length < 2 || !d.monto || !(sig >= 1 && sig <= 104) || !d.prox) { err.hidden = false; err.textContent = "Escribe nombre completo, monto, qué número de pago sigue (1 si apenas empieza) y la fecha de ese pago."; return null; }
   return d;
 }
 // Crea el préstamo semanal con los pagos que ya llevaba (marcados como carga inicial).
@@ -1148,12 +1150,12 @@ async function confirmarAlta(x) {
 }
 function altasAdmin(e) {
   const L = ALTAS.filter((x) => x.empresa === e.id && x.estado === "pendiente");
-  return `<p class="lbl">Préstamos que ya tenían${L.length ? ` <span class="pill warn">${L.length} por confirmar</span>` : ""}</p>
-    ${L.length ? `<div class="list">${L.map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span>${mxn(x.monto)} · lleva ${x.pagados} de ${(e.plazos || [14])[0]}</span></div>
-      <div class="item-mid">Próximo pago el ${fcorta(new Date(x.prox + "T12:00:00"))} · lo subió ${esc(nameOf(x.por))}</div>
+  return `<p class="lbl">Préstamos cargados por confirmar${L.length ? ` <span class="pill warn">${L.length} por confirmar</span>` : ""}</p>
+    ${L.length ? `<div class="list">${L.map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span>${mxn(x.monto)} · ${x.pagados ? `sigue el pago ${x.pagados + 1} de ${(e.plazos || [14])[0]}` : "nuevo: empieza en el pago 1"}</span></div>
+      <div class="item-mid">${x.pagados ? "Pago " + (x.pagados + 1) : "Primer pago"} el ${fcorta(new Date(x.prox + "T12:00:00"))} · lo subió ${esc(nameOf(x.por))}</div>
       <div class="actions"><button class="btn sm primary" type="button" data-altaok="${x.id}">Confirmar</button><button class="btn sm" type="button" data-altaed="${x.id}">${ALTA_ED === x.id ? "Cerrar" : "Corregir"}</button><button class="link del" type="button" data-altano="${x.id}">Rechazar</button></div>
       ${ALTA_ED === x.id ? altaForm(x.id, x) : ""}</div>`).join("")}</div>` : ""}
-    <details><summary>Cargar yo un préstamo que ya tenía</summary>${altaForm("", null).replace('data-altaf=""', `data-altaf="" data-altae="${e.id}"`)}</details>`;
+    <details><summary>Cargar yo un préstamo (nuevo o que ya llevaba pagos)</summary>${altaForm("", null).replace('data-altaf=""', `data-altaf="" data-altae="${e.id}"`)}</details>`;
 }
 function altasHandlers(rerender) {
   const P = $("panel");
@@ -1166,7 +1168,7 @@ function altasHandlers(rerender) {
     try {
       if (isAdmin() && id) { await updateDoc(doc(db, "altas", id), d); ALTA_ED = ""; rerender(); }
       else if (isAdmin()) { await confirmarAlta({ ...d, empresa: f.dataset.altae }); f.reset(); }
-      else { await addDoc(collection(db, "altas"), { ...d, empresa: USER.empresa, empresaNombre: MIEMP?.nombre || "", por: ME.uid, estado: "pendiente", fecha: new Date().toISOString() }); f.reset(); avisar("Préstamo existente por confirmar", `${USER.nombre || "La administradora"} cargó a ${d.nombre} (${mxn(d.monto)}, lleva ${d.pagados} pagos).`); }
+      else { await addDoc(collection(db, "altas"), { ...d, empresa: USER.empresa, empresaNombre: MIEMP?.nombre || "", por: ME.uid, estado: "pendiente", fecha: new Date().toISOString() }); f.reset(); avisar("Préstamo por confirmar", `${USER.nombre || "La administradora"} cargó a ${d.nombre} (${mxn(d.monto)}, ${d.pagados ? "sigue el pago " + (d.pagados + 1) : "empieza en el pago 1"}).`); }
     } catch (er) { const err = f.querySelector(".err"); err.hidden = false; err.textContent = "No se pudo guardar. Revisa tu conexión."; }
   }));
 }
@@ -1181,8 +1183,8 @@ function vEmp() {
       <div class="tiles"><div><span>Colaboradores con préstamo</span><b>${st.act.length}</b></div><div><span>A juntar esta semana</span><b>${mxn(st.semana)}</b></div><div><span>Atrasados</span><b>${st.atr.length}</b></div></div></div>
     <div class="card"><h2>Dar de alta a un colaborador</h2><p class="muted">Abre el formulario, llénalo con sus datos y sube sus documentos. También puedes mandarle el enlace para que lo haga desde su celular.</p>
       <div class="actions"><a class="btn primary" href="${convLink(e)}" target="_blank" rel="noopener">Abrir formulario</a><a class="btn" href="https://wa.me/?text=${encodeURIComponent("Este es el enlace para pedir tu préstamo del convenio de " + e.nombre + " con Entre Amigos:\n" + convLink(e))}" target="_blank" rel="noopener">Mandar enlace por WhatsApp</a></div></div>
-    <div class="card"><h2>Colaboradores que ya tenían préstamo</h2><p class="muted">Si alguien ya tenía préstamo antes de usar la app, cárgalo aquí con los pagos que ya hizo. Entre Amigos lo revisa y lo confirma.</p>${altaForm("", null)}
-      ${ALTAS.length ? `<div class="list" style="margin-top:10px">${ALTAS.slice(0, 40).map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span class="pill${x.estado === "confirmada" ? " ok" : x.estado === "rechazada" ? " no" : " warn"}">${{ pendiente: "Por confirmar", confirmada: "Confirmado", rechazada: "No confirmado" }[x.estado] || ""}</span></div><div class="item-mid">${mxn(x.monto)} · lleva ${x.pagados} pagos · próximo el ${fcorta(new Date(x.prox + "T12:00:00"))}</div></div>`).join("")}</div>` : ""}</div>
+    <div class="card"><h2>Cargar préstamos</h2><p class="muted">Carga aquí a cada colaborador con su préstamo: si ya lleva pagos, pon el número de pago que sigue; si apenas empieza, pon 1. Entre Amigos lo revisa y lo confirma.</p>${altaForm("", null)}
+      ${ALTAS.length ? `<div class="list" style="margin-top:10px">${ALTAS.slice(0, 40).map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span class="pill${x.estado === "confirmada" ? " ok" : x.estado === "rechazada" ? " no" : " warn"}">${{ pendiente: "Por confirmar", confirmada: "Confirmado", rechazada: "No confirmado" }[x.estado] || ""}</span></div><div class="item-mid">${mxn(x.monto)} · ${x.pagados ? "sigue el pago " + (x.pagados + 1) : "nuevo, empieza en el pago 1"} · el ${fcorta(new Date(x.prox + "T12:00:00"))}</div></div>`).join("")}</div>` : ""}</div>
     <div class="card"><h2>Colaboradores con préstamo</h2>${empleadosLista(st)}</div>
     <div class="card"><h2>Solicitudes</h2><div class="list">${sols.length ? sols.map((x) => `<div class="item"><div class="item-top"><b>${esc(x.nombre)}</b><span class="pill${x.estado === "aprobada" ? " ok" : ""}">${EST2[x.estado] || "En revisión"}</span></div><div class="item-mid">${mxn(x.monto)} a ${x.plazo} semanas · ${fhora(x.fecha)}</div></div>`).join("") : `<p class="muted">Sin solicitudes todavía.</p>`}</div></div>
     <div class="card"><p class="muted">Los pagos se registran en Entre Amigos cuando se entrega el efectivo. Si ves algo que no cuadra, avísanos.</p><a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + " del convenio " + e.nombre + ".")}" target="_blank" rel="noopener">Escribir a Entre Amigos</a></div>`;
