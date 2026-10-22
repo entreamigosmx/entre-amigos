@@ -68,6 +68,7 @@ const QS = new URLSearchParams(location.search);
 var PEND_TEL_Q = "";
 if (QS.has("nueva")) setSignup(true);
 if (QS.get("tipo") === "colaborador") setTipo("colaborador");
+if (QS.get("tipo") === "empresa") TIPO = "empresa";
 const SOLQ = /^[A-Za-z0-9]{10,40}$/.test(QS.get("sol") || "") ? QS.get("sol") : "";
 if (SOLQ || QS.get("nom")) {
   setSignup(true); $("l-tipo-w").hidden = true;
@@ -144,9 +145,10 @@ async function ensureUser(u, nombre) {
   const ref = doc(db, "usuarios", u.uid);
   const s = await getDoc(ref);
   if (s.exists()) return s.data();
-  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : "", telefono: PEND_TEL || PEND_TEL_Q || "", creado: new Date().toISOString() };
+  const d = { nombre: nombre || PEND_NAME || u.displayName || (u.email || "").split("@")[0], email: (u.email || "").toLowerCase(), rol: ADMINS.includes((u.email || "").toLowerCase()) ? "admin" : "cliente", solicita: TIPO === "colaborador" ? "equipo" : TIPO === "empresa" ? "empresa" : "", telefono: PEND_TEL || PEND_TEL_Q || "", creado: new Date().toISOString() };
   await setDoc(ref, d);
-  if (d.rol !== "admin") avisar(d.solicita === "equipo" ? "Nuevo colaborador por aprobar" : "Nuevo cliente registrado", d.solicita === "equipo" ? "Alguien pidió acceso como colaborador. Revísalo en Personas." : "Se creó una cuenta de cliente nueva en la app.");
+  if (d.rol !== "admin" && d.solicita === "empresa") avisar("Empresa interesada en convenio", (d.nombre || "Alguien") + " creó su cuenta desde Convenios para empresas. Revísalo en Personas.");
+  else if (d.rol !== "admin") avisar(d.solicita === "equipo" ? "Nuevo colaborador por aprobar" : "Nuevo cliente registrado", d.solicita === "equipo" ? "Alguien pidió acceso como colaborador. Revísalo en Personas." : "Se creó una cuenta de cliente nueva en la app.");
   return d;
 }
 
@@ -1584,7 +1586,11 @@ function vMis() {
   setTimeout(() => { const f = $("my-tel"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const t = tel10($("my-tel-i").value); if (t.length !== 10) return; await updateDoc(doc(db, "usuarios", ME.uid), { telefono: t }); USER.telefono = t; vMis(); }; });
   setTimeout(() => docsCard($("docs-box"), ME.uid, false));
   const telBox = USER.telefono ? "" : `<form class="card" id="my-tel" novalidate><h3>Agrega tu WhatsApp</h3><p class="muted">Para avisarte cuando tu préstamo esté listo o cuando revisemos tus documentos.</p><div class="row"><label for="my-tel-i">WhatsApp<input id="my-tel-i" type="tel" inputmode="tel" placeholder="33 1234 5678"></label><button class="btn primary" type="submit">Guardar</button></div></form>`;
-  $("panel").innerHTML = ver + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => {
+  const conv = USER.solicita === "empresa" ? `<div class="card inv"><p class="hi">Convenio para empresas</p>
+    <p class="big-t">Un beneficio para los colaboradores de tu empresa, sin costo para la empresa.</p>
+    <ol class="req" style="margin:12px 0"><li><b>Firmamos un convenio</b> con tu empresa.</li><li><b>Te damos un enlace exclusivo</b> para tus colaboradores. Ahí piden su préstamo y suben sus documentos. Tú puedes darlos de alta también.</li><li><b>Montos:</b> $5,000, $10,000 o hasta $20,000.</li><li><b>Pagan en 14 semanas</b>, $100 por cada $1,000 a la semana (por ejemplo, $5,000 se pagan con $500 a la semana), en efectivo, por medio de la empresa.</li><li><b>La empresa respalda el convenio:</b> si alguien deja de trabajar ahí, el saldo se cubre con su finiquito.</li><li><b>Tienes tu propio acceso</b> para ver a tus colaboradores con préstamo, quién va al corriente y cuánto se junta cada semana.</li></ol>
+    <a class="btn primary" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + ". Ya creé mi cuenta y me interesa el convenio de préstamos para mi empresa.")}" target="_blank" rel="noopener">Quiero el convenio</a></div>` : "";
+  $("panel").innerHTML = ver + conv + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => {
     const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
     if (p.tipo === "interes") return `<div class="card">
       <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
@@ -1631,7 +1637,7 @@ function vPersonas() {
     <div class="row"><label for="bc-mail">Correo de la cuenta<input id="bc-mail" type="email" inputmode="email" placeholder="cliente@correo.com"></label><button class="btn danger" type="submit" id="bc-b" style="align-self:end">Borrar cuenta</button></div>
     <p class="toast" id="bc-t"></p></form>
   <div class="card"><h2>Personas</h2><div class="list">${list.length ? list.map((u) => `<div class="item">
-    <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}${u.rol === "equipo" ? ` <span class="pill">Colaborador</span>` : ""}${u.inversionista ? ` <span class="pill ok">Inversionista</span>` : ""}</b><span>${esc(u.email)}</span></div>
+    <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}${u.rol === "equipo" ? ` <span class="pill">Colaborador</span>` : ""}${u.inversionista ? ` <span class="pill ok">Inversionista</span>` : ""}${u.solicita === "empresa" ? ` <span class="pill warn">Empresa interesada</span>` : ""}</b><span>${esc(u.email)}</span></div>
     ${(() => { const L = PRES.filter((p) => p.clienteUid === u.uid || (u.email && p.clienteEmail === u.email)); return L.length ? `<div class="item-mid">Préstamos: ${L.map((p) => { const a = avance(p); return esc(mxn(p.monto)) + (a.liquidado ? " (liquidado)" : vencido(p, a) ? " (vencido)" : " (al corriente)"); }).join(" · ")}</div>` : ""; })()}
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
     ${u.rol === "cliente" && u.solicita === "equipo" ? `<span class="pill warn">Quiere ser colaborador</span><button class="btn sm primary" type="button" data-ok="${u.uid}">Aprobar</button><button class="link" type="button" data-no="${u.uid}">Dejar como cliente</button>` : isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
