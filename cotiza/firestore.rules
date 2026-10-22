@@ -14,7 +14,8 @@ service cloud.firestore {
       allow read: if admin() || (signed() && request.auth.uid == uid);
       allow create: if signed() && request.auth.uid == uid
         && (request.resource.data.rol == 'cliente' || (admin() && request.resource.data.rol == 'admin'));
-      allow update: if admin() || (signed() && request.auth.uid == uid && request.resource.data.rol == resource.data.rol);
+      allow update: if admin() || (signed() && request.auth.uid == uid && request.resource.data.rol == resource.data.rol
+        && request.resource.data.get('inversionista', false) == resource.data.get('inversionista', false));
       allow delete: if admin();
     }
     match /config/{d} {
@@ -82,6 +83,29 @@ service cloud.firestore {
     }
     match /entregas/{id} {
       allow read, write: if admin();
+    }
+    // Aportaciones y retiros de inversionistas: solo el administrador.
+    match /inversiones/{id} {
+      allow read, write: if admin();
+    }
+    // Comprobantes de pago de los clientes (foto de la transferencia).
+    match /comprobantes/{id} {
+      allow read, write: if admin();
+      allow create: if team() && request.resource.data.por == request.auth.uid;
+    }
+    // Ajustes por inversionista (días para pagarle, qué ve): solo el administrador.
+    match /invcfg/{id} {
+      allow read, write: if admin();
+    }
+    // Resumen que ve cada inversionista en su app: lo escribe el administrador, lo lee solo él.
+    match /portafolio/{uid} {
+      allow read: if admin() || (signed() && request.auth.uid == uid);
+      allow write: if admin();
+    }
+    // Comprobantes de lo que se le paga a cada inversionista.
+    match /recibos/{id} {
+      allow read: if admin() || (signed() && resource.data.uid == request.auth.uid);
+      allow write: if admin();
     }
     // Contador anónimo de visitas de la página: cualquiera suma 1, solo el administrador lo lee.
     match /visitas/{dia} {
