@@ -1055,8 +1055,8 @@ function empForm(e) {
   e = e || {};
   return `<form class="edit" data-empf="${e.id || ""}" novalidate><h3>${e.id ? "Editar " + esc(e.nombre) : "Nueva empresa"}</h3>
     <div class="row"><label>Nombre de la empresa<input name="nombre" value="${esc(e.nombre || "")}" placeholder="Ej. Valle Real"></label><label>Contacto (Recursos Humanos)<input name="contacto" value="${esc(e.contacto || "")}" placeholder="Nombre"></label></div>
-    <div class="row"><label>WhatsApp del contacto<input name="tel" inputmode="tel" value="${esc(e.tel || "")}"></label><label>Pago semanal por cada $1,000<input name="porMil" inputmode="decimal" value="${e.porMil || CFG.fac || ""}" placeholder="Ej. 125"></label></div>
-    <div class="row"><label>Semanas que puede elegir el empleado<input name="plazos" value="${esc((e.plazos || [10, 12, 15]).join(", "))}"></label><label>Monto mínimo y máximo<input name="montos" value="${(e.montoMin || 5000) + " - " + (e.montoMax || 10000)}"></label></div>
+    <div class="row"><label>WhatsApp del contacto<input name="tel" inputmode="tel" value="${esc(e.tel || "")}"></label><label>Pago semanal por cada $1,000<input name="porMil" inputmode="decimal" value="${e.porMil || 100}" placeholder="Ej. 100"></label></div>
+    <div class="row"><label>Semanas<input name="plazos" value="${esc((e.plazos || [14]).join(", "))}"></label><label>Montos que puede pedir<input name="montos" value="${esc((e.montos || [5000, 10000, 20000]).join(", "))}"></label></div>
     <p class="err" hidden></p>
     <div class="actions"><button class="btn primary" type="submit">Guardar</button><button class="btn" type="button" data-empx>Cancelar</button></div></form>`;
 }
@@ -1070,7 +1070,7 @@ function vEmpresas() {
     const msgRH = `Hola ${e.contacto || ""}, este es el enlace del convenio de préstamos de ${e.nombre} con Entre Amigos. Compártelo solo con sus colaboradores; ahí piden su préstamo y suben sus documentos:\n${convLink(e)}\n\nEntre Amigos`;
     return `<div class="card"><div class="head"><h2>${esc(e.nombre)}</h2>${e.activo === false ? `<span class="pill warn">Enlace pausado</span>` : ""}</div>
       <div class="stats"><span class="stat"><b>${st.act.length}</b> con préstamo</span><span class="stat">Por cobrar <b>${mxn(st.cartera)}</b></span><span class="stat${st.atr.length ? " warn" : ""}"><b>${st.atr.length}</b> atrasados</span><span class="stat">A juntar esta semana <b>${mxn(st.semana)}</b></span>${sol.length ? `<span class="stat warn"><b>${sol.length}</b> solicitudes nuevas</span>` : ""}</div>
-      <div class="item-mid" style="margin:8px 0">Enlace: <a href="${convLink(e)}" target="_blank" rel="noopener">${esc(convLink(e))}</a> · ${e.porMil ? mxn2(e.porMil) + " por cada $1,000 a la semana" : ""}</div>
+      <div class="item-mid" style="margin:8px 0">Enlace: <a href="${convLink(e)}" target="_blank" rel="noopener">${esc(convLink(e))}</a> · ${(e.montos || []).map((m) => mxn(m) + " = " + mxn(m / 1000 * (e.porMil || 0)) + "/sem").join(" · ")} · ${(e.plazos || [14]).join(", ")} semanas</div>
       <div class="actions">${e.tel ? `<a class="btn sm primary" href="${waTo(e.tel, msgRH)}" target="_blank" rel="noopener">Mandar enlace a ${esc(e.contacto || "RH")}</a>` : ""}<button class="btn sm" type="button" data-ecopy="${e.id}">Copiar enlace</button><button class="btn sm" type="button" data-eopen="${e.id}">${open ? "Cerrar" : "Ver empleados"}</button><button class="btn sm" type="button" data-eedit="${e.id}">Editar</button><button class="btn sm" type="button" data-epausa="${e.id}">${e.activo === false ? "Reactivar enlace" : "Pausar enlace"}</button></div>
       ${EMP_FORM === e.id ? empForm(e) : ""}
       <p class="lbl">Administradora</p>
@@ -1094,11 +1094,12 @@ function vEmpresas() {
   P.querySelectorAll("form[data-empf]").forEach((f) => (f.onsubmit = async (ev) => {
     ev.preventDefault(); const g = (n) => f.querySelector(`[name=${n}]`).value.trim(), err = f.querySelector(".err");
     const plazos = g("plazos").split(/[^0-9]+/).map(Number).filter((n) => n > 0 && n <= 104), mm = g("montos").split(/[^0-9]+/).map(Number).filter(Boolean);
-    const d = { nombre: g("nombre"), contacto: g("contacto"), tel: tel10(g("tel")), porMil: num(g("porMil")), plazos: plazos.length ? plazos : [12], montoMin: mm[0] || 5000, montoMax: mm[1] || mm[0] || 10000 };
+    const montos = g("montos").replace(/,(?=\d{3}\b)/g, "").split(/[^0-9]+/).map(Number).filter((n) => n >= 500).sort((a, b) => a - b);
+    const d = { nombre: g("nombre"), contacto: g("contacto"), tel: tel10(g("tel")), porMil: num(g("porMil")), plazos: plazos.length ? plazos : [14], montos: montos.length ? montos : [5000, 10000, 20000] };
     if (!d.nombre || !d.porMil) { err.hidden = false; err.textContent = "Escribe el nombre de la empresa y el pago por cada $1,000."; return; }
     const id = f.dataset.empf, old = EMPS.find((x) => x.id === id);
     const codigo = old?.codigo || slugE(d.nombre) + "-" + rnd() + rnd();
-    const pub = { empresa: id || "", nombre: d.nombre, porMil: d.porMil, plazos: d.plazos, montoMin: d.montoMin, montoMax: d.montoMax, activo: old ? old.activo !== false : true };
+    const pub = { empresa: id || "", nombre: d.nombre, porMil: d.porMil, plazos: d.plazos, montos: d.montos, activo: old ? old.activo !== false : true };
     try {
       if (old) { await updateDoc(doc(db, "empresas", id), d); await setDoc(doc(db, "convenios", codigo), { ...pub, empresa: id }); }
       else { const ref = await addDoc(collection(db, "empresas"), { ...d, codigo, activo: true, creado: new Date().toISOString() }); await setDoc(doc(db, "convenios", codigo), { ...pub, empresa: ref.id }); }
