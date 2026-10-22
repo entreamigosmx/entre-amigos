@@ -219,6 +219,7 @@ function startApp() {
   if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); drawTabs(); }, () => {}));
   const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); if (!isAdmin()) drawTabs(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
+  if (isAdmin()) getDoc(doc(db, "config", "reglas")).then((x) => { RULES_CUR = x.exists() ? x.data().v || 0 : 0; drawRulesBanner(); }).catch(() => { RULES_CUR = 0; drawRulesBanner(); });
   if (isAdmin()) getDoc(doc(db, "config", "convenioInfo")).then((x) => { if (!x.exists() || x.data().v !== CONV_V) setDoc(doc(db, "config", "convenioInfo"), { v: CONV_V, html: CONV_HTML }); }).catch(() => {});
   if (isAdmin()) { listenP("all", collection(db, "prestamos")); unsubs.push(onSnapshot(collection(db, "altas"), (s) => { ALTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "empresas") draw(); }, () => {})); unsubs.push(onSnapshot(collection(db, "empresas"), (s) => { EMPS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nombre.localeCompare(b.nombre)); if (TAB === "empresas" || TAB === "prestamos") draw(); }, () => {})); }
   else if (USER.rol === "empresa" && USER.empresa) {
@@ -1038,6 +1039,38 @@ function vAutos() {
   }));
 }
 
+/* ---------- Reglas de seguridad: se publican desde la app con un toque ---------- */
+const RULES_V = 2; // subir este número cada vez que cambie firestore.rules
+let RULES_CUR = null;
+async function publicarReglas(btn, out) {
+  const say = (t, ok) => { out.textContent = t; out.className = ok ? "ok" : "err"; out.hidden = false; };
+  btn.disabled = true; say("Pidiendo permiso a Google…", true);
+  try {
+    const tk = await tokenAdmin();
+    say("Publicando reglas…", true);
+    const content = await (await fetch("./firestore.rules?t=" + Date.now(), { cache: "no-store" })).text();
+    const H = { Authorization: "Bearer " + tk, "Content-Type": "application/json", "X-Goog-User-Project": CONF.projectId }, B = `https://firebaserules.googleapis.com/v1/projects/${CONF.projectId}`;
+    const r1 = await fetch(B + "/rulesets", { method: "POST", headers: H, body: JSON.stringify({ source: { files: [{ name: "firestore.rules", content }] } }) });
+    const j1 = await r1.json().catch(() => ({}));
+    if (!r1.ok) throw new Error(j1.error?.message || "No se pudieron revisar las reglas");
+    const r2 = await fetch(B + "/releases/cloud.firestore", { method: "PATCH", headers: H, body: JSON.stringify({ release: { name: `projects/${CONF.projectId}/releases/cloud.firestore`, rulesetName: j1.name } }) });
+    const j2 = await r2.json().catch(() => ({}));
+    if (!r2.ok) throw new Error(j2.error?.message || "No se pudieron publicar");
+    await setDoc(doc(db, "config", "reglas"), { v: RULES_V, fecha: new Date().toISOString() });
+    RULES_CUR = RULES_V; say("Listo. Las reglas quedaron publicadas.", true); btn.textContent = "Publicadas";
+    drawRulesBanner();
+  } catch (e) {
+    btn.disabled = false;
+    say(e.code === "otra-cuenta" ? "Elige tu cuenta de administrador (jesusreynosoalfaro@gmail.com)." : e.code === "auth/popup-closed-by-user" ? "Se cerró la ventana de Google. Intenta otra vez." : "No se pudo: " + (e.message || "error") + ". Avísale a Claude.", false);
+  }
+}
+function drawRulesBanner() {
+  const box = $("rules-banner"); if (!box) return;
+  if (!isAdmin() || RULES_CUR === null || RULES_CUR >= RULES_V) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="card notice"><h3>Hay una actualización de seguridad</h3><p class="muted">Para que funcionen las funciones nuevas hay que publicar las reglas de tu base de datos. Es un toque: Google te pide confirmar con tu cuenta.</p>
+    <div class="actions"><button class="btn primary" type="button" id="rules-go">Actualizar ahora</button></div><p id="rules-out" hidden></p></div>`;
+  $("rules-go").onclick = () => publicarReglas($("rules-go"), $("rules-out"));
+}
 /* ---------- Convenios con empresas ---------- */
 // Explicación que ve una empresa interesada SOLO después de que el administrador la aprueba (se guarda en Firestore).
 const CONV_V = 1;
@@ -1780,7 +1813,9 @@ async function borrarCuenta(email, uid, btn) {
 /* ---------- Tasas (admin) ---------- */
 function vTasas() {
   const t = CFG.tasas || {};
-  $("panel").innerHTML = `<div class="card"><h2>Valores sugeridos</h2><p class="muted">Tu equipo los verá ya puestos al cotizar. Pueden ajustarlos en cada cotización.</p>
+  setTimeout(() => { const b = $("rules-now"); if (b) b.onclick = () => publicarReglas(b, $("rules-now-out")); });
+  $("panel").innerHTML = `<div class="card"><h2>Reglas de seguridad</h2><p class="muted">Publica las reglas de tu base de datos sin copiar y pegar. Úsalo cuando Claude te avise de un cambio.</p><button class="btn" type="button" id="rules-now">Publicar reglas ahora</button><p id="rules-now-out" hidden></p></div>
+  <div class="card"><h2>Valores sugeridos</h2><p class="muted">Tu equipo los verá ya puestos al cotizar. Pueden ajustarlos en cada cotización.</p>
     <form id="ft" novalidate>
       <div class="row">${Object.entries(GARANTIAS).map(([k, v]) => `<label for="t-${k}">Interés mensual: ${v.toLowerCase()} (%)<input id="t-${k}" inputmode="decimal" value="${t[k] ?? ""}"></label>`).join("")}
       <label for="t-plazo">Plazo sugerido (meses)<input id="t-plazo" inputmode="numeric" value="${CFG.plazo ?? 12}"></label></div>

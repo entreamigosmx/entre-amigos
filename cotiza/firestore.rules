@@ -1,4 +1,5 @@
 rules_version = '2';
+// Versión 2. Se publican desde la app (Ajustes > Publicar reglas ahora).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signed() { return request.auth != null; }
