@@ -8,7 +8,7 @@ export async function autos() {
   if (cache) return cache;
   const r = await fetch(BASE + "data/autos.json", { cache: "no-cache" });
   if (!r.ok) throw new Error("inventario");
-  cache = (await r.json()).filter((a) => a.disponible).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+  cache = (await r.json()).filter((a) => a.disponible && !a.borrador).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
   return cache;
 }
 export function src(path, size) {

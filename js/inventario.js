@@ -1,4 +1,4 @@
-import { autos, card, esc, WA_ICON } from "./comun.js?v=p1";
+import { autos, card, esc, WA_ICON } from "./comun.js?v=p2";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const $ = (id) => document.getElementById(id);

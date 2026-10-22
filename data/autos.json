@@ -1101,5 +1101,50 @@
   "portada": false,
   "nombre": "BMW F 900 GS",
   "version": ""
+ },
+ {
+  "title": "Changan Hunter 4x4 2024",
+  "slug": "changan-hunter-4x4-2024",
+  "marca": "Changan",
+  "modelo": "Hunter 4x4",
+  "anio": 2024,
+  "precio": 419000,
+  "precioEspecial": false,
+  "categoria": "Pickup",
+  "kilometraje": 45851,
+  "transmision": "Automática",
+  "combustible": "Gasolina",
+  "disponible": true,
+  "destacado": true,
+  "orden": 1.5,
+  "galeria": [
+   "fotos/changan-hunter-4x4-2024/01.jpg",
+   "fotos/changan-hunter-4x4-2024/02.jpg",
+   "fotos/changan-hunter-4x4-2024/03.jpg",
+   "fotos/changan-hunter-4x4-2024/04.jpg",
+   "fotos/changan-hunter-4x4-2024/05.jpg",
+   "fotos/changan-hunter-4x4-2024/06.jpg",
+   "fotos/changan-hunter-4x4-2024/07.jpg",
+   "fotos/changan-hunter-4x4-2024/08.jpg",
+   "fotos/changan-hunter-4x4-2024/09.jpg",
+   "fotos/changan-hunter-4x4-2024/10.jpg",
+   "fotos/changan-hunter-4x4-2024/11.jpg",
+   "fotos/changan-hunter-4x4-2024/12.jpg",
+   "fotos/changan-hunter-4x4-2024/13.jpg",
+   "fotos/changan-hunter-4x4-2024/14.jpg"
+  ],
+  "descripcion": "<p>Pickup doble cabina 4x4 con transmisión automática, interiores en piel y el equipamiento de la versión más completa de gasolina. 45,851 km. Lista para trabajo, carretera y fin de semana.</p><h4>Motor y tracción</h4><ul><li>Motor 2.0L turbo a gasolina, 214 hp y 287 lb-pie de torque</li><li>Transmisión automática de 8 velocidades</li><li>Tracción 4x4 con modos 2H, AUTO y 4L (baja)</li><li>Bloqueo de diferencial</li><li>Selector de modos de manejo</li></ul><h4>Interior y tecnología</h4><ul><li>Asientos en piel con costuras en contraste</li><li>Tablero digital y pantalla táctil central</li><li>Volante multifunciones</li><li>Cabina doble para 5 pasajeros</li></ul><h4>Seguridad</h4><ul><li>Cámara de reversa y cámara de punto ciego</li><li>4 bolsas de aire</li><li>Control de estabilidad y de tracción, ABS</li><li>Asistente de arranque en pendiente y control de descenso</li></ul><h4>Exterior</h4><ul><li>Faros LED con firma luminosa</li><li>Rines de aluminio de 18 pulgadas</li><li>Estribos laterales y barras de techo</li><li>Enganche para remolque</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "foto": "fotos/changan-hunter-4x4-2024/01.jpg",
+  "categorias": [
+   "Pickups",
+   "Trabajo",
+   "Todo terreno"
+  ],
+  "nombre": "Changan Hunter",
+  "version": "4x4 Automática · Piel",
+  "video": "fotos/changan-hunter-4x4-2024/video.mp4",
+  "videoPoster": "fotos/changan-hunter-4x4-2024/video.jpg",
+  "borrador": true,
+  "portada": true
  }
 ]
