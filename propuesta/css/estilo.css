@@ -457,3 +457,4 @@ details.como summary{cursor:pointer;font-weight:700;color:var(--lime)}
 .conv ol{margin:0}
 @media (max-width:760px){.conv{grid-template-columns:1fr}}
 .card.conv{padding:clamp(20px,3vw,32px);background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.plazos .fijo{margin:0;padding:10px 14px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);font-weight:700}

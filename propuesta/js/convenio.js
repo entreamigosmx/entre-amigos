@@ -5,17 +5,19 @@ $("fixwa") && ($("fixwa").innerHTML = WA_ICON);
 const mxn = (n) => "$" + Math.round(n).toLocaleString("es-MX");
 const mxn2 = (n) => "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const COD = (new URLSearchParams(location.search).get("c") || "").trim();
-const DEMO = { empresa: "demo", nombre: "Empresa de ejemplo", porMil: 125, plazos: [10, 12, 15], montoMin: 5000, montoMax: 10000 };
+const DEMO = { empresa: "demo", nombre: "Empresa de ejemplo", porMil: 100, plazos: [14], montos: [5000, 10000, 20000] };
 let CV = null, PL = 0, fb = null;
 const FOTOS = {}, REQ = ["ine_f", "ine_r", "domicilio"];
 
 function pinta() {
   $("c-emp").textContent = "Convenio " + CV.nombre;
   $("c-lead").textContent = `Préstamo para colaboradores de ${CV.nombre}, con pagos semanales fijos en efectivo por medio de tu empresa.`;
-  const M = []; for (let m = CV.montoMin || 5000; m <= (CV.montoMax || 10000); m += 1000) M.push(m);
+  let M = (CV.montos || []).filter((m) => m > 0);
+  if (!M.length) { for (let m = CV.montoMin || 5000; m <= (CV.montoMax || 10000); m += 1000) M.push(m); }
   $("c-monto").innerHTML = M.map((m) => `<option value="${m}">${mxn(m)}</option>`).join("");
-  PL = PL || (CV.plazos || [12])[Math.floor(((CV.plazos || [12]).length - 1) / 2)];
-  $("c-plazos").innerHTML = (CV.plazos || [12]).map((n) => `<button type="button" data-n="${n}" aria-pressed="${n === PL}">${n} semanas</button>`).join("");
+  const PLS = CV.plazos && CV.plazos.length ? CV.plazos : [14];
+  PL = PL || PLS[Math.floor((PLS.length - 1) / 2)];
+  $("c-plazos").innerHTML = PLS.length === 1 ? `<p class="fijo">${PLS[0]} semanas</p>` : PLS.map((n) => `<button type="button" data-n="${n}" aria-pressed="${n === PL}">${n} semanas</button>`).join("");
   $("c-plazos").querySelectorAll("button").forEach((b) => (b.onclick = () => { PL = Number(b.dataset.n); pinta(); }));
   calc(); $("cf").hidden = false;
 }
