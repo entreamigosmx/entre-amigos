@@ -61,17 +61,23 @@ function showroom(list) {
   return pick;
 }
 
-/* Explora por tipo: una foto real por categoría */
-const TIPOS = [["SUVs", "SUVs"], ["Pickups", "Pickups"], ["Lujo", "Lujo"], ["Sedanes", "Sedanes"], ["Todo terreno", "Todo terreno"], ["Motos", "Motos"], ["Trabajo", "Trabajo"], ["Familiares", "Familiares"]];
+/* Explora por tipo: íconos de línea propios, uno por tipo */
+const ICONOS = {
+"SUVs": "<path d=\"M7.4 24 H3 L3 18 L5 15.5 L13 14.2 L19 8 L56 8 L59.5 10 L61 16 L61 24 V24 H55.6 M43.4 24 H19.6 M7.4 24 A6.1 6.1 0 0 1 19.6 24 M43.4 24 A6.1 6.1 0 0 1 55.6 24\"/><path d=\"M24 6.2H52\"/><path d=\"M20.2 9.6L16.6 14H31V9.6zM33.5 9.6V14H45V9.6zM47.5 9.6V14H59.2L58.2 9.6z\"/><circle cx=\"13.5\" cy=\"24\" r=\"4.8\"/><circle cx=\"49.5\" cy=\"24\" r=\"4.8\"/>",
+"Pickups": "<path d=\"M7.5 24 H3 L3 18 L5 15.5 L13 14.5 L19 8.2 L35 8.2 L36 15 L62 15 L62 24 V24 H55.5 M44.5 24 H18.5 M7.5 24 A5.5 5.5 0 0 1 18.5 24 M44.5 24 A5.5 5.5 0 0 1 55.5 24\"/><path d=\"M20.4 9.8L17.2 14H26.5V9.8zM29 9.8V14H34.3L34 9.8z\"/><circle cx=\"13\" cy=\"24\" r=\"4.2\"/><circle cx=\"50\" cy=\"24\" r=\"4.2\"/>",
+"Lujo": "<path d=\"M8 24 H3 L3 20.5 L5 18 L18 16.2 L27 11 L36 10.6 L52 16.4 L60 17.6 L61 20 L61 24 V24 H56 M45 24 H19 M8 24 A5.5 5.5 0 0 1 19 24 M45 24 A5.5 5.5 0 0 1 56 24\"/><path d=\"M28 12.3L21.6 16H46.5L37 12.3z\"/><circle cx=\"13.5\" cy=\"24\" r=\"4.2\"/><circle cx=\"50.5\" cy=\"24\" r=\"4.2\"/>",
+"Sedanes": "<path d=\"M8 24 H3 L3 19 L5 16.5 L14 15 L21 9.5 L38 9.5 L46 15 L58 16.5 L61 18.5 L61 24 V24 H56 M45 24 H19 M8 24 A5.5 5.5 0 0 1 19 24 M45 24 A5.5 5.5 0 0 1 56 24\"/><path d=\"M22 11L17.6 15H29V11zM31.5 11V15H43.2L37.6 11z\"/><circle cx=\"13.5\" cy=\"24\" r=\"4.2\"/><circle cx=\"50.5\" cy=\"24\" r=\"4.2\"/>",
+"Todo terreno": "<path d=\"M8.7 24 H5 L5 14.5 L16 13.5 L19.5 7.5 L53.5 7.5 L53.5 24 V24 H51.3 M38.7 24 H21.3 M8.7 24 A6.3 6.3 0 0 1 21.3 24 M38.7 24 A6.3 6.3 0 0 1 51.3 24\"/><path d=\"M21 9L18.4 13H31V9zM33.5 9V13H51V9z\"/><rect x=\"54\" y=\"12\" width=\"4.5\" height=\"9\" rx=\"1.6\"/><circle cx=\"15\" cy=\"24\" r=\"5\"/><circle cx=\"45\" cy=\"24\" r=\"5\"/>",
+"Motos": "<circle cx=\"13\" cy=\"22\" r=\"7\"/><circle cx=\"51\" cy=\"22\" r=\"7\"/><path d=\"M13 22l9-9h12l5 9H24l-3-5M39 22l4-11 8 11M43 11h-5l-1-3h8M28 13l3-4h5\"/>",
+"Trabajo": "<path d=\"M8 24 H3 L3 20 L5 17 L11 15.5 L17.5 7 L19.5 6 L59 6 L61 8 L61 24 V24 H56 M45 24 H19 M8 24 A5.5 5.5 0 0 1 19 24 M45 24 A5.5 5.5 0 0 1 56 24\"/><path d=\"M19.2 8L14.4 15H27V8zM33 8V21\"/><circle cx=\"13.5\" cy=\"24\" r=\"4.2\"/><circle cx=\"50.5\" cy=\"24\" r=\"4.2\"/>",
+"Familiares": "<path d=\"M8 24 H3 L3 19 L5 16.8 L9 15.8 L21 7.2 L56 7.2 L60 8.8 L61 13 L61 24 V24 H56 M45 24 H19 M8 24 A5.5 5.5 0 0 1 19 24 M45 24 A5.5 5.5 0 0 1 56 24\"/><path d=\"M21.6 9L13.6 15.2H29V9zM31.5 9V15.2H43V9zM45.5 9V15.2H59.6L59 9zM31.5 17.5H43\"/><circle cx=\"13.5\" cy=\"24\" r=\"4.2\"/><circle cx=\"50.5\" cy=\"24\" r=\"4.2\"/>"
+};
+const TIPOS = ["SUVs", "Pickups", "Lujo", "Sedanes", "Todo terreno", "Motos", "Trabajo", "Familiares"];
 function tipos(list) {
-  const used = new Set();
-  document.getElementById("types").innerHTML = TIPOS.map(([cat, label]) => {
-    const inCat = list.filter((a) => (a.categorias || []).includes(cat));
-    if (!inCat.length) return "";
-    const a = inCat.find((x) => local(x) && !used.has(x.slug)) || inCat.find(local) || inCat[0];
-    used.add(a.slug);
-    const img = cat === "Motos" ? BASE + "assets/img/motos.jpg" : src(fotos(a)[0], "t");
-    return `<a class="type" href="inventario.html?cat=${encodeURIComponent(cat)}"><img src="${img}" alt="" loading="lazy" decoding="async"><span><b>${label}</b><small>${inCat.length}</small></span></a>`;
+  document.getElementById("types").innerHTML = TIPOS.map((cat) => {
+    const n = list.filter((a) => (a.categorias || []).includes(cat)).length;
+    if (!n) return "";
+    return `<a class="type" href="inventario.html?cat=${encodeURIComponent(cat)}"><svg viewBox="0 0 64 32" aria-hidden="true">${ICONOS[cat]}</svg><b>${cat}</b><small>${n} ${n === 1 ? "disponible" : "disponibles"}</small></a>`;
   }).join("");
 }
 
