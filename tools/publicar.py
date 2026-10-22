@@ -12,4 +12,4 @@ for f in glob.glob(P+"/js/*.js"):
     s=open(f).read().replace('export const BASE = "../";','export const BASE = "";')
     s=s.replace('"../','"')
     open("js/"+os.path.basename(f),"w").write(s)
-shutil.copy(P+"/css/estilo.css","css/estilo.css")
+for f in glob.glob(P+"/css/*.css"): shutil.copy(f,"css/"+os.path.basename(f))
