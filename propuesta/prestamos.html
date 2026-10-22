@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Préstamos con garantía | Entre Amigos</title>
+<meta name="description" content="Préstamos con garantía de auto, relojes, oro o monedas en Guadalajara. Condiciones según tu garantía, sujetas a evaluación.">
+<meta name="theme-color" content="#0a0b0a">
+<link rel="icon" href="../assets/img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/estilo.css?v=p11">
+<meta name="robots" content="noindex">
+</head>
+<body>
+<div class="preview-bar">Vista previa de la propuesta. La página publicada no ha cambiado. <a href="../prestamos.html">Ver la actual</a></div>
+<header class="top g"><div class="in">
+  <a class="brand" href="./" aria-label="Entre Amigos, inicio"><img src="../assets/img/logo-mark.png" width="63" height="40" alt=""><span class="wm"><b>Entre <i>Amigos</i></b><span>Más que clientes, amigos</span></span></a>
+  <nav class="nav" aria-label="Principal"><a href="inventario.html">Inventario</a><a href="./#como">Cómo trabajamos</a><a href="./#vende">Vende tu auto</a><a href="./#financiamiento">Financiamiento</a><a href="./#servicios">Servicios</a><a href="./#contacto">Contacto</a></nav>
+  <a class="btn primary" href="https://wa.me/523333063319" target="_blank" rel="noopener">WhatsApp</a>
+</div></header>
+<main class="blk g" style="padding-block:clamp(40px,6vw,72px) 80px"><div class="in">
+  <a class="back" href="./">← Volver al inicio</a>
+  <div class="head"><span class="eyebrow">Préstamos</span><h1 style="font-size:clamp(40px,6vw,64px)">Préstamos con garantía</h1>
+  <p class="lead">Si necesitas liquidez, te prestamos con garantía. Plazos a tu medida, con pagos mensuales. El monto y las condiciones dependen de la garantía y se definen al revisarla.</p></div>
+  <div class="sell">
+    <div class="opt"><h3>Con tu auto</h3><p>Puedes seguir usando tu auto: dejas la documentación endosada y una llave mientras dura el préstamo.</p></div>
+    <div class="opt"><h3>Con relojes, oro o monedas</h3><p>Tu garantía queda bajo resguardo y se te devuelve al liquidar el préstamo.</p></div>
+    <div class="opt"><h3>Pagos claros</h3><p>Te entregamos tu corrida de pagos antes de firmar y puedes consultar tu avance en línea con tu cuenta.</p></div>
+  </div>
+  <div class="two" style="margin-top:clamp(32px,5vw,56px)">
+    <div><h2 style="font-size:clamp(28px,3.6vw,40px)">Qué necesitas</h2>
+      <ul class="req" style="margin-top:14px"><li>INE vigente</li><li>Comprobante de domicilio no mayor a 3 meses</li><li>Constancia de situación fiscal</li><li>La garantía y sus documentos (por ejemplo, factura del auto)</li></ul>
+      <p class="note" style="margin-top:14px">Todo préstamo está sujeto a evaluación y aprobación. No publicamos tasas porque dependen de cada garantía y plazo.</p></div>
+    <form class="card" id="sol" novalidate style="align-self:start">
+      <h3>Solicita tu préstamo</h3>
+      <p class="muted" style="margin:0">Llena estos datos y te mandamos tu cotización por WhatsApp.</p>
+      <div class="row2"><label for="s-nom">Nombre completo<input id="s-nom" autocomplete="name" placeholder="Nombre y apellidos"></label>
+      <label for="s-tel">WhatsApp<input id="s-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label></div>
+      <fieldset class="tipo-p"><legend>¿Qué tipo de préstamo buscas?</legend>
+        <label class="opt-p"><input type="radio" name="tipo" value="garantia" checked><span><b>Con garantía · pagos mensuales</b>Dejas en garantía tu auto, reloj, oro, monedas u otra prenda.</span></label>
+        <label class="opt-p"><input type="radio" name="tipo" value="sin"><span><b>No tengo garantía</b>Mándanos tu solicitud y la revisamos. La autorización depende de tu caso.</span></label>
+      </fieldset>
+      <div class="row2"><label for="s-monto">Monto que necesitas<input id="s-monto" inputmode="numeric" autocomplete="off" placeholder="Ej. 50,000"></label>
+      <label for="s-plazo"><span id="s-plazo-l">Plazo en meses</span><input id="s-plazo" inputmode="numeric" autocomplete="off" placeholder="Ej. 6"></label></div>
+      <label for="s-uni" id="s-uni-l" hidden style="display:none!important">¿Cómo prefieres pagar?<select id="s-uni"><option value="meses">Pagos mensuales (plazo en meses)</option></select></label>
+      <div id="s-gar-box" class="gbox">
+        <div class="row2"><label for="s-gar">Garantía<select id="s-gar"><option value="auto">Auto</option><option value="reloj">Reloj</option><option value="oro">Oro</option><option value="monedas">Monedas</option><option value="otro">Otra prenda</option></select></label>
+        <label for="s-val">Valor de tu garantía<input id="s-val" inputmode="numeric" autocomplete="off" placeholder="Ej. 150,000"></label></div>
+        <label for="s-desc">Descripción de la garantía<input id="s-desc" autocomplete="off" placeholder="Ej. Jetta 2019, Rolex Submariner, 5 centenarios"></label>
+        <p class="cov" id="s-cov">Tu garantía debe valer al menos el doble de lo que pides (2 a 1). Si el plazo es mayor a 12 meses, el triple (3 a 1).</p>
+      </div>
+      <p class="note" id="s-aval" hidden style="margin:0">Requisitos: aval, pagaré, INE vigente y comprobante de domicilio.</p>
+      <label for="s-nota">Comentarios (opcional)<input id="s-nota" autocomplete="off" placeholder="Ej. Lo necesito para el viernes"></label>
+      <p class="err" id="s-err" hidden></p>
+      <button class="btn primary" type="submit">Enviar solicitud por WhatsApp</button>
+      <div class="row2"><a class="btn quiet" href="../cotiza/">Ya soy cliente: ver mi préstamo</a>
+      <a class="btn quiet" href="../cotiza/">Soy colaborador: entrar</a></div>
+      <p class="note" style="margin:0;text-align:center">¿Quieres ser colaborador? <a href="../colaboradores/">Regístrate aquí</a></p>
+    </form>
+  </div>
+  <section class="card conv" id="empresas" style="margin-top:clamp(32px,5vw,56px)">
+    <div><span class="eyebrow">Convenios para empresas</span><h2 style="font-size:clamp(28px,3.6vw,40px);margin-top:6px">Préstamos para tus colaboradores</h2>
+      <p class="muted" style="margin-top:8px">Un beneficio para tu equipo sin costo para tu empresa.</p>
+      <ol class="req" style="margin-top:14px"><li><b>Tu empresa firma un convenio</b> con Entre Amigos.</li><li><b>Tus colaboradores piden</b> de $5,000 a $10,000 desde un enlace exclusivo para tu empresa.</li><li><b>Pagan en cómodas semanas</b>, en efectivo, por medio de la empresa, que respalda el convenio.</li></ol></div>
+    <div style="display:grid;gap:10px"><a class="btn primary" href="https://wa.me/523333063319?text=Hola%2C%20me%20interesa%20el%20convenio%20de%20pr%C3%A9stamos%20para%20los%20colaboradores%20de%20mi%20empresa." target="_blank" rel="noopener" id="conv-wa">Quiero el convenio para mi empresa</a>
+      <p class="note" style="margin:0">¿Tu empresa ya tiene convenio? Pide a Recursos Humanos tu enlace para solicitar.</p></div>
+  </section>
+</div></main>
+<footer class="g"><div class="in">
+  <span>Entre Amigos · Av. Aztecas 1021, Monraz, Guadalajara · 33 3306 3319</span>
+  <span><a href="prestamos.html#empresas">Convenios para empresas</a> · <a href="../cotiza/">Acceso clientes y colaboradores</a></span>
+</div></footer>
+<script type="module">
+const $ = (i) => document.getElementById(i);
+const GAR = { auto: "Auto", reloj: "Reloj", oro: "Oro", monedas: "Monedas", otro: "Otra prenda" };
+const num = (v) => Number(String(v || "").replace(/[^0-9.]/g, "")) || 0;
+const fmt = (e) => { const v = e.target.value.replace(/\D/g, ""); e.target.value = v ? Number(v).toLocaleString("es-MX") : ""; };
+$("s-monto").addEventListener("input", fmt); $("s-val").addEventListener("input", fmt);
+const tipo = () => document.querySelector('input[name="tipo"]:checked').value;
+const factor = (meses) => (meses > 12 ? 3 : 2);
+// Regla de garantía: 2 a 1 hasta 12 meses, 3 a 1 si el plazo es mayor.
+function cobertura() {
+  const m = num($("s-monto").value), n = parseInt($("s-plazo").value, 10) || 0, v = num($("s-val").value), box = $("s-cov");
+  if (tipo() !== "garantia") return { ok: true };
+  const fx = factor(n), req = m * fx, max = Math.floor(v / fx / 1000) * 1000;
+  if (!m) { box.className = "cov"; box.textContent = "Tu garantía debe valer al menos el doble de lo que pides (2 a 1). Si el plazo es mayor a 12 meses, el triple (3 a 1)."; return { ok: false }; }
+  if (!v) { box.className = "cov"; box.textContent = `Para pedir $${m.toLocaleString("es-MX")}${n ? " a " + n + " meses" : ""}, tu garantía debe valer al menos $${req.toLocaleString("es-MX")} (${fx} a 1). Escribe cuánto vale.`; return { ok: false, req, fx }; }
+  if (v >= req) { box.className = "cov ok"; box.textContent = `Tu garantía cubre el préstamo (${fx} a 1).`; return { ok: true, req, fx }; }
+  box.className = "cov bad";
+  box.innerHTML = `Tu garantía no alcanza. Para $${m.toLocaleString("es-MX")}${n ? " a " + n + " meses" : ""} debe valer al menos <b>$${req.toLocaleString("es-MX")}</b> (${fx} a 1), porque pedimos que la garantía valga ${fx === 2 ? "el doble" : "el triple"} del préstamo.` + (max > 0 ? ` Con una garantía de $${v.toLocaleString("es-MX")} puedes pedir hasta <b>$${max.toLocaleString("es-MX")}</b>. <button type="button" class="link" id="s-fit">Pedir $${max.toLocaleString("es-MX")}</button>` : "") + `<br>¿Necesitas ese monto de todos modos? <button type="button" class="link" id="s-rev">Mandarla para revisión sin garantía suficiente</button>`;
+  const fit = document.getElementById("s-fit"); if (fit) fit.onclick = () => { $("s-monto").value = max.toLocaleString("es-MX"); cobertura(); };
+  document.getElementById("s-rev").onclick = () => {
+    const d = $("s-desc").value.trim();
+    $("s-nota").value = `Ofrezco en garantía: ${GAR[$("s-gar").value]}${d ? " " + d : ""}, valor $${v.toLocaleString("es-MX")}. ` + $("s-nota").value;
+    document.querySelector('input[name="tipo"][value="sin"]').checked = true; cambiaTipo();
+  };
+  return { ok: false, req, fx, max };
+}
+function cambiaTipo() {
+  const t = tipo(), g = t === "garantia", sin = t === "sin";
+  $("s-gar-box").hidden = !g; $("s-aval").hidden = t !== "semanal"; $("s-uni-l").hidden = !sin;
+  const sem = t === "semanal" || (sin && $("s-uni").value === "semanas");
+  $("s-plazo-l").textContent = sem ? "Plazo en semanas" : "Plazo en meses";
+  $("s-plazo").placeholder = sem ? "Ej. 14" : "Ej. 6";
+  cobertura();
+}
+document.querySelectorAll('input[name="tipo"]').forEach((r) => r.addEventListener("change", cambiaTipo));
+$("s-uni").addEventListener("change", cambiaTipo);
+["s-monto", "s-plazo", "s-val"].forEach((id) => $(id).addEventListener("input", cobertura));
+cambiaTipo();
+// Guarda la solicitud en la app de préstamos para responderla desde ahí.
+let guardar = null;
+Promise.all([
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
+]).then(([A, F]) => {
+  const app = A.initializeApp({ apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8", authDomain: "entre-amigos-financiera.firebaseapp.com", projectId: "entre-amigos-financiera", appId: "1:244817036834:web:7dd1a54f4825a318a2ac7b" });
+  const db = F.getFirestore(app);
+  guardar = (d) => F.addDoc(F.collection(db, "solicitudes"), d).then((r) => r.id);
+}).catch(() => {});
+$("sol").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const nom = $("s-nom").value.trim(), monto = $("s-monto").value.trim(), n = parseInt($("s-plazo").value, 10) || 0, uni = tipo() === "semanal" || (tipo() === "sin" && $("s-uni").value === "semanas") ? "semanas" : "meses", g = tipo() === "semanal" ? "aval" : tipo() === "sin" ? "sin" : $("s-gar").value;
+  const fail = (t) => { $("s-err").hidden = false; $("s-err").textContent = t; $("s-err").scrollIntoView({ block: "center" }); };
+  if (!nom || !monto || !n) return fail("Escribe tu nombre completo, el monto y el plazo.");
+  if (nom.split(/\s+/).length < 2) return fail("Escribe tu nombre completo: nombre y apellidos.");
+  if (g !== "aval" && g !== "sin") {
+    if (!num($("s-val").value)) return fail("Escribe cuánto vale tu garantía.");
+    const c = cobertura(); if (!c.ok) return fail(`Tu garantía debe valer al menos $${c.req.toLocaleString("es-MX")} (${c.fx} a 1) para este préstamo. Ajusta el monto o el valor de tu garantía.`);
+  }
+  $("s-err").hidden = true;
+  const tel = $("s-tel").value.replace(/\D/g, "").slice(-10), desc = g === "aval" || g === "sin" ? "" : $("s-desc").value.trim(), val = g === "aval" || g === "sin" ? 0 : num($("s-val").value), nota = $("s-nota").value.trim();
+  const L = ["Hola, quiero solicitar un préstamo.", "", "Nombre: " + nom];
+  if (tel) L.push("WhatsApp: " + $("s-tel").value.trim());
+  L.push("Monto: $" + monto, "Plazo: " + n + " " + uni, "Pagos: " + (uni === "semanas" ? "semanales" : "mensuales"));
+  if (g === "aval") L.push("Garantía: sin garantía (con aval)");
+  else if (g === "sin") L.push("Garantía: no tengo garantía");
+  else { L.push("Garantía: " + GAR[g] + (desc ? " - " + desc : "")); if (val) L.push("Valor aproximado: $" + val.toLocaleString("es-MX")); }
+  if (nota) L.push("Comentarios: " + nota);
+  const datos = { nombre: nom.slice(0, 80), telefono: tel, monto: num(monto), plazo: n, unidad: uni, garantia: g, desc: desc.slice(0, 200), valor: val, nota: nota.slice(0, 300), fecha: new Date().toISOString(), origen: "web", estado: "nueva" };
+  window.open("https://wa.me/523333063319?text=" + encodeURIComponent(L.join("\n")), "_blank", "noopener");
+  fetch("https://ntfy.sh/entreamigos-avisos-7q4k9x2m", { method: "POST", body: "$" + monto + " a " + n + " " + uni + (g === "aval" ? " con aval" : g === "sin" ? " sin garantía (tú decides)" : " con garantía " + GAR[g]) + ". Revísala en la app.", headers: { Title: "Nueva solicitud de préstamo", Click: "https://ventaentreamigos.com/cotiza/", Tags: "bell" } }).catch(() => {});
+  const listo = (id) => {
+    const q = "?nueva" + (id ? "&sol=" + id : "") + "&nom=" + encodeURIComponent(nom) + (tel ? "&tel=" + tel : "");
+    $("sol").innerHTML = `<h3>Recibimos tu solicitud</h3>
+      <p class="muted" style="margin:0">Te contestamos por WhatsApp. <b>Último paso:</b> crea tu cuenta (toma un minuto). Ahí ves tu cotización y tu corrida de pagos, subes tus documentos y das seguimiento a tu solicitud.</p>
+      <a class="btn primary" href="../cotiza/${q}">Crear mi cuenta</a>
+      <p class="note" style="margin:0">Si no se abrió WhatsApp, escríbenos al 33 3306 3319.</p>`;
+    $("sol").scrollIntoView({ block: "start" });
+  };
+  if (guardar) guardar(datos).then(listo, () => listo("")); else listo("");
+});
+</script>
+<script src="js/visitas.js?v=1" defer></script>
+</body>
+</html>

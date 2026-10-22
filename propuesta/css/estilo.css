@@ -446,3 +446,14 @@ details.ficha .desc{margin:0;padding:0 18px 18px}
 .strip .play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35)}
 .strip .play svg{width:22px;height:22px;fill:var(--lime)}
 @media (max-width:760px){.stage:has(video:not([hidden])){aspect-ratio:9/14}}
+/* Convenio empresarial */
+.cbox{display:grid;gap:2px;padding:14px 16px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line)}
+.cbox span{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cbox b{font-family:var(--display);font-size:clamp(40px,9vw,56px);line-height:1;color:var(--lime)}
+.cbox small{color:var(--soft);font-size:15px}
+details.como{border-top:1px solid var(--line);padding-top:10px}
+details.como summary{cursor:pointer;font-weight:700;color:var(--lime)}
+.conv{display:grid;grid-template-columns:1.2fr 1fr;gap:var(--gap);align-items:center}
+.conv ol{margin:0}
+@media (max-width:760px){.conv{grid-template-columns:1fr}}
+.card.conv{padding:clamp(20px,3vw,32px);background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
