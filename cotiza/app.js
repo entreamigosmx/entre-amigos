@@ -207,6 +207,7 @@ const TABS = () => isAdmin()
   : isTeam() ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"], ["prestamos", "Mis clientes"]]
   : [["mis", "Mis préstamos"]];
 
+let VIS = {};
 let CFG = {}, COTS = [], PRES = [], USERS = [], PSRC = {}, REP = {}, ENT = [], SOLS = [], VENTAS = [];
 function startApp() {
   show("v-app");
@@ -235,6 +236,7 @@ function startApp() {
     unsubs.push(onSnapshot(collection(db, "ventas"), (s) => { VENTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); drawTabs(); if (TAB === "autos" || TAB === "agenda") draw(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "entregas"), (s) => { ENT = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); }, () => {}));
   }
+  if (isAdmin()) unsubs.push(onSnapshot(collection(db, "visitas"), (s) => { VIS = {}; s.docs.forEach((d) => (VIS[d.id] = d.data())); loadAutos().then(() => { if (TAB === "agenda") draw(); }); }, () => {}));
   if (isAdmin()) unsubs.push(onSnapshot(collection(db, "usuarios"), (s) => { USERS = s.docs.map((d) => ({ uid: d.id, ...d.data() })); if (TAB === "personas" || TAB === "prestamos" || TAB === "agenda") draw(); drawTabs(); }, () => {}));
   go(TABS()[0][0]);
 }
@@ -1375,6 +1377,32 @@ function vTasas() {
 }
 
 
+/* ---------- Visitas de la página (contador anónimo) ---------- */
+const autoNom = (slug) => { const a = (AUTOS || []).find((x) => x.slug === slug); return a ? a.title : slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); };
+const PAG_NOM = { inicio: "Portada", inventario: "Inventario", auto: "Fichas de autos", creditos: "Simulador de crédito", vender: "Vende tu auto", prestamos: "Préstamos", nosotros: "Nosotros" };
+function topAutos(dias, n) {
+  const t = {}; dias.forEach((k) => Object.entries((VIS[k] || {}).autos || {}).forEach(([s, v]) => (t[s] = (t[s] || 0) + v)));
+  return Object.entries(t).sort((a, b) => b[1] - a[1]).slice(0, n);
+}
+function visDia(k) {
+  const v = VIS[k]; if (!v) return `<p class="muted">Sin visitas registradas ese día.</p>`;
+  const top = topAutos([k], 5), pags = Object.entries(v.paginas || {}).sort((a, b) => b[1] - a[1]);
+  return `<div class="stats"><span class="stat"><b>${v.personas || 0}</b> personas</span><span class="stat"><b>${v.total || 0}</b> páginas vistas</span><span class="stat"><b>${v.wa || 0}</b> clics a WhatsApp</span></div>
+    ${top.length ? `<p class="lbl">Autos más vistos</p><ol class="vtop">${top.map(([s, n]) => `<li><span>${esc(autoNom(s))}</span><b>${n}</b></li>`).join("")}</ol>` : ""}
+    ${pags.length ? `<p class="note">${pags.map(([p, n]) => `${esc(PAG_NOM[p] || p)} ${n}`).join(" · ")}</p>` : ""}`;
+}
+function visitasCard() {
+  if (!isAdmin()) return "";
+  const hoy = today(), ayer = iso(new Date(new Date(hoy + "T12:00:00").getTime() - 864e5));
+  const d7 = Array.from({ length: 7 }, (_, i) => iso(new Date(new Date(hoy + "T12:00:00").getTime() - i * 864e5)));
+  const sum = (ks, f) => ks.reduce((a, k) => a + ((VIS[k] || {})[f] || 0), 0);
+  const top7 = topAutos(d7, 5);
+  return `<div class="card"><div class="head"><h2>Visitas a tu página</h2><span class="note">ventaentreamigos.com</span></div>
+    <p class="lbl">Hoy</p>${visDia(hoy)}
+    <div class="stats" style="margin-top:10px"><span class="stat">Ayer <b>${sum([ayer], "personas")}</b> personas</span><span class="stat">Últimos 7 días <b>${sum(d7, "personas")}</b> personas · <b>${sum(d7, "total")}</b> vistas · <b>${sum(d7, "wa")}</b> WhatsApp</span></div>
+    ${top7.length ? `<p class="lbl">Más vistos en 7 días</p><ol class="vtop">${top7.map(([s, n]) => `<li><span>${esc(autoNom(s))}</span><b>${n}</b></li>`).join("")}</ol>` : ""}
+    <p class="note">Se cuenta una persona por celular o computadora al día. No se guardan datos personales.</p></div>`;
+}
 /* ---------- Cotizar auto del inventario (Entre Amigos) ---------- */
 let AUTOS = null;
 const SITE = "https://ventaentreamigos.com";
@@ -1668,7 +1696,7 @@ function vAgenda() {
     const cls = !l.length ? "" : l.some((c) => c.atrasada) ? "late" : l.every((c) => c.pagada) ? "paid" : "due";
     const T = tareasDia(k, all, rcv).filter((x) => x.t === "cobrar" || x.t === "pago" || x.t === "entro");
     if (k === hoy) { const ns = tareasDia(k, all, rcv).filter((x) => x.t === "sol" || x.t === "segcot" || x.t === "venta").length; if (ns) T.unshift({ t: "solchip", cls: "msg", n: ns }); }
-    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}</button>`;
+    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}${isAdmin() && VIS[k] && VIS[k].personas ? `<em class="vis" title="Personas que entraron a la página">${VIS[k].personas}</em>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   $("panel").innerHTML = (isAdmin() ? solicitudesCard(3) : "") + `
@@ -1677,6 +1705,7 @@ function vAgenda() {
     ${legend()}
     <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
+  ${visitasCard()}
   ${(() => { const T = tareasDia(hoy, all, rcv); return T.length ? `<div class="card"><h2>Tareas de hoy</h2><div class="tasks">${T.map(tareaRow).join("")}</div></div>` : ""; })()}
   ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${atr.map((c) => cuotaRow(c, true)).join("")}</div></div>` : ""}
   <div class="card"><h2>Pagos de hoy</h2><div class="list">${deHoy.length ? deHoy.map((c) => cuotaRow(c, false)).join("") : `<p class="muted">No hay pagos programados para hoy.</p>`}</div></div>
@@ -1684,12 +1713,13 @@ function vAgenda() {
   <div class="card">
     <div class="head"><h2>Calendario</h2><div class="actions"><button class="btn sm" type="button" id="m-prev" aria-label="Mes anterior">‹</button><b style="align-self:center;min-width:120px;text-align:center">${first.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</b><button class="btn sm" type="button" id="m-next" aria-label="Mes siguiente">›</button></div></div>
     <div class="cal"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>${cells}</div>
-    <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día</p>
+    <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día${isAdmin() ? ` <small class="vis">12</small> Personas que entraron a la página` : ""}</p>
     ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3>
       ${(() => { const T = tareasDia(AG_DAY, all, rcv); return T.length ? `<p class="lbl">Tareas del día</p><div class="tasks">${T.map(tareaRow).join("")}</div>` : ""; })()}
       ${sel.length ? `<p class="lbl">Pagos que tocaban ese día</p><div class="list">${sel.map((c) => cuotaRow(c, false)).join("")}</div>` : ""}
       ${(rcv[AG_DAY] || []).length ? `<p class="lbl">Pagos recibidos ese día</p><div class="list">${rcv[AG_DAY].map(pagoRow).join("")}</div>` : ""}
-      ${!sel.length && !(rcv[AG_DAY] || []).length ? `<p class="muted">Sin movimientos ese día.</p>` : ""}` : `<p class="muted">Toca un día para ver qué pagos tocaban y cuáles se recibieron.</p>`}
+      ${!sel.length && !(rcv[AG_DAY] || []).length ? `<p class="muted">Sin movimientos ese día.</p>` : ""}
+      ${isAdmin() ? `<p class="lbl">Visitas a la página</p>${visDia(AG_DAY)}` : ""}` : `<p class="muted">Toca un día para ver qué pagos tocaban y cuáles se recibieron.</p>`}
   </div>
   <div class="card"><div class="head"><h2>Pagos recibidos en ${first.toLocaleDateString("es-MX", { month: "long" })}</h2></div>
     <div class="stats"><span class="stat">Total <b>${mxn2(sum(delMes, "monto"))}</b></span><span class="stat">Capital <b>${mxn2(sum(delMes, "capital"))}</b></span><span class="stat">Interés <b>${mxn2(sum(delMes, "interes"))}</b></span><span class="stat"><b>${delMes.filter((r) => r.tarde > 0).length}</b> pagaron tarde</span></div>
