@@ -190,7 +190,7 @@ onAuthStateChanged(auth, async (u) => {
     return;
   }
   if (!isAdmin() && !["equipo", "cliente"].includes(USER.rol)) {
-    $("p-nom").textContent = USER.nombre || "";
+    $("pausa-nom").textContent = USER.nombre || "";
     $("p-wa").href = "https://wa.me/" + WA + "?text=" + encodeURIComponent("Hola, mi cuenta de Entre Amigos (" + (u.email || "") + ") aparece inactiva. ¿Me ayudan?");
     show("v-pend");
     return;
@@ -249,17 +249,17 @@ function drawTabs() {
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
 function go(t) { TAB = t; drawTabs(); draw(); window.scrollTo(0, 0); }
 let NOTICE = null;
-function notice(nombre, tel, msg, titulo) {
-  NOTICE = tel10(tel).length === 10 ? { nombre, tel, msg, titulo } : { nombre, tel: "", msg, titulo };
+function notice(nombre, tel, msg, titulo, mail) {
+  NOTICE = { nombre, tel: tel10(tel).length === 10 ? tel : "", msg, titulo, mail: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail || "") ? mail : "" };
   drawNotice(); window.scrollTo(0, 0);
 }
 function drawNotice() {
   const n = NOTICE, box = $("notice"); if (!box) return;
   if (!n) { box.innerHTML = ""; return; }
   box.innerHTML = `<div class="card notice"><h3>${esc(n.titulo)}</h3>
-    <p class="muted">${n.tel ? "Avísale a " + esc(n.nombre) + " por WhatsApp con un toque:" : esc(n.nombre) + " no tiene WhatsApp registrado. Copia el mensaje y mándaselo:"}</p>
+    <p class="muted">${n.tel ? "Avísale a " + esc(n.nombre) + (n.mail ? " por WhatsApp o por correo:" : " por WhatsApp con un toque:") : n.mail ? "Avísale a " + esc(n.nombre) + " por correo:" : esc(n.nombre) + " no tiene WhatsApp registrado. Copia el mensaje y mándaselo:"}</p>
     <pre>${esc(n.msg)}</pre>
-    <div class="actions">${n.tel ? `<a class="btn primary" href="${waTo(n.tel, n.msg)}" target="_blank" rel="noopener" id="n-wa">Avisar por WhatsApp</a>` : ""}<button class="btn" type="button" id="n-copy">Copiar</button><button class="link" type="button" id="n-x">Cerrar</button></div></div>`;
+    <div class="actions">${n.tel ? `<a class="btn primary" href="${waTo(n.tel, n.msg)}" target="_blank" rel="noopener" id="n-wa">Avisar por WhatsApp</a>` : ""}${n.mail ? `<a class="btn" href="mailto:${encodeURIComponent(n.mail)}?subject=${encodeURIComponent("Tu préstamo con Entre Amigos")}&body=${encodeURIComponent(n.msg)}">Mandar por correo</a>` : ""}<button class="btn" type="button" id="n-copy">Copiar</button><button class="link" type="button" id="n-x">Cerrar</button></div></div>`;
   $("n-x").onclick = () => { NOTICE = null; drawNotice(); };
   $("n-wa") && $("n-wa").addEventListener("click", () => setTimeout(() => { NOTICE = null; drawNotice(); }, 800));
   $("n-copy").onclick = () => navigator.clipboard?.writeText(n.msg).catch(() => {});
@@ -740,7 +740,7 @@ function vPrestamos() {
     try {
       const ref = await addDoc(collection(db, "prestamos"), p);
       const a = avance(p), sig = a.siguiente;
-      notice(p.cliente, p.telefono, `Hola ${p.cliente}, ya está listo tu préstamo por ${mxn(p.monto)}.${sig ? " Tu primer pago es de " + mxn2(sig.monto) + (sig.fecha ? " el " + fcorta(sig.fecha) : "") + "." : ""}\n\nPuedes ver tu préstamo, tus pagos, tus fechas y tus documentos aquí:\n${p.clienteUid ? PORTAL() : invLink(ref.id)}\n\nEntre Amigos`, "Préstamo guardado");
+      notice(p.cliente, p.telefono, `Hola ${p.cliente}, ya está listo tu préstamo por ${mxn(p.monto)}.${sig ? " Tu primer pago es de " + mxn2(sig.monto) + (sig.fecha ? " el " + fcorta(sig.fecha) : "") + "." : ""}\n\nPuedes ver tu préstamo, tus pagos, tus fechas y tus documentos aquí:\n${p.clienteUid ? PORTAL() : invLink(ref.id)}${p.clienteUid ? "" : "\n\nEntra al enlace y crea tu cuenta" + (p.clienteEmail ? " con este correo: " + p.clienteEmail : "") + ". Así verás tu préstamo desde tu celular."}\n\nEntre Amigos`, "Préstamo guardado", p.clienteEmail);
     } catch (er) { $("p-err").hidden = false; $("p-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
   });
   $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { OPEN = OPEN === b.dataset.open ? "" : b.dataset.open; vPrestamos(); }));
