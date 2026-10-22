@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Convenio de préstamos | Entre Amigos</title>
+<meta name="description" content="Préstamos para colaboradores de empresas con convenio con Entre Amigos.">
+<meta name="theme-color" content="#0a0b0a">
+<link rel="icon" href="assets/img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/estilo.css?v=p12">
+<meta name="robots" content="noindex">
+</head>
+<body>
+<header class="top g"><div class="in">
+  <a class="brand" href="./" aria-label="Entre Amigos, inicio"><img src="assets/img/logo-mark.png" width="63" height="40" alt=""><span class="wm"><b>Entre <i>Amigos</i></b><span>Más que clientes, amigos</span></span></a>
+  <nav class="nav" aria-label="Principal"><a href="inventario.html" >Inventario</a><a href="./#como">Por qué nosotros</a><a href="./#vende">Vende tu auto</a><a href="creditos.html">Créditos</a><a href="./#servicios">Servicios</a><a href="./#contacto">Contacto</a></nav>
+  <a class="btn primary" href="https://wa.me/523333063319" target="_blank" rel="noopener">WhatsApp</a>
+</div></header>
+
+<main class="blk g" style="padding-block:clamp(28px,5vw,56px) 80px"><div class="in" style="max-width:760px">
+  <div class="head"><span class="eyebrow" id="c-emp">Convenio empresarial</span><h1 style="font-size:clamp(34px,6vw,54px)">Préstamo para colaboradores</h1>
+    <p class="lead" id="c-lead">Un préstamo rápido, con pagos semanales fijos, gracias al convenio de tu empresa con Entre Amigos.</p></div>
+  <p class="err" id="c-bad" hidden>Este enlace no es válido o ya no está activo. Pídele a tu empresa el enlace correcto.</p>
+  <form id="cf" novalidate class="vsteps" hidden>
+    <section class="card vstep"><h2><span>1</span>¿Cuánto necesitas?</h2>
+      <label for="c-monto">Monto<select id="c-monto"></select></label>
+      <label>Pagar en<div class="plazos" id="c-plazos" role="group" aria-label="Semanas"></div></label>
+      <div class="cbox"><span>Tu pago cada semana</span><b id="c-pago">$0</b><small id="c-det"></small></div>
+      <details class="como"><summary>¿Cómo funciona?</summary>
+        <ol class="req"><li><b>Pides</b> el monto que necesitas aquí y subes tus documentos.</li><li><b>Revisamos</b> tu solicitud con tu empresa y te avisamos por WhatsApp.</li><li><b>Recibes</b> tu préstamo en efectivo.</li><li><b>Pagas</b> lo mismo cada semana, en efectivo, por medio de tu empresa, hasta terminar.</li></ol>
+        <p class="note">Sin aval: tu empresa respalda el convenio. Si dejas de trabajar ahí, el saldo pendiente se cubre con tu finiquito.</p></details>
+    </section>
+    <section class="card vstep"><h2><span>2</span>Tus documentos</h2>
+      <p class="muted" style="margin:0">Tómales foto con tu celular.</p>
+      <div class="slots two">
+        <label class="slot" data-slot="ine_f"><input type="file" accept="image/*" hidden><span class="ph"></span><span class="sl">INE (frente)</span></label>
+        <label class="slot" data-slot="ine_r"><input type="file" accept="image/*" hidden><span class="ph"></span><span class="sl">INE (reverso)</span></label>
+        <label class="slot" data-slot="domicilio"><input type="file" accept="image/*" hidden><span class="ph"></span><span class="sl">Comprobante de domicilio</span></label>
+        <label class="slot opt" data-slot="nomina"><input type="file" accept="image/*" hidden><span class="ph"></span><span class="sl">Recibo de nómina o gafete (opcional)</span></label>
+      </div>
+    </section>
+    <section class="card vstep"><h2><span>3</span>Tus datos</h2>
+      <div class="row2"><label for="c-nom">Nombre completo<input id="c-nom" autocomplete="name" placeholder="Nombre y apellidos"></label><label for="c-tel">Tu WhatsApp<input id="c-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label></div>
+      <label for="c-puesto">Puesto o área (opcional)<input id="c-puesto" autocomplete="off" placeholder="Ej. Almacén"></label>
+      <label class="chk2"><input type="checkbox" id="c-ok"> Acepto que Entre Amigos use estos datos y documentos solo para evaluar mi préstamo y que comparta con mi empresa si voy al corriente.</label>
+      <p class="err" id="c-err" role="alert" hidden></p>
+      <div class="prog" id="c-prog" hidden><i id="c-bar"></i><span id="c-ptxt"></span></div>
+      <button class="btn primary" type="submit" id="c-send">Enviar mi solicitud</button>
+    </section>
+  </form>
+  <div class="card" id="c-done" hidden></div>
+</div></main>
+<footer class="g"><div class="in">
+  <span>Entre Amigos · Av. Aztecas 1021, Monraz, Guadalajara · 33 3306 3319</span>
+  <span><a href="./">ventaentreamigos.com</a></span>
+</div></footer>
+<a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
+<script type="module" src="js/convenio.js?v=p2"></script>
+</body>
+</html>
