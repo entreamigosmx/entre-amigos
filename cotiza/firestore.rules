@@ -18,12 +18,17 @@ service cloud.firestore {
       allow create: if signed() && request.auth.uid == uid
         && (request.resource.data.rol == 'cliente' || (admin() && request.resource.data.rol == 'admin'));
       allow update: if admin() || (signed() && request.auth.uid == uid && request.resource.data.rol == resource.data.rol
-        && request.resource.data.get('inversionista', false) == resource.data.get('inversionista', false));
+        && request.resource.data.get('inversionista', false) == resource.data.get('inversionista', false)
+        && request.resource.data.get('convenioOk', false) == resource.data.get('convenioOk', false));
       allow delete: if admin();
     }
     match /config/{d} {
       allow read: if team();
       allow write: if admin();
+    }
+    // Cómo funciona el convenio para empresas: solo lo ve quien tú autorizaste (usuarios.convenioOk).
+    match /config/convenioInfo {
+      allow read: if admin() || (signed() && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('convenioOk', false) == true);
     }
     match /cotizaciones/{id} {
       allow get: if signed();

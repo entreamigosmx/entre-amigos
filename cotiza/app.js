@@ -198,7 +198,7 @@ onAuthStateChanged(auth, async (u) => {
     return;
   }
   // Si el administrador cambia el tipo de acceso, la pantalla se actualiza sola.
-  unsubs.push(onSnapshot(doc(db, "usuarios", u.uid), (s) => { const r = s.data()?.rol; if (r && USER && r !== USER.rol && !isAdmin()) location.reload(); }, () => {}));
+  unsubs.push(onSnapshot(doc(db, "usuarios", u.uid), (s) => { const d = s.data() || {}; if (USER && !isAdmin() && ((d.rol && d.rol !== USER.rol) || !!d.convenioOk !== !!USER.convenioOk || (d.solicita || "") !== (USER.solicita || ""))) location.reload(); }, () => {}));
   startApp();
 });
 
@@ -219,6 +219,7 @@ function startApp() {
   if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); drawTabs(); }, () => {}));
   const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); if (!isAdmin()) drawTabs(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
+  if (isAdmin()) getDoc(doc(db, "config", "convenioInfo")).then((x) => { if (!x.exists() || x.data().v !== CONV_V) setDoc(doc(db, "config", "convenioInfo"), { v: CONV_V, html: CONV_HTML }); }).catch(() => {});
   if (isAdmin()) { listenP("all", collection(db, "prestamos")); unsubs.push(onSnapshot(collection(db, "empresas"), (s) => { EMPS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nombre.localeCompare(b.nombre)); if (TAB === "empresas" || TAB === "prestamos") draw(); }, () => {})); }
   else if (USER.rol === "empresa" && USER.empresa) {
     listenP("emp", query(collection(db, "prestamos"), where("empresa", "==", USER.empresa)));
@@ -1037,6 +1038,11 @@ function vAutos() {
 }
 
 /* ---------- Convenios con empresas ---------- */
+// Explicación que ve una empresa interesada SOLO después de que el administrador la aprueba (se guarda en Firestore).
+const CONV_V = 1;
+const CONV_HTML = `<p class="hi">Convenio para empresas</p>
+    <p class="big-t">Un beneficio para los colaboradores de tu empresa, sin costo para la empresa.</p>
+    <ol class="req" style="margin:12px 0"><li><b>Firmamos un convenio</b> con tu empresa.</li><li><b>Te damos un enlace exclusivo</b> para tus colaboradores. Ahí piden su préstamo y suben sus documentos. Tú puedes darlos de alta también.</li><li><b>Montos:</b> $5,000, $10,000 o hasta $20,000.</li><li><b>Pagan en 14 semanas</b>, $100 por cada $1,000 a la semana (por ejemplo, $5,000 se pagan con $500 a la semana), en efectivo, por medio de la empresa.</li><li><b>La empresa respalda el convenio:</b> si alguien deja de trabajar ahí, el saldo se cubre con su finiquito.</li><li><b>Tienes tu propio acceso</b> para ver a tus colaboradores con préstamo, quién va al corriente y cuánto se junta cada semana.</li></ol>`;
 let EMP_OPEN = "", EMP_FORM = "";
 const convLink = (e) => SITE + "/convenio.html?c=" + e.codigo;
 const slugE = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "empresa";
@@ -1586,10 +1592,8 @@ function vMis() {
   setTimeout(() => { const f = $("my-tel"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const t = tel10($("my-tel-i").value); if (t.length !== 10) return; await updateDoc(doc(db, "usuarios", ME.uid), { telefono: t }); USER.telefono = t; vMis(); }; });
   setTimeout(() => docsCard($("docs-box"), ME.uid, false));
   const telBox = USER.telefono ? "" : `<form class="card" id="my-tel" novalidate><h3>Agrega tu WhatsApp</h3><p class="muted">Para avisarte cuando tu préstamo esté listo o cuando revisemos tus documentos.</p><div class="row"><label for="my-tel-i">WhatsApp<input id="my-tel-i" type="tel" inputmode="tel" placeholder="33 1234 5678"></label><button class="btn primary" type="submit">Guardar</button></div></form>`;
-  const conv = USER.solicita === "empresa" ? `<div class="card inv"><p class="hi">Convenio para empresas</p>
-    <p class="big-t">Un beneficio para los colaboradores de tu empresa, sin costo para la empresa.</p>
-    <ol class="req" style="margin:12px 0"><li><b>Firmamos un convenio</b> con tu empresa.</li><li><b>Te damos un enlace exclusivo</b> para tus colaboradores. Ahí piden su préstamo y suben sus documentos. Tú puedes darlos de alta también.</li><li><b>Montos:</b> $5,000, $10,000 o hasta $20,000.</li><li><b>Pagan en 14 semanas</b>, $100 por cada $1,000 a la semana (por ejemplo, $5,000 se pagan con $500 a la semana), en efectivo, por medio de la empresa.</li><li><b>La empresa respalda el convenio:</b> si alguien deja de trabajar ahí, el saldo se cubre con su finiquito.</li><li><b>Tienes tu propio acceso</b> para ver a tus colaboradores con préstamo, quién va al corriente y cuánto se junta cada semana.</li></ol>
-    <a class="btn primary" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + ". Ya creé mi cuenta y me interesa el convenio de préstamos para mi empresa.")}" target="_blank" rel="noopener">Quiero el convenio</a></div>` : "";
+  const conv = USER.solicita === "empresa" ? `<div class="card inv" id="conv-box">${USER.convenioOk ? `<p class="muted">Cargando…</p>` : `<p class="hi">Convenio para empresas</p><p class="big-t">Recibimos tu solicitud. La revisamos y te avisamos por WhatsApp; en cuanto la aprobemos, aquí verás toda la información.</p>`}</div>` : "";
+  if (USER.solicita === "empresa" && USER.convenioOk) setTimeout(async () => { try { const s2 = await getDoc(doc(db, "config", "convenioInfo")); const box = $("conv-box"); if (box && s2.exists()) box.innerHTML = s2.data().html + `<a class="btn primary" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + ". Ya vi la información del convenio para mi empresa.")}" target="_blank" rel="noopener">Escribir a Entre Amigos</a>`; } catch (e) {} });
   $("panel").innerHTML = ver + conv + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => {
     const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
     if (p.tipo === "interes") return `<div class="card">
@@ -1637,9 +1641,10 @@ function vPersonas() {
     <div class="row"><label for="bc-mail">Correo de la cuenta<input id="bc-mail" type="email" inputmode="email" placeholder="cliente@correo.com"></label><button class="btn danger" type="submit" id="bc-b" style="align-self:end">Borrar cuenta</button></div>
     <p class="toast" id="bc-t"></p></form>
   <div class="card"><h2>Personas</h2><div class="list">${list.length ? list.map((u) => `<div class="item">
-    <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}${u.rol === "equipo" ? ` <span class="pill">Colaborador</span>` : ""}${u.inversionista ? ` <span class="pill ok">Inversionista</span>` : ""}${u.solicita === "empresa" ? ` <span class="pill warn">Empresa interesada</span>` : ""}</b><span>${esc(u.email)}</span></div>
+    <div class="item-top"><b>${esc(u.nombre || "Sin nombre")}${u.rol === "equipo" ? ` <span class="pill">Colaborador</span>` : ""}${u.inversionista ? ` <span class="pill ok">Inversionista</span>` : ""}${u.solicita === "empresa" ? (u.convenioOk ? ` <span class="pill ok">Convenio: aprobada</span>` : ` <span class="pill warn">Empresa interesada</span>`) : ""}</b><span>${esc(u.email)}</span></div>
     ${(() => { const L = PRES.filter((p) => p.clienteUid === u.uid || (u.email && p.clienteEmail === u.email)); return L.length ? `<div class="item-mid">Préstamos: ${L.map((p) => { const a = avance(p); return esc(mxn(p.monto)) + (a.liquidado ? " (liquidado)" : vencido(p, a) ? " (vencido)" : " (al corriente)"); }).join(" · ")}</div>` : ""; })()}
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
+    ${u.solicita === "empresa" && !u.convenioOk ? `<button class="btn sm primary" type="button" data-convok="${u.uid}">Aprobar convenio</button><button class="link" type="button" data-convno="${u.uid}">No aprobar</button>` : ""}
     ${u.rol === "cliente" && u.solicita === "equipo" ? `<span class="pill warn">Quiere ser colaborador</span><button class="btn sm primary" type="button" data-ok="${u.uid}">Aprobar</button><button class="link" type="button" data-no="${u.uid}">Dejar como cliente</button>` : isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
     <label class="chk" style="margin:0"><input type="checkbox" data-inv="${u.uid}"${u.inversionista ? " checked" : ""}> Inversionista</label>
     <input data-tel="${u.uid}" inputmode="tel" placeholder="WhatsApp" value="${esc(u.telefono || "")}" style="width:150px;font-size:14px;padding:6px 8px">
@@ -1652,6 +1657,12 @@ function vPersonas() {
     const u = USERS.find((x) => x.uid === b.dataset.ok) || {};
     notice(u.nombre || "", u.telefono, `Hola ${u.nombre || ""}, ya aprobé tu cuenta de colaborador en Entre Amigos. Ya puedes cotizar y llevar a tus clientes aquí:\n${PORTAL()}\n\nCualquier duda me dices.`, "Colaborador aprobado");
   }));
+  $("panel").querySelectorAll("[data-convok]").forEach((b) => (b.onclick = async () => {
+    await updateDoc(doc(db, "usuarios", b.dataset.convok), { convenioOk: true });
+    const u = USERS.find((x) => x.uid === b.dataset.convok) || {};
+    notice(u.nombre || "", u.telefono, `Hola ${u.nombre || ""}, ya aprobamos tu solicitud del convenio para empresas. Entra con tu cuenta para ver toda la información:\n${PORTAL()}\n\nEntre Amigos`, "Convenio aprobado", u.email);
+  }));
+  $("panel").querySelectorAll("[data-convno]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez"; return; } updateDoc(doc(db, "usuarios", b.dataset.convno), { solicita: "" }); }));
   $("panel").querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.no), { solicita: "" })));
   $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
   if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true);
