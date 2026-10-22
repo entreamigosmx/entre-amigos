@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="css/estilo.css?v=p9">
-<link rel="stylesheet" href="css/portada.css?v=p7">
+<link rel="stylesheet" href="css/portada.css?v=p9">
 <meta name="robots" content="noindex">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"AutoDealer","name":"Entre Amigos","slogan":"Más que clientes, amigos","url":"https://ventaentreamigos.com/","telephone":"+52 33 3306 3319","image":"https://ventaentreamigos.com/assets/img/og.jpg","address":{"@type":"PostalAddress","streetAddress":"Av. Aztecas 1021, Col. Monraz","postalCode":"44670","addressLocality":"Guadalajara","addressRegion":"Jalisco","addressCountry":"MX"},"sameAs":["https://www.instagram.com/entreamigosmx","https://www.facebook.com/share/1KADt3UUoX/","https://www.tiktok.com/@ventaentreamigosmx"]}</script>
 </head>
@@ -26,7 +26,7 @@
 
 <header class="top g"><div class="in">
   <a class="brand" href="./" aria-label="Entre Amigos, inicio"><img src="../assets/img/logo-mark.png" width="63" height="40" alt=""><span class="wm"><b>Entre <i>Amigos</i></b><span>Más que clientes, amigos</span></span></a>
-  <nav class="nav" aria-label="Principal"><a href="inventario.html">Inventario</a><a href="vender.html">Vende tu auto</a><a href="creditos.html">Créditos</a><a href="#equipo">Equipo</a><a href="#visita">Visítanos</a></nav>
+  <nav class="nav" aria-label="Principal"><a href="inventario.html">Inventario</a><a href="vender.html">Vende tu auto</a><a href="creditos.html">Créditos</a><a href="nosotros.html">Nosotros</a><a href="#visita">Visítanos</a></nav>
   <div class="tact">
     <a class="btn ghost ico" href="https://www.google.com/maps/search/?api=1&query=Entre%20Amigos%2C%20Av.%20Aztecas%201021%2C%20Monraz%2C%2044670%20Guadalajara%2C%20Jalisco" target="_blank" rel="noopener" aria-label="Cómo llegar a Entre Amigos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>Ubicación</span></a>
     <a class="btn primary" href="https://wa.me/523333063319" target="_blank" rel="noopener">WhatsApp</a>
@@ -82,17 +82,24 @@
   <figure class="voice" id="voice" aria-live="polite"><div class="stars" aria-label="5 de 5 estrellas">★★★★★</div><blockquote id="v-t">Seguridad, confianza y servicio.</blockquote><figcaption id="v-n">Cliente · Google</figcaption></figure>
 </div></section>
 
-<!-- 6. Vender y crédito -->
-<section class="blk g tight" id="vende"><div class="in">
-  <div class="duo">
-    <a class="panel" href="vender.html"><img src="../assets/img/anuncio-video.jpg" alt="" loading="lazy" style="object-position:center 30%"><div><span class="eyebrow">Vende tu auto</span><h3>Recibe una propuesta</h3><span class="go">Cotizar mi auto <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></a>
-    <a class="panel" href="creditos.html" id="financiamiento"><img src="../assets/img/showroom.jpg" alt="" loading="lazy" style="object-position:center 40%"><div><span class="eyebrow">Crédito automotriz</span><h3>Calcula tu mensualidad</h3><span class="go">Calcular <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></a>
+<!-- 6. Crédito y vender -->
+<section class="blk g tight" id="financiamiento"><div class="in">
+  <div class="duo2">
+    <form class="msim" id="msim" onsubmit="return false">
+      <div class="mtop"><span class="eyebrow">Crédito automotriz</span><h2>¿Cuánto pagarías al mes?</h2></div>
+      <label class="mfield">Auto<select id="m-auto"><option>Cargando…</option></select></label>
+      <div class="mfield"><div class="mrow"><span>Enganche</span><b id="m-eng-t"></b></div><input type="range" id="m-eng" min="0" max="90" step="1" value="35" aria-label="Enganche en porcentaje"><p class="note" id="m-eng-n"></p></div>
+      <div class="mfield"><div class="mrow"><span>Plazo</span><b id="m-pl-t"></b></div><div class="plazos" id="m-plazos" role="group" aria-label="Plazo en meses"></div></div>
+      <div class="mres"><span>Mensualidad de ejemplo</span><b id="m-men">$0</b><small class="note">Tasa de referencia, sujeta a aprobación de la financiera.</small></div>
+      <a class="btn primary" id="m-go" href="creditos.html">Ver cotización completa</a>
+    </form>
+    <a class="panel" href="vender.html" id="vende"><img src="../assets/img/anuncio-video.jpg" alt="" loading="lazy" style="object-position:center 30%"><div><span class="eyebrow">Vende tu auto</span><h3>Recibe una propuesta</h3><span class="go">Cotizar mi auto <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></a>
   </div>
 </div></section>
 
 <!-- 6b. Equipo -->
 <section class="blk g tight" id="equipo"><div class="in">
-  <div class="head"><h2>Nuestro equipo</h2></div>
+  <div class="head-row"><div class="head"><h2>Nuestro equipo</h2></div><a class="btn quiet" href="nosotros.html">Conócenos</a></div>
   <div class="team"><figure class="mate"><img src="../assets/img/equipo/jesus.jpg" alt="Jesús, Gerente general" loading="lazy" width="600" height="800"><figcaption><b>Jesús</b><span>Gerente general</span></figcaption></figure><figure class="mate"><img src="../assets/img/equipo/javier.jpg" alt="Javier, Ventas" loading="lazy" width="600" height="800"><figcaption><b>Javier</b><span>Ventas</span></figcaption></figure><figure class="mate"><img src="../assets/img/equipo/elias.jpg" alt="Elías, Encargado de taller" loading="lazy" width="600" height="800"><figcaption><b>Elías</b><span>Encargado de taller</span></figcaption></figure><figure class="mate"><img src="../assets/img/equipo/kevin.jpg" alt="Kevin, Mecánico" loading="lazy" width="600" height="800"><figcaption><b>Kevin</b><span>Mecánico</span></figcaption></figure><figure class="mate"><img src="../assets/img/equipo/david.jpg" alt="David, Ayudante de mecánico" loading="lazy" width="600" height="800"><figcaption><b>David</b><span>Ayudante de mecánico</span></figcaption></figure><figure class="mate"><img src="../assets/img/equipo/luis.jpg" alt="Luis, Detallado" loading="lazy" width="600" height="800"><figcaption><b>Luis</b><span>Detallado</span></figcaption></figure></div>
 </div></section>
 
@@ -117,13 +124,13 @@
         <a href="https://www.tiktok.com/@ventaentreamigosmx" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M16 3c.4 2.4 1.9 3.9 4 4.1v3.3a7.6 7.6 0 0 1-4-1.3v6.4A5.6 5.6 0 1 1 10.4 10v3.4a2.3 2.3 0 1 0 2.2 2.3V3z"/></svg></a>
         <a href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></a>
       </div></div>
-    <div id="servicios"><b>Servicios</b><p>Compra y venta · Consignación · Toma a cuenta · Financiamiento · Detallado · Taller · Gestoría · Seguros</p></div>
-    <div><b>Más</b><p><a href="../prestamos.html">Préstamos con garantía</a><br><a href="../cotiza/">Acceso clientes y colaboradores</a></p></div>
+    <div id="servicios"><b><a href="nosotros.html#servicios">Servicios</a></b><p>Compra y venta · Consignación · Toma a cuenta · Financiamiento · Detallado · Taller · Gestoría · Seguros</p></div>
+    <div><b>Más</b><p><a href="nosotros.html">Nosotros y servicios</a><br><a href="../prestamos.html">Préstamos con garantía</a><br><a href="../cotiza/">Acceso clientes y colaboradores</a></p></div>
   </div>
 </div></footer>
 <a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
 
-<script type="module" src="js/portada.js?v=p3"></script>
+<script type="module" src="js/portada.js?v=p4"></script>
 <script>if(matchMedia("(prefers-reduced-motion: reduce)").matches)document.querySelectorAll("video[autoplay]").forEach(v=>{v.removeAttribute("autoplay");v.pause()});</script>
 </body>
 </html>

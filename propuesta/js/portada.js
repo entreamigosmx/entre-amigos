@@ -101,3 +101,33 @@ fetch(BASE + "data/opiniones.json", { cache: "no-cache" }).then((r) => r.json())
   draw();
   if (!reduce) setInterval(() => { if (!document.hidden) { k = (k + 1) % list.length; draw(); } }, 6000);
 }).catch(() => {});
+
+/* Mini simulador de crédito */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  if (!$("msim")) return;
+  let CFG = { tasaAnual: 15, ivaSobreIntereses: true, engancheSugerido: 35, plazos: [12, 24, 36, 48, 60], plazoInicial: 48 }, LIST = [], PL = 48;
+  const m2 = (n) => "$" + Math.round(n || 0).toLocaleString("es-MX");
+  const men = (f, t, n) => { const r = (t / 100 / 12) * (CFG.ivaSobreIntereses ? 1.16 : 1); return r ? (f * r) / (1 - Math.pow(1 + r, -n)) : f / n; };
+  function plazos() {
+    $("m-plazos").innerHTML = CFG.plazos.map((n) => `<button type="button" data-n="${n}" aria-pressed="${n === PL}">${n}</button>`).join("");
+    $("m-plazos").querySelectorAll("button").forEach((b) => (b.onclick = () => { PL = Number(b.dataset.n); plazos(); calc(); }));
+  }
+  function calc() {
+    const a = LIST.find((x) => x.slug === $("m-auto").value); if (!a) return;
+    const ep = Number($("m-eng").value), e = (a.precio * ep) / 100, f = a.precio - e;
+    $("m-eng-t").textContent = `${m2(e)} (${ep}%)`;
+    $("m-pl-t").textContent = PL + " meses";
+    $("m-eng-n").textContent = ep < CFG.engancheSugerido ? `Sugerimos desde ${CFG.engancheSugerido}%; con buen historial puede ser menor.` : "";
+    $("m-men").textContent = CFG.tasaAnual ? m2(men(f, CFG.tasaAnual, PL)) : "Te la cotizamos";
+    $("m-go").href = `creditos.html?a=${encodeURIComponent(a.slug)}&e=${ep}&p=${PL}`;
+  }
+  $("m-eng").addEventListener("input", calc); $("m-auto").addEventListener("change", calc);
+  Promise.all([fetch(BASE + "data/credito.json", { cache: "no-cache" }).then((r) => r.json()).catch(() => ({})), autos()]).then(([cfg, list]) => {
+    CFG = { ...CFG, ...cfg }; LIST = list.filter((a) => !a.apartado && a.precio);
+    PL = CFG.plazos.includes(CFG.plazoInicial) ? CFG.plazoInicial : CFG.plazos.at(-1);
+    $("m-eng").value = CFG.engancheSugerido;
+    $("m-auto").innerHTML = LIST.map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");
+    plazos(); calc();
+  }).catch(() => {});
+})();
