@@ -92,6 +92,21 @@ service cloud.firestore {
     match /comprobantes/{id} {
       allow read, write: if admin();
       allow create: if team() && request.resource.data.por == request.auth.uid;
+      // El cliente puede mandar el comprobante de su propio pago desde su app; queda "por revisar".
+      allow create: if signed() && request.resource.data.por == request.auth.uid
+        && request.resource.data.estado == 'por revisar'
+        && get(/databases/$(database)/documents/prestamos/$(request.resource.data.pid)).data.clienteUid == request.auth.uid;
+      allow read: if signed() && resource.data.por == request.auth.uid;
+    }
+    // Papelera: copia de lo que se borra (préstamos, pagos, cotizaciones) para poder recuperarlo.
+    match /papelera/{id} {
+      allow read, write: if admin();
+      allow create: if team() && request.resource.data.por == request.auth.uid;
+    }
+    // Bitácora: quién cambió qué y cuándo. Solo el administrador la lee; nadie la puede editar ni borrar.
+    match /bitacora/{id} {
+      allow read, delete: if admin();
+      allow create: if team() && request.resource.data.por == request.auth.uid;
     }
     // Ajustes por inversionista (días para pagarle, qué ve): solo el administrador.
     match /invcfg/{id} {
