@@ -10,6 +10,9 @@ service cloud.firestore {
     function team() {
       return admin() || (signed() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) && myRol() == 'equipo');
     }
+    // Administradora de una empresa con convenio: solo ve lo de su empresa.
+    function emp() { return signed() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) && myRol() == 'empresa'; }
+    function miEmpresa() { return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('empresa', ''); }
     match /usuarios/{uid} {
       allow read: if admin() || (signed() && request.auth.uid == uid);
       allow create: if signed() && request.auth.uid == uid
@@ -47,7 +50,8 @@ service cloud.firestore {
     }
     match /solicitudes/{id} {
       allow create: if request.resource.data.estado == 'nueva'
-        && request.resource.data.keys().hasOnly(['nombre', 'telefono', 'monto', 'plazo', 'unidad', 'garantia', 'desc', 'valor', 'nota', 'fecha', 'origen', 'uid', 'email', 'estado'])
+        && request.resource.data.keys().hasOnly(['nombre', 'telefono', 'monto', 'plazo', 'unidad', 'garantia', 'desc', 'valor', 'nota', 'fecha', 'origen', 'uid', 'email', 'estado', 'empresa', 'empresaNombre', 'nDocs'])
+        && (request.resource.data.get('empresa', '') == '' || exists(/databases/$(database)/documents/empresas/$(request.resource.data.empresa)))
         && request.resource.data.nombre is string && request.resource.data.nombre.size() > 0 && request.resource.data.nombre.size() <= 80
         && request.resource.data.monto is number && request.resource.data.monto > 0 && request.resource.data.monto < 100000000
         && request.resource.data.get('desc', '').size() <= 200 && request.resource.data.get('nota', '').size() <= 300
@@ -56,6 +60,15 @@ service cloud.firestore {
         || (signed() && resource.data.get('uid', '') == '' && request.resource.data.uid == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'email']));
       allow read, delete: if admin();
+      allow read: if emp() && resource.data.get('empresa', '') != '' && resource.data.empresa == miEmpresa();
+      // Documentos que sube el empleado con su solicitud del convenio.
+      match /docs/{k} {
+        allow create: if k in ['ine_f', 'ine_r', 'domicilio', 'nomina']
+          && get(/databases/$(database)/documents/solicitudes/$(id)).data.estado == 'nueva'
+          && request.resource.data.keys().hasOnly(['data']) && request.resource.data.data is string && request.resource.data.data.size() < 1000000;
+        allow read, delete: if admin();
+        allow read: if emp() && get(/databases/$(database)/documents/solicitudes/$(id)).data.get('empresa', '') == miEmpresa();
+      }
     }
     match /ventas/{id} {
       allow create: if request.resource.data.estado == 'nueva'
@@ -122,6 +135,16 @@ service cloud.firestore {
       allow read: if admin() || (signed() && resource.data.uid == request.auth.uid);
       allow write: if admin();
     }
+    // Empresas con convenio: el administrador las maneja; la administradora de cada una solo lee la suya.
+    match /empresas/{id} {
+      allow read: if admin() || (emp() && miEmpresa() == id);
+      allow write: if admin();
+    }
+    // Datos públicos del enlace de cada convenio (para la página del empleado). Solo se lee con el código exacto.
+    match /convenios/{codigo} {
+      allow get: if true;
+      allow list, write: if admin();
+    }
     // Contador anónimo de visitas de la página: cualquiera suma 1, solo el administrador lo lee.
     match /visitas/{dia} {
       allow read: if admin();
@@ -137,7 +160,8 @@ service cloud.firestore {
       allow read: if admin()
         || (team() && resource.data.por == request.auth.uid)
         || (signed() && resource.data.clienteUid == request.auth.uid)
-        || (verified() && resource.data.clienteEmail == request.auth.token.email.lower());
+        || (verified() && resource.data.clienteEmail == request.auth.token.email.lower())
+        || (emp() && resource.data.get('empresa', '') != '' && resource.data.empresa == miEmpresa());
       allow create: if admin() || (team() && request.resource.data.por == request.auth.uid);
       allow update: if admin()
         || (team() && resource.data.por == request.auth.uid
