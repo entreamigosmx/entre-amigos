@@ -962,14 +962,14 @@ function repartoBox(p) {
   const ei = RPEDIT.startsWith(p.id + ":") ? Number(RPEDIT.split(":")[1]) : -1, ed = L[ei] || null;
   const sl = (a, b) => (a === b ? " selected" : "");
   const intShare = L.filter((x) => x.base !== "fijo").reduce((s, x) => s + (x.base === "puntos" ? (p.tasa ? (x.valor / p.tasa) * 100 : 0) : x.valor), 0);
-  return `<details class="rep" data-repd="${p.id}"${REPOPEN === p.id ? " open" : ""}><summary>Fondeo y comisiones${L.length ? " (" + L.length + ")" : ""}</summary>
-    <div class="list" style="margin-top:8px">${L.length ? L.map((x, i) => `<div class="item"><div class="item-top"><span>${repTxt(p, x)}</span><span><button class="link" type="button" data-reped="${p.id}:${i}">${RPEDIT === p.id + ":" + i ? "Cancelar" : "Editar"}</button> <button class="link del" type="button" data-reprm="${p.id}:${i}">Quitar</button></span></div></div>`).join("") : `<p class="muted">Sin reparto. Todo el interés de este préstamo es para ti.</p>`}</div>
+  return `<details class="rep" data-repd="${p.id}"${REPOPEN === p.id ? " open" : ""}><summary>Comisiones${L.filter((x) => !x.migrado).length ? " (" + L.filter((x) => !x.migrado).length + ")" : ""}</summary>
+    <div class="list" style="margin-top:8px">${L.some((x) => !x.migrado) ? L.map((x, i) => x.migrado ? "" : `<div class="item"><div class="item-top"><span>${repTxt(p, x)}</span><span><button class="link" type="button" data-reped="${p.id}:${i}">${RPEDIT === p.id + ":" + i ? "Cancelar" : "Editar"}</button> <button class="link del" type="button" data-reprm="${p.id}:${i}">Quitar</button></span></div></div>`).join("") : `<p class="muted">Sin reparto. Todo el interés de este préstamo es para ti.</p>`}</div>
     ${L.length && intShare ? `<p class="note">Del interés que pague el cliente: ${Math.round(intShare)}% se reparte y ${Math.max(0, Math.round(100 - intShare))}% queda para ti${L.some((x) => x.base === "fijo") ? " (antes de los pagos fijos)" : ""}.</p>` : ""}
     <form class="edit" data-repf="${p.id}" data-idx="${ei}" novalidate>
       ${ed ? `<h3>Editar a ${esc(persName(ed))}</h3>` : ""}
       <div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${eq.map((u) => `<option value="${u.uid}"${sl(u.uid, ed?.uid)}>${esc(u.nombre)}</option>`).join("")}</select></label>
       <label data-rn>Nombre<input name="nombre" placeholder="Ej. Mamá" value="${esc(ed && !ed.uid ? ed.nombre : "")}"></label></div>
-      <div class="row"><label>Papel<select name="papel"><option value="fondeo">Fondeó el dinero</option><option value="comision"${sl("comision", ed?.papel)}>Comisión</option></select></label>
+      <div class="row"><label>Papel<select name="papel"><option value="comision">Comisión (por traer al cliente)</option>${ed?.papel === "fondeo" ? `<option value="fondeo" selected>Fondeó el dinero (sistema anterior)</option>` : ""}</select></label>
       <label>Cómo se calcula<select name="base">${p.tipo !== "semanal" ? `<option value="puntos">Le pago X% al mes (de los ${p.tasa}% que cobro)</option>` : ""}<option value="pct"${sl("pct", ed?.base)}>% del interés que cobro</option><option value="fijo"${sl("fijo", ed?.base)}>Monto fijo por cada pago</option></select></label></div>
       <div class="row"><label><span data-vl>Valor</span><input name="valor" inputmode="decimal" placeholder="Ej. 3" value="${ed ? ed.valor : ""}"></label>
       <label class="chk"><input type="checkbox" name="capital"${!ed || ed.capital ? " checked" : ""}> Se le regresa el capital que pague el cliente</label></div>
@@ -1414,6 +1414,92 @@ function estadoPersonas() {
   });
   return P;
 }
+
+/* ---------- Inversionistas desde la ficha del préstamo: quién puso el dinero y cuánto le pagas ---------- */
+let PINV = "";
+function personasInv() {
+  const M = new Map();
+  USERS.filter((u) => u.rol !== "admin" && u.rol !== "bloqueado" && (u.inversionista || u.rol === "equipo")).forEach((u) => M.set(u.uid, u.nombre || u.email));
+  INVS.forEach((m) => { if (m.tipo === "retiro" || INV_OFF.includes(m.estado || "")) return; const k = persKey(m); if (!M.has(k)) M.set(k, m.nombre); });
+  return [...M.entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
+}
+function prestamoInvBox(p) {
+  if (!isAdmin()) return "";
+  const C = CONTRATOS().filter((m) => (m.pids || []).includes(p.id) && vigenteDe(m) > 0.5), MG = margenes();
+  const viejos = (REP[p.id]?.participantes || []).map((x, i) => ({ x, i })).filter(({ x }) => x.papel === "fondeo" && !x.migrado);
+  const { int } = interesMesPrestamo(p), paga = C.reduce((s2, m) => s2 + ((MG[m.id]?.det || []).find((d) => d.p.id === p.id) ? mensualDe(m) * (MG[m.id].det.find((d) => d.p.id === p.id).monto / vigenteDe(m)) : 0), 0);
+  const P = personasInv(), r2 = (n) => Math.round(n * 100) / 100;
+  return `<details class="sec" data-pinvsec${C.length || viejos.length || PINV ? " open" : ""}><summary>Quién puso el dinero</summary>
+    ${C.length ? `<div class="tbl cuadre"><table>
+      <tr><td>El cliente te paga al mes</td><td class="r">${mxn2(int)}</td></tr>
+      <tr><td>Pagas a inversionistas por este préstamo</td><td class="r">− ${mxn2(r2(paga))}</td></tr>
+      <tr><td><b>Te queda al mes</b></td><td class="r"><b>${mxn2(r2(int - paga))}</b></td></tr></table></div>` : `<p class="muted">Este préstamo es con tu dinero. Si lo fondeó un inversionista, agrégalo aquí.</p>`}
+    <div class="list">${C.map((m) => { const d = (MG[m.id]?.det || []).find((z) => z.p.id === p.id); return `<div class="item"><div class="item-top"><b>${esc(m.nombre)} · ${m.tasa}% al mes</b><span>${mxn2(mensualDe(m))} cada día ${diaDe(m)}</span></div>
+      <div class="item-mid">Su inversión: ${mxn(vigenteDe(m))} del ${fdate(m.fecha)}${d ? ` · en este préstamo ${mxn(d.monto)}` : ""}${(m.pids || []).length > 1 ? ` · también en ${m.pids.length - 1} préstamo${m.pids.length > 2 ? "s" : ""} más` : ""}</div>
+      <div class="actions"><button class="btn sm" type="button" data-pinv="ed:${m.id}">${PINV === "ed:" + m.id ? "Cerrar" : "Cambiar monto o %"}</button><button class="btn sm" type="button" data-pinv="ret:${m.id}">${PINV === "ret:" + m.id ? "Cerrar" : "Le regresé capital"}</button><button class="link del" type="button" data-pinvq="${m.id}">Quitar de este préstamo</button></div>
+      ${PINV === "ed:" + m.id ? `<form class="edit" data-pinvf="ed:${m.id}" novalidate><div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${Number(m.monto).toLocaleString("es-MX")}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" value="${m.tasa}"></label></div>
+        <label>Fecha en que te prestó (le pagas ese día cada mes)<input name="f" type="date" value="${m.fecha}"></label><p class="note">Cambia la inversión completa de ${esc(m.nombre)}, no solo este préstamo.</p><p class="err" hidden></p><button class="btn sm primary" type="submit">Guardar</button></form>` : ""}
+      ${PINV === "ret:" + m.id ? `<form class="edit" data-pinvret="${m.id}" novalidate><div class="row"><label>Monto que le regresaste<input name="m" inputmode="decimal" value="${vigenteDe(m).toLocaleString("es-MX")}"></label><label>Fecha<input name="f" type="date" value="${today()}"></label></div><p class="note">Ese mes le toca el interés de lo regresado solo por los días que lo tuviste; desde ahí su pago baja.</p><p class="err" hidden></p><button class="btn sm primary" type="submit">Guardar</button></form>` : ""}</div>`; }).join("")}</div>
+    ${viejos.map(({ x }) => `<p class="err" style="margin:0">${esc(persName(x))} aparece también con el sistema anterior en este préstamo. Pásalo en la pestaña Inversionistas, caja "Pasar a inversiones", para que no se le pague dos veces.</p>`).join("")}
+    ${PINV === "nuevo" ? `<form class="edit" data-pinvnew novalidate><h3>Agregar inversionista a este préstamo</h3>
+      <label>¿Quién puso el dinero?<select name="who"><option value="">Otra persona (escribe el nombre)</option>${P.map(([k, n]) => `<option value="${esc(k)}">${esc(n)}</option>`).join("")}</select></label>
+      <label data-w="nom">Nombre<input name="nombre" placeholder="Ej. Pilar"></label>
+      <label data-w="usar">¿Qué dinero es?<select name="usar"></select></label>
+      <div data-w="nueva"><div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${Number(debeDe(p, avance(p)) || p.monto).toLocaleString("es-MX")}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" placeholder="Ej. 2.5"></label></div>
+        <label>Fecha en que te prestó (le pagas ese día cada mes, desde el mes siguiente)<input name="f" type="date" value="${today()}"></label></div>
+      <p class="err" hidden></p><div class="actions"><button class="btn primary" type="submit">Guardar</button><button class="btn" type="button" data-pinv="nuevo">Cancelar</button></div></form>`
+    : `<button class="btn sm" type="button" data-pinv="nuevo">Agregar inversionista</button>`}
+  </details>`;
+}
+function bindPrestamoInv(p) {
+  const P = $("panel");
+  const sec = P.querySelector("[data-pinvsec]"); if (!sec) return;
+  P.querySelectorAll("[data-pinv]").forEach((b) => (b.onclick = () => { PINV = PINV === b.dataset.pinv ? "" : b.dataset.pinv; vPrestamos(); }));
+  P.querySelectorAll("[data-pinvq]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: su inversión sigue, solo queda sin colocar"; return; }
+    const m = INVS.find((x) => x.id === b.dataset.pinvq); if (m) await updateDoc(doc(db, "inversiones", m.id), { pids: (m.pids || []).filter((x) => x !== p.id) });
+  }));
+  P.querySelectorAll("form[data-pinvf]").forEach((f) => (f.onsubmit = async (ev) => {
+    ev.preventDefault(); const g = (n) => f.querySelector(`[name=${n}]`).value, er = f.querySelector(".err"), id = f.dataset.pinvf.split(":")[1];
+    const monto = num(g("m")), tasa = num(g("t")), fecha = g("f");
+    if (!monto || !tasa || !fecha) { er.hidden = false; er.textContent = "Escribe monto, porcentaje y fecha."; return; }
+    if (tasa >= 20) { er.hidden = false; er.textContent = "El porcentaje es mensual, por ejemplo 2.5."; return; }
+    await updateDoc(doc(db, "inversiones", id), { monto, tasa, fecha, editado: new Date().toISOString() }); PINV = ""; vPrestamos();
+  }));
+  P.querySelectorAll("form[data-pinvret]").forEach((f) => (f.onsubmit = async (ev) => {
+    ev.preventDefault(); const m = INVS.find((x) => x.id === f.dataset.pinvret), g = (n) => f.querySelector(`[name=${n}]`).value, er = f.querySelector(".err"), mo = num(g("m")), fe = g("f");
+    if (!m || !mo || !fe) { er.hidden = false; er.textContent = "Escribe el monto y la fecha."; return; }
+    if (mo > vigenteDe(m) + 0.5) { er.hidden = false; er.textContent = "Es más de lo que te prestó (" + mxn(vigenteDe(m)) + ")."; return; }
+    await addDoc(collection(db, "inversiones"), { uid: m.uid || "", nombre: m.nombre, tipo: "retiro", aid: m.id, monto: mo, fecha: fe, nota: "", reg: new Date().toISOString() }); PINV = ""; vPrestamos();
+  }));
+  const f = P.querySelector("form[data-pinvnew]"); if (!f) return;
+  const w = (k) => f.querySelector(`[data-w=${k}]`), sel = f.querySelector("[name=who]"), usar = f.querySelector("[name=usar]");
+  const upd = () => {
+    const k = sel.value, MG = margenes();
+    const C = k ? CONTRATOS().filter((m) => persKey(m) === k && vigenteDe(m) > 0.5 && !(m.pids || []).includes(p.id)) : [];
+    usar.innerHTML = `<option value="">Dinero nuevo que me prestó</option>` + C.map((m) => `<option value="${m.id}">La inversión de ${mxn(vigenteDe(m))} al ${m.tasa}% del ${fdate(m.fecha)}${MG[m.id] ? " · sin colocar " + mxn(MG[m.id].sinColocar) : ""}</option>`).join("");
+    const cap = debeDe(p, avance(p)) || p.monto, libre = C.find((m) => (MG[m.id]?.sinColocar || 0) >= cap - 1); usar.value = libre ? libre.id : "";
+    w("nom").hidden = !!k; w("usar").hidden = !C.length; w("nueva").hidden = !!usar.value;
+  };
+  sel.onchange = upd; usar.onchange = () => (w("nueva").hidden = !!usar.value); upd();
+  f.onsubmit = async (ev) => {
+    ev.preventDefault(); const g = (n) => f.querySelector(`[name=${n}]`).value, er = f.querySelector(".err");
+    try {
+      if (usar.value) { const m = INVS.find((x) => x.id === usar.value); await updateDoc(doc(db, "inversiones", m.id), { pids: [...new Set([...(m.pids || []), p.id])] }); }
+      else {
+        const k = sel.value, u = USERS.find((x) => x.uid === k), ex = INVS.find((m) => persKey(m) === k);
+        const nombre = u ? u.nombre || u.email : ex ? ex.nombre : g("nombre").trim(), uid = u ? u.uid : ex ? ex.uid || "" : "";
+        const monto = num(g("m")), tasa = num(g("t")), fecha = g("f");
+        if (!nombre) { er.hidden = false; er.textContent = "Elige quién puso el dinero o escribe su nombre."; return; }
+        if (!monto || !tasa || !fecha) { er.hidden = false; er.textContent = "Escribe monto, porcentaje y fecha."; return; }
+        if (tasa >= 20) { er.hidden = false; er.textContent = "El porcentaje es mensual, por ejemplo 2.5."; return; }
+        await addDoc(collection(db, "inversiones"), { uid, nombre, tipo: "aporte", monto, tasa, fecha, pids: [p.id], nota: "", reg: new Date().toISOString() });
+        if (uid) updateDoc(doc(db, "usuarios", uid), { inversionista: true }).catch(() => {});
+      }
+      PINV = ""; vPrestamos();
+    } catch (x) { er.hidden = false; er.textContent = "No se pudo guardar. Revisa tu conexión."; }
+  };
+}
 /* ---------- Aviso al abrir la app: pagos a inversionistas de hoy o atrasados (hasta que marques "Ya le pagué") ---------- */
 let INVAL_T = null;
 function drawInvAlert() { clearTimeout(INVAL_T); INVAL_T = setTimeout(drawInvAlert0, 300); }
@@ -1783,7 +1869,7 @@ function loanItem0(p) {
     <div class="item-mid">${loanDesc(p, a)}</div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
     <div class="item-bot"><span>${SI ? `Intereses pagados ${mxn2(a.pagado)} · Abonos a capital ${mxn2(a.capPagado)}${a.interesAdeudado ? " · Interés vencido " + mxn2(a.interesAdeudado) : ""}` : p.tipo === "capfijo" ? `Pagado ${mxn2(a.pagado)} · Capital pendiente ${mxn2(a.capital)}` : `Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}`}</span></div>
-    <div class="item-bot">${AVIS[p.id] ? `<span class="pill warn">Avisó un pago</span>` : ""}${a.siguiente && !venc ? `<span>Próximo: ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? " el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Tiene cuenta</span>` : `<span class="pill">Sin cuenta</span>`}</div>
+    <div class="item-bot">${AVIS[p.id] ? `<span class="pill warn">Avisó un pago</span>` : ""}${isAdmin() ? [...new Set(CONTRATOS().filter((m) => (m.pids || []).includes(p.id) && vigenteDe(m) > 0.5).map((m) => nom1(m.nombre)))].map((n) => `<span class="pill">Dinero de ${esc(n)}</span>`).join("") : ""}${a.siguiente && !venc ? `<span>Próximo: ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? " el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Tiene cuenta</span>` : `<span class="pill">Sin cuenta</span>`}</div>
   </div>`;
 }
 let PEDIT = "", FILT_P = "", COMPS = {};
@@ -1937,6 +2023,7 @@ function fichaHTML(p) {
         <p class="err" hidden></p>
         <button class="btn primary" type="submit">Guardar</button></form>` : ""}
     ${adm && EDIT === p.id ? editForm(p) : ""}
+    ${prestamoInvBox(p)}
     ${pagosBox(p, adm)}
     ${estadoBox(p, true)}
     ${schedule(p, a, false, true).replace("<details", '<details class="sec"')}
@@ -1971,6 +2058,7 @@ function fichaBind(p) {
   P.querySelector("[data-back]").onclick = () => { OPEN = ""; FX = ""; EDIT = ""; PEDIT = ""; RECH = ""; vPrestamos(); };
   P.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { FX = FX === b.dataset.fx ? "" : b.dataset.fx; EDIT = ""; vPrestamos(); }));
   P.querySelector("[data-asc]").onclick = () => verComoCliente(p);
+  bindPrestamoInv(p);
   const fc = P.querySelector("form[data-corte]");
   if (fc) fc.onsubmit = async (e) => {
     e.preventDefault();
