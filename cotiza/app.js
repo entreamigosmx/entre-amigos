@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, deleteField, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta, liquidacion } from "./calc.js?v=11";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta, liquidacion } from "./calc.js?v=12";
 
 const CONF = {
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -789,7 +789,7 @@ function bindLoan() {
   if (FILT_P && bus) bus.dispatchEvent(new Event("input"));
   $("panel").querySelectorAll("[data-liq]").forEach((b) => (b.onclick = async () => {
     const p = PRES.find((x) => x.id === b.dataset.liq); if (!p) return;
-    const L = liquidacion(p), todo = b.dataset.modo === "todo", m = Math.round((todo ? L.completoTotal : L.total) * 100) / 100;
+    const L = liquidacion(p), m = Math.round(L.total * 100) / 100;
     if (!m) return;
     if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: registra " + mxn2(m) + " y lo liquida"; return; }
     b.disabled = true;
@@ -797,7 +797,7 @@ function bindLoan() {
     // Solo interés: se registra por separado el interés pendiente y el capital, para que cada cosa cuente donde va.
     const nuevos = p.tipo === "interes"
       ? [L.interes > 0.005 ? { ...base, monto: L.interes } : null, { ...base, reg: base.reg + "b", monto: L.capital, tipo: "capital" }].filter(Boolean)
-      : [{ ...base, monto: m, liq: true }];
+      : [{ ...base, monto: m, liq: true, ...(L.intDias ? { intLiq: L.intDias } : {}) }];
     await updateDoc(doc(db, "prestamos", p.id), { pagos: arrayUnion(...nuevos) });
   }));
   $("panel").querySelectorAll("[data-comp]").forEach((b) => (b.onclick = () => { const [pid, id] = b.dataset.comp.split(":"); const c = (COMPS[pid] || []).find((x) => x.id === id); verDoc(c, "Comprobante de pago"); }));
@@ -1571,6 +1571,7 @@ function schedule(p, a, edit, sinPagos) {
 }
 
 /* ---------- Ficha de un préstamo (pantalla completa) ---------- */
+const r2c = (n) => Math.round(n * 100) / 100;
 const mesC = (f, sem) => { const d = new Date(f + "T12:00:00"); return sem ? d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }) : d.toLocaleDateString("es-MX", { month: "short", year: "2-digit" }); };
 const mesLbl = (f, sem) => { const d = new Date(f + "T12:00:00"); return sem ? fcorta(d) : d.toLocaleDateString("es-MX", { month: "short", year: "numeric" }); };
 const ESTC = { pagado: ["Pagado", "ok"], parcial: ["Parcial", "warn"], vencido: ["Vencido", "warn"], proximo: ["Pendiente", ""], corte: ["Pagado", "ok"], liq: ["Liquidado", "ok"] };
@@ -1692,14 +1693,14 @@ function fichaHTML(p) {
     ${adm ? `<div class="sec">${repartoBox(p)}</div>` : ""}
     ${adm ? `<details class="sec"><summary>Liquidar o borrar</summary>${(() => {
       if (a.liquidado) return "";
-      const L = liquidacion(p), dif = L.completoTotal && L.completoTotal - L.total > 0.5;
+      const L = liquidacion(p), intV = r2c(L.interes - (L.intDias || 0) - (p.tipo === "interes" && L.dias ? 0 : 0));
       return `<div class="tbl cuadre"><table>
         <tr><td>Capital pendiente</td><td class="r">${mxn2(L.capital)}</td></tr>
-        ${L.interes > 0.005 ? `<tr><td>Interés vencido sin pagar</td><td class="r">${mxn2(L.interes)}</td></tr>` : ""}
-        <tr><td><b>Para liquidar hoy</b></td><td class="r"><b>${mxn2(L.total)}</b></td></tr>
-        ${dif ? `<tr><td>Si cobras todos los intereses del plazo</td><td class="r">${mxn2(L.completoTotal)}</td></tr>` : ""}</table></div>
-      <p class="note">${p.tipo === "semanal" ? "En semanal se cobra lo que resta del pago acordado." : "Para liquidar hoy no incluye intereses de meses que todavía no vencen."}</p>
-      <div class="actions"><button class="btn sm" type="button" data-liq="${p.id}">Liquidar con ${mxn2(L.total)}</button>${dif ? `<button class="btn sm" type="button" data-liq="${p.id}" data-modo="todo">Liquidar con ${mxn2(L.completoTotal)}</button>` : ""}</div>`;
+        ${p.tipo === "interes" ? (L.interes > 0.005 ? `<tr><td>Interés${L.dias ? ` (vencido + ${L.dias} de ${L.diasMes} días de este mes)` : " vencido"}</td><td class="r">${mxn2(L.interes)}</td></tr>` : "")
+          : `${intV > 0.005 ? `<tr><td>Interés vencido sin pagar</td><td class="r">${mxn2(intV)}</td></tr>` : ""}${L.intDias > 0.005 ? `<tr><td>Interés de ${L.dias} de ${L.diasMes} días de este mes</td><td class="r">${mxn2(L.intDias)}</td></tr>` : ""}`}
+        <tr><td><b>Para liquidar hoy</b></td><td class="r"><b>${mxn2(L.total)}</b></td></tr></table></div>
+      <p class="note">${L.semanal ? "En semanal se cobra lo que resta del pago acordado." : "Incluye el interés hasta hoy, por días reales. Si liquida otro día, la cantidad cambia: regístralo el día que te pague."}</p>
+      <div class="actions"><button class="btn sm" type="button" data-liq="${p.id}">Liquidar con ${mxn2(L.total)}</button></div>`;
     })()}
       <p class="muted">Borrar elimina el préstamo con todos sus pagos; pide que toques dos veces.</p>
       <div class="actions"><button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button></div></details>` : ""}

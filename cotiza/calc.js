@@ -98,14 +98,27 @@ export function avanceInteres(p, hoyISO) {
   const capital = Math.max(0, r2(p.monto - capPagado));
   const hoy = hoyISO || hoyLocal();
   const lim = new Date(hoy + "T12:00:00"); lim.setDate(lim.getDate() + 35);
+  // Reglas del dueño:
+  // - Un abono a capital a mitad de mes NO baja el interés del siguiente vencimiento: cuenta a partir del vencimiento
+  //   que sigue al primer día de pago en o después del abono. Si se abona justo el día de pago, baja el siguiente mes.
+  // - Si se paga TODO el capital (liquidación), el interés del periodo en curso se cobra solo por los días reales
+  //   transcurridos desde el último vencimiento hasta el día en que pagó.
+  const tasaMes = (base) => (p.pagoFijo ? (p.pagoFijo * base) / p.monto : base * r);
+  let acumCap = 0, fLiq = null;
+  for (const x of caps) { acumCap += x.monto || 0; if (acumCap >= p.monto - 0.5) { fLiq = x.fecha; break; } }
   const filas = [];
   for (let n = 1; n <= 600 && p.inicio; n++) {
-    const f = fechaPago(p.inicio, n, "mensual"); const fi = isoD(f);
-    const capN = Math.max(0, r2(p.monto - caps.filter((x) => x.fecha < fi).reduce((s, x) => s + x.monto, 0)));
+    const f = fechaPago(p.inicio, n, "mensual"), fi = isoD(f), ant = isoD(fechaPago(p.inicio, n - 1, "mensual"));
+    const capN = n === 1 ? p.monto : Math.max(0, r2(p.monto - caps.filter((x) => x.fecha <= ant).reduce((s, x) => s + x.monto, 0)));
     if (capN <= 0.5) break;
-    if (f > lim && filas.length) break;
-    // pagoFijo = interés mensual acordado (si es distinto al calculado); baja en proporción si abona a capital.
-    filas.push({ n, pago: r2(p.pagoFijo ? (p.pagoFijo * capN) / p.monto : capN * r), capital: capN, fecha: f });
+    if (f > lim && filas.length && !(fLiq && fLiq > ant)) break;
+    if (fLiq && fLiq > ant && fLiq < fi) {
+      // Liquidó a mitad del periodo: interés por días reales hasta el día que pagó.
+      const dias = Math.round((new Date(fLiq + "T12:00:00") - new Date(ant + "T12:00:00")) / 864e5), diasMes = Math.round((f - new Date(ant + "T12:00:00")) / 864e5);
+      filas.push({ n, pago: r2((tasaMes(capN) * dias) / diasMes), capital: capN, fecha: new Date(fLiq + "T12:00:00"), dias, diasMes, prorrateo: true });
+      break;
+    }
+    filas.push({ n, pago: r2(tasaMes(capN)), capital: capN, fecha: f });
   }
   const credito = p.corte ? r2(filas.filter((f) => isoD(f.fecha) <= p.corte).reduce((s, f) => s + f.pago, 0)) : 0;
   const ef = intPagado + credito;
@@ -114,7 +127,7 @@ export function avanceInteres(p, hoyISO) {
   const vencido = filas.filter((f) => isoD(f.fecha) <= hoy).reduce((s, f) => s + f.pago, 0);
   const sig = cubiertos < filas.length ? filas[cubiertos] : null;
   return {
-    tipo: "interes", corrida: { pago: r2(p.pagoFijo ? (p.pagoFijo * capital) / p.monto : capital * r), filas, total: null }, pagado: intPagado, credito, capPagado, capital,
+    tipo: "interes", corrida: { pago: (filas.find((f) => isoD(f.fecha) > hoy) || {}).pago ?? r2(tasaMes(capital)), filas, total: null }, pagado: intPagado, credito, capPagado, capital,
     interesAdeudado: Math.max(0, r2(vencido - ef)), restante: capital, cubiertos, total: null,
     siguiente: capital > 0.5 && sig ? { n: sig.n, monto: r2(acum + sig.pago - ef), fecha: sig.fecha } : null,
     liquidado: capital <= 0.5 && vencido - ef <= 0.5,
@@ -160,6 +173,7 @@ export function desglosePagos(p) {
       const int = filas[k].pago ? take * (filas[k].interes / filas[k].pago) : 0;
       out.interes += int; out.capital += take - int; rest[k] -= take; m -= take;
     }
+    if (m > 0.005 && x.liq && x.intLiq) { const il = Math.min(m, x.intLiq); out.interes += il; m -= il; } // interés por días al liquidar
     if (m > 0.005) { if (p.tipo === "interes") out.interes += m; else out.capital += m; }
     out.capital = r2(out.capital); out.interes = r2(out.interes);
     return out;
@@ -213,16 +227,30 @@ export function estadoCuenta(p, hoyISO) {
 export function liquidacion(p, hoyISO) {
   const hoy = hoyISO || hoyLocal(), a = avance(p);
   if (a.liquidado) return { total: 0, capital: 0, interes: 0 };
-  if (p.tipo === "interes") { const int = Math.max(0, a.interesAdeudado || 0); return { total: r2(a.capital + int), capital: a.capital, interes: r2(int) }; }
-  if (p.tipo === "semanal") return { total: a.restante, capital: a.restante, interes: 0, completo: true };
-  const c = a.corrida, ef = a.pagado + (a.credito || 0);
+  if (p.tipo === "interes") {
+    // Se simula el pago de todo el capital hoy: el interés incluye lo vencido + los días reales del periodo en curso.
+    const q = { ...p, pagos: [...(p.pagos || []), { fecha: hoy, monto: a.capital, tipo: "capital" }] };
+    const b = avanceInteres(q, hoy), int = Math.max(0, b.interesAdeudado || 0);
+    const ult = b.corrida.filas.at(-1);
+    return { total: r2(a.capital + int), capital: a.capital, interes: r2(int), dias: ult && ult.prorrateo ? ult.dias : 0, diasMes: ult && ult.prorrateo ? ult.diasMes : 0 };
+  }
+  if (p.tipo === "semanal") return { total: a.restante, capital: a.restante, interes: 0, semanal: true };
+  const c = a.corrida, ef = a.pagado + (a.credito || 0), r = (p.tasa || 0) / 100;
   const due = c.filas.filter((f) => isoD(fechaPago(p.inicio, f.n, p.tipo)) <= hoy);
-  const sumDue = due.reduce((s, f) => s + f.pago, 0), intDue = due.reduce((s, f) => s + (f.interes || 0), 0);
+  const sumDue = due.reduce((s, f) => s + f.pago, 0);
   const saldo = due.length ? due.at(-1).saldo : p.monto;
   const pendDue = Math.max(0, sumDue - ef), adelanto = Math.max(0, ef - sumDue);
   // De lo vencido sin pagar, la parte de interés es la de las cuotas más recientes (los pagos cubren primero las antiguas).
   let porCubrir = pendDue, intPend = 0;
   for (let k = due.length - 1; k >= 0 && porCubrir > 0.005; k--) { const t = Math.min(porCubrir, due[k].pago); intPend += t * ((due[k].interes || 0) / due[k].pago); porCubrir -= t; }
-  const capital = Math.max(0, r2(saldo - adelanto)), interes = r2(intPend);
-  return { total: r2(capital + pendDue), capital: r2(capital + pendDue - interes), interes, completoTotal: a.restante };
+  const capital = Math.max(0, r2(saldo - adelanto));
+  // Interés por días reales desde el último vencimiento hasta hoy, sobre el capital que debe.
+  let dias = 0, diasMes = 0, intDias = 0;
+  if (due.length < c.filas.length && capital > 0.5) {
+    const ant = fechaPago(p.inicio, due.length, p.tipo), sig = fechaPago(p.inicio, due.length + 1, p.tipo), h = new Date(hoy + "T12:00:00");
+    dias = Math.max(0, Math.round((h - ant) / 864e5)); diasMes = Math.round((sig - ant) / 864e5);
+    intDias = r2((capital * r * dias) / diasMes);
+  }
+  const interes = r2(intPend + intDias);
+  return { total: r2(capital + pendDue + intDias), capital: r2(capital + pendDue - intPend), interes, intDias, dias, diasMes };
 }
