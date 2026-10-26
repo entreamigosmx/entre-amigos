@@ -1,5 +1,5 @@
 rules_version = '2';
-// Versión 2. Se publican desde la app (Ajustes > Publicar reglas ahora).
+// Versión 3. Se publican desde la app (Ajustes > Publicar reglas ahora).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signed() { return request.auth != null; }
@@ -106,6 +106,18 @@ service cloud.firestore {
     // Aportaciones y retiros de inversionistas: solo el administrador.
     match /inversiones/{id} {
       allow read, write: if admin();
+    }
+    // El inversionista avisa que te prestó dinero: solo crea su aviso (pendiente) y ve los suyos; el administrador decide.
+    match /solinv/{id} {
+      allow read: if admin() || (signed() && resource.data.uid == request.auth.uid);
+      allow create: if signed() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.estado == 'pendiente'
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'monto', 'tasa', 'fecha', 'nota', 'estado', 'reg'])
+        && request.resource.data.monto is number && request.resource.data.monto > 0 && request.resource.data.monto < 100000000
+        && request.resource.data.tasa is number && request.resource.data.tasa > 0 && request.resource.data.tasa < 20
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80
+        && request.resource.data.get('nota', '').size() <= 200;
+      allow update, delete: if admin();
     }
     // Comprobantes de pago de los clientes (foto de la transferencia).
     match /comprobantes/{id} {

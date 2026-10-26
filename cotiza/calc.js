@@ -254,3 +254,26 @@ export function liquidacion(p, hoyISO) {
   const interes = r2(intPend + intDias);
   return { total: r2(capital + pendDue + intDias), capital: r2(capital + pendDue - intPend), interes, intDias, dias, diasMes };
 }
+
+// Inversión de un inversionista (contrato): te prestó `monto` el día `fecha` a `tasa`% mensual.
+// Se le paga cada mes el mismo día, empezando el mes siguiente, mientras tengas su dinero (haya o no cliente).
+// Si le regresas capital, ese mes se le paga el interés de lo regresado solo por los días que lo tuviste (días reales);
+// desde ahí el interés baja en proporción. Si le regresas todo, el último interés se le paga el día que le regresas.
+export function pagosInversion(inv, retiros, hastaISO) {
+  const r = (inv.tasa || 0) / 100, out = [], R = (retiros || []).filter((x) => x.monto > 0).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  if (!inv.fecha || !inv.monto || !r) return out;
+  const t = (s) => new Date(s + "T12:00:00");
+  for (let k = 1; k <= 600; k++) {
+    const s = isoD(fechaPago(inv.fecha, k, "mensual")), e = isoD(fechaPago(inv.fecha, k + 1, "mensual"));
+    const P = r2(inv.monto - R.filter((x) => x.fecha <= s).reduce((a, x) => a + x.monto, 0));
+    if (P <= 0.5) break;
+    const D = Math.round((t(e) - t(s)) / 864e5), dentro = R.filter((x) => x.fecha > s && x.fecha <= e);
+    const base = P - dentro.reduce((a, x) => a + (x.monto * Math.round((t(e) - t(x.fecha)) / 864e5)) / D, 0);
+    const fin = r2(P - dentro.reduce((a, x) => a + x.monto, 0)) <= 0.5;
+    const fecha = fin ? dentro.at(-1).fecha : e;
+    if (hastaISO && fecha > hastaISO) break;
+    out.push({ n: k, fecha, monto: r2(base * r), capital: P, parcial: dentro.length > 0, final: fin });
+    if (fin) break;
+  }
+  return out;
+}
