@@ -1808,23 +1808,26 @@ function solicitudForm() {
 }
 let VERI_T = null;
 function clienteLoanCard(p) {
-    const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
+    const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes", sem = p.tipo === "semanal";
+    // Si va atrasado, lo primero que ve es cuánto debe hoy y de qué meses (no una fecha que ya pasó).
+    const e = estadoCuenta(p), venc = vencido(p, a), faltan = e.meses.filter((f) => f.falta > 0.5 && f.fecha <= today());
+    const debeHoy = venc > 0.5 ? `<div class="big"><span>Debes hoy</span><b>${mxn2(venc)}</b></div><p class="muted">Te falta${faltan.length > 1 ? "n" : ""} ${faltan.map((f) => mxn(f.falta) + " de " + mesLbl(f.fecha, sem)).join(" y ")}. Ponte al corriente o escríbenos si necesitas ayuda.</p>` : "";
     if (p.tipo === "interes") return `<div class="card">
-      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
+      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>
       <p class="muted">Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes. Puedes abonar a capital cuando quieras y tu interés baja.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}</p>
-      ${a.siguiente ? `<div class="big"><span>Tu próximo pago de interés</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : a.liquidado ? `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>` : ""}
-      <div class="facts"><div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div><div><span>Abonos a capital</span><b>${mxn2(a.capPagado)}</b></div><div><span>Intereses pagados</span><b>${mxn2(a.pagado)}</b></div></div>
+      ${debeHoy || (a.siguiente ? `<div class="big"><span>Tu próximo pago de interés</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : a.liquidado ? `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>` : "")}
+      <div class="facts"><div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div><div><span>Interés al mes</span><b>${mxn2(a.corrida.pago)}</b></div><div><span>Intereses pagados</span><b>${mxn2(a.pagado)}</b></div><div><span>Abonos a capital</span><b>${mxn2(a.capPagado)}</b></div></div>
       ${estadoBox(p, false)}
       ${pagosBox(p, false)}
       ${avisoBox(p)}
       ${schedule(p, a, false, true)}
       <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, tengo una duda sobre mi préstamo.")}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
     </div>`;
-    const pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
+    const pct = Math.min(100, Math.round(((a.pagado + (a.credito || 0)) / a.corrida.total) * 100));
     return `<div class="card">
-      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
+      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>
       <p class="muted">${p.tipo === "semanal" ? `${a.total} pagos semanales` : p.tipo === "capfijo" ? `Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes más un abono a capital de ${mxn(p.abono)}. Tu pago baja cada mes.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}` : `${a.total} pagos mensuales${p.desc ? " · Garantía: " + esc(p.desc) : ""}`}</p>
-      ${a.siguiente ? `<div class="big"><span>Tu próximo pago · ${unidad} ${a.siguiente.n} de ${a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>`}
+      ${debeHoy || (a.siguiente ? `<div class="big"><span>Tu próximo pago · ${unidad} ${a.siguiente.n} de ${a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>`)}
       <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
       <div class="facts"><div><span>Pagado</span><b>${mxn2(a.pagado)}</b></div>${p.tipo === "capfijo" ? `<div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div>` : `<div><span>Te resta</span><b>${mxn2(a.restante)}</b></div>`}<div><span>Avance</span><b>${a.cubiertos} de ${a.total}</b></div></div>
       ${estadoBox(p, false)}
