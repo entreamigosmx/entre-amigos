@@ -1419,7 +1419,7 @@ let INVAL_T = null;
 function drawInvAlert() { clearTimeout(INVAL_T); INVAL_T = setTimeout(drawInvAlert0, 300); }
 function drawInvAlert0() {
   const box = $("inv-alert"); if (!box) return;
-  if (!isAdmin() || !USERS.length) { box.innerHTML = ""; return; }
+  if (!isAdmin() || !USERS.length || TAB === "agenda") { box.innerHTML = ""; return; }
   let EP; try { EP = estadoPersonas(); } catch (e) { box.innerHTML = ""; return; }
   const hoy = today(), L = Object.values(EP).flatMap((e) => e.pend.filter((o) => o.fecha <= hoy).map((o) => ({ e, o })));
   const sol = SOLINV.filter((x) => x.estado === "pendiente").length;
@@ -2650,6 +2650,28 @@ function tareaRow(x) {
   const wa2 = x.t === "segcot" && x.c2.telefono ? waTo(x.c2.telefono, `Hola ${x.c2.cliente || ""}, ¿pudiste revisar la cotización de tu préstamo por ${mxn(x.c2.monto)}? Si tienes dudas o quieres ajustar el monto o el plazo, con gusto te ayudo.\n\nPara confirmarla entra aquí:\n${PORTAL()}?c=${x.c2.id}\n\nEntre Amigos`) : "";
   return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}${x.t === "inv" ? `<button class="btn sm" type="button" data-goinv>Ir a Inversionistas</button>` : ""}</div>`;
 }
+/* ---------- Pantalla principal: avisos arriba y secciones que se abren o se minimizan ---------- */
+// Al abrir la app todo empieza cerrado (menos el calendario, que siempre se ve); lo que abras se queda abierto mientras la usas.
+let FOLD = {};
+const saveFold = () => {};
+const FOLD_KEYS = [["Solicitudes", "sol"], ["Hoy", "hoy"], ["Tareas", "tareas"], ["Atrasados", "atr"], ["Pagos de hoy", "phoy"], ["Próximos", "prox"], ["Visitas", "vis"], ["Pagos recibidos", "rec"]];
+const FOLD_CORTO = { sol: "Solicitudes", hoy: "Resumen de hoy", tareas: "Tareas de hoy", atr: "Atrasados", phoy: "Cobros de hoy", prox: "Próximos 7 días", vis: "Visitas", cal: "Calendario", rec: "Recibido del mes" };
+function plegarPanel(res) {
+  $("panel").querySelectorAll(":scope > .card").forEach((card) => {
+    const h = card.querySelector("h2"); if (!h) return;
+    const t = h.textContent.trim(), key = (FOLD_KEYS.find(([pre]) => t.startsWith(pre)) || [])[1]; if (!key) return;
+    const d = document.createElement("details"); d.className = card.className + " fold"; d.id = "f-" + key; d.open = !!FOLD[key];
+    const sm = document.createElement("summary"); sm.innerHTML = `<span class="ft">${esc(t)}</span><span class="fs">${FOLD_CORTO[key]}</span>${res[key] !== "" && res[key] !== undefined ? `<span class="fr">${res[key]}</span>` : ""}`;
+    h.remove(); d.appendChild(sm); while (card.firstChild) d.appendChild(card.firstChild); card.replaceWith(d);
+    d.addEventListener("toggle", () => { FOLD[key] = d.open; saveFold(); });
+  });
+  const F = [...$("panel").querySelectorAll(":scope > details.fold")];
+  if (F.length) { const g = document.createElement("div"); g.className = "foldgrid"; F[0].before(g); F.forEach((d) => g.appendChild(d)); }
+}
+function avisosCard(A) {
+  const L = A.filter((a) => a.n);
+  return `<div class="card avisos"><h3>Avisos</h3>${L.length ? `<div class="avl">${L.map((a) => `<button type="button" class="aviso ${a.cls || ""}" data-ir="${a.ir}"><b>${a.big}</b><span>${a.txt}</span></button>`).join("")}</div>` : `<p class="muted">Todo al día. No hay nada pendiente por revisar.</p>`}</div>`;
+}
 function vAgenda() {
   const all = cuotas(), hoy = today();
   const en7 = iso(new Date(Date.now() + 7 * 864e5));
@@ -2683,7 +2705,25 @@ function vAgenda() {
     cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : x.t === "invd" ? "→ " + nom1(x.z.e.nombre) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}${isAdmin() && VIS[k] && VIS[k].personas ? `<em class="vis" title="Personas que entraron a la página">${VIS[k].personas}</em>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
-  $("panel").innerHTML = (isAdmin() ? solicitudesCard(3) : "") + `
+  const nSol = isAdmin() ? SOLS.filter((x) => x.estado === "nueva").length : 0, visHoy = isAdmin() ? (VIS[hoy] || {}).personas || 0 : 0;
+  let invHoy = [], invSol = 0;
+  if (isAdmin()) { try { invHoy = Object.values(estadoPersonas()).flatMap((e) => e.pend.filter((o) => o.fecha <= hoy).map((o) => ({ e, o }))); } catch (er) {} invSol = SOLINV.filter((x) => x.estado === "pendiente").length; }
+  const nAvis = isAdmin() ? Object.values(AVIS).reduce((s2, n) => s2 + n, 0) : 0, nVen = isAdmin() ? VENTAS.filter((v) => v.estado === "nueva").length : 0;
+  const porHoy = deHoy.filter((c) => !c.pagada);
+  const avisos = avisosCard([
+    { n: nSol, big: nSol, txt: nSol === 1 ? "Solicitud de préstamo por revisar" : "Solicitudes de préstamo por revisar", ir: "sol", cls: "warn" },
+    { n: atr.length, big: mxn(sum(atr, "debe")), txt: `${atr.length} ${atr.length === 1 ? "cliente atrasado" : "clientes atrasados"}`, ir: "atr", cls: "warn" },
+    { n: nAvis, big: nAvis, txt: nAvis === 1 ? "Cliente avisa que pagó" : "Clientes avisan que pagaron", ir: "tab:prestamos", cls: "warn" },
+    { n: invHoy.length, big: mxn(invHoy.reduce((s2, z) => s2 + z.o.falta, 0)), txt: "Pagar a " + [...new Set(invHoy.map((z) => esc(nom1(z.e.nombre))))].join(", "), ir: "tab:cuentas", cls: invHoy.some((z) => z.o.fecha < hoy) ? "warn" : "" },
+    { n: invSol, big: invSol, txt: invSol === 1 ? "Inversionista te avisa que prestó" : "Inversionistas te avisan que prestaron", ir: "tab:cuentas" },
+    { n: porHoy.length, big: mxn(sum(porHoy, "debe")), txt: `${porHoy.length} por cobrar hoy`, ir: "phoy" },
+    { n: nVen, big: nVen, txt: nVen === 1 ? "Auto ofrecido por revisar" : "Autos ofrecidos por revisar", ir: "tab:autos" },
+    { n: prox.length, big: prox.length, txt: "Pagos en los próximos 7 días", ir: "prox" },
+    { n: visHoy, big: visHoy, txt: visHoy === 1 ? "Persona entró hoy a tu página" : "Personas entraron hoy a tu página", ir: "vis" },
+  ]);
+  const tHoy = tareasDia(hoy, all, rcv).length;
+  const res = { sol: String(nSol), hoy: fcorta(new Date()).replace(/ \d{4}$/, ""), tareas: String(tHoy), atr: mxn(sum(atr, "debe")), phoy: mxn(sum(porHoy, "debe")), prox: String(prox.length), vis: isAdmin() ? String(visHoy) : "", cal: first.toLocaleDateString("es-MX", { month: "short" }).replace(".", ""), rec: mxn(sum(delMes, "monto")) };
+  $("panel").innerHTML = avisos + (isAdmin() ? solicitudesCard(3) : "") + `
   <div class="card">
     <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
     ${legend()}
@@ -2709,6 +2749,11 @@ function vAgenda() {
   <div class="card"><div class="head"><h2>Pagos recibidos en ${first.toLocaleDateString("es-MX", { month: "long" })}</h2></div>
     <div class="stats"><span class="stat">Total <b>${mxn2(sum(delMes, "monto"))}</b></span><span class="stat">Capital <b>${mxn2(sum(delMes, "capital"))}</b></span><span class="stat">Interés <b>${mxn2(sum(delMes, "interes"))}</b></span><span class="stat"><b>${delMes.filter((r) => r.tarde > 0).length}</b> pagaron tarde</span></div>
     <div class="list">${delMes.length ? delMes.map(pagoRow).join("") : `<p class="muted">Sin pagos registrados este mes.</p>`}</div></div>`;
+  plegarPanel(res);
+  $("panel").querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => {
+    const k = b.dataset.ir; if (k.startsWith("tab:")) return go(k.slice(4));
+    const d = $("f-" + k); if (!d) return; d.open = true; FOLD[k] = true; saveFold(); d.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
   const find = (key) => { const [id, n] = key.split(":"); return all.find((c) => c.p.id === id && c.n === Number(n)); };
   const pay = (c, m) => updateDoc(doc(db, "prestamos", c.p.id), { pagos: arrayUnion({ monto: m, fecha: today(), reg: new Date().toISOString(), regPor: ME.uid }) });
   $("panel").querySelectorAll("[data-pago]").forEach((b) => (b.onclick = () => { b.disabled = true; pay(find(b.dataset.pago), find(b.dataset.pago).debe); }));
