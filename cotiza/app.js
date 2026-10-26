@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, deleteField, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta } from "./calc.js?v=9";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta } from "./calc.js?v=10";
 
 const CONF = {
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -704,7 +704,7 @@ function vPrestamos() {
       <div class="row"><label for="e-abono" data-f="abono">Abono a capital cada mes<input id="e-abono" inputmode="numeric" placeholder="Ej. 10,000"></label>
       <label for="e-pago" data-f="pago"><span id="e-pago-l">Pago acordado</span><input id="e-pago" inputmode="decimal" placeholder="Opcional"></label>
       <label for="e-n" data-f="n"><span id="e-n-l">Meses que le faltan</span><input id="e-n" inputmode="numeric" placeholder="Ej. 3"></label></div>
-      <div class="row"><label for="e-ini">Fecha de su próximo pago<input id="e-ini" type="date" value="${plusDays(30)}"></label>
+      <div class="row"><label for="e-ini">Fecha de su próximo pago (si va atrasado, la del primer mes que no ha pagado completo)<input id="e-ini" type="date" value="${plusDays(30)}"></label>
       <label for="e-mail">Correo (opcional)<input id="e-mail" type="email" inputmode="email" placeholder="cliente@correo.com"></label></div>
       <div class="row" data-f="gar"><label for="e-gar">Garantía<select id="e-gar"><option value="">Sin garantía</option>${garOpts().replace('<option value="sin">Sin garantía</option>', "")}</select></label>
       <label for="e-desc">Descripción<input id="e-desc" placeholder="Ej. Tahoe 2020, Rolex, 5 centenarios"></label></div>
@@ -1583,7 +1583,7 @@ function estadoBox(p, admin) {
 // Pagos y abonos recibidos, con la cuota a la que se aplicó cada uno.
 function pagosBox(p, admin) {
   const e = estadoCuenta(p), sem = p.tipo === "semanal", n2f = Object.fromEntries(e.todos.map((f) => [f.n, f.fecha]));
-  const aq = (x) => (p.tipo === "interes" && x.tipo === "capital" ? "Capital" : x.aplica.length ? x.aplica.map((n) => mesLbl(n2f[n], sem)).join(", ") : x.sobra ? "Adelanto" : "");
+  const aq = (x) => (p.tipo === "interes" && x.tipo === "capital" ? "Capital" : x.antes ? "Antes del corte (ya saldado)" : x.aplica.length ? x.aplica.map((n) => mesLbl(n2f[n], sem)).join(", ") : x.sobra ? "Adelanto" : "");
   const pend = admin ? (COMPS[p.id] || []).filter((c) => c.estado === "por revisar") : [];
   return `${pend.length ? `<div class="sec avis"><h3>El cliente avisa que pagó</h3>${pend.map((c) => `<div class="item"><div class="item-top"><b>${mxn2(c.monto)}</b><span>${fcorta(new Date(c.fecha + "T12:00:00"))}</span></div>
       ${c.nota ? `<div class="item-mid">${esc(c.nota)}</div>` : ""}
@@ -1595,6 +1595,29 @@ function pagosBox(p, admin) {
   </details>`;
 }
 let RECH = "";
+// Cómo se calcula lo que debe hoy, paso por paso, para poder revisarlo a mano.
+function cuadreBox(p, a, e) {
+  const hoy = today(), sem = p.tipo === "semanal", u = sem ? "semana" : "mes", us = sem ? "semanas" : "meses";
+  const ven = e.meses.filter((f) => f.fecha <= hoy), tot = ven.reduce((s, f) => s + f.pago, 0);
+  const iguales = ven.length && ven.every((f) => Math.abs(f.pago - ven[0].pago) < 0.01);
+  const cuenta = (p.pagos || []).filter((x) => !(p.tipo === "interes" && x.tipo === "capital") && (!p.corte || x.fecha > p.corte));
+  const abon = cuenta.reduce((s, x) => s + (x.monto || 0), 0), adel = Math.max(0, abon - tot);
+  const antes = (p.pagos || []).filter((x) => p.corte && x.fecha <= p.corte && !(p.tipo === "interes" && x.tipo === "capital"));
+  const ini = p.inicio && p.inicio > hoy;
+  return `<details class="sec cuadre"${vencido(p, a) > 0.5 || (p.inicio && p.inicio > hoy) ? " open" : ""}><summary>Cómo se calcula</summary>
+    ${ini ? `<p class="err" style="margin:0">La fecha del primer pago es el ${fcorta(new Date(p.inicio + "T12:00:00"))}, que todavía no llega. Por eso no cuenta ningún ${u} vencido. Si el cliente va atrasado, corrígela en Editar préstamo con la fecha del primer ${u} que debía pagar, o usa Último ${u} pagado.</p>` : ""}
+    <div class="tbl"><table>
+      <tr><td>${p.corte ? "Pagado completo hasta" : "Primer pago"}</td><td class="r">${p.corte ? mesLbl(p.corte, sem) : p.inicio ? fcorta(new Date(p.inicio + "T12:00:00")) : "Sin fecha"}</td></tr>
+      <tr><td>${us[0].toUpperCase() + us.slice(1)} que ya vencieron${ven.length ? ` (${mesLbl(ven[0].fecha, sem)} a ${mesLbl(ven.at(-1).fecha, sem)})` : ""}</td><td class="r">${ven.length}${iguales ? " × " + mxn2(ven[0].pago) : ""}</td></tr>
+      <tr><td><b>Debía pagar hasta hoy</b></td><td class="r"><b>${mxn2(tot)}</b></td></tr>
+      <tr><td>Pagos que cuentan (${cuenta.length})${p.corte ? " desde el corte" : ""}</td><td class="r">− ${mxn2(abon)}</td></tr>
+      <tr><td><b>Debe hoy</b></td><td class="r"><b>${mxn2(Math.max(0, tot - abon))}</b></td></tr>
+      ${adel > 0.5 ? `<tr><td>Pagado por adelantado</td><td class="r">${mxn2(adel)}</td></tr>` : ""}
+    </table></div>
+    ${antes.length ? `<p class="note">${antes.length} pago${antes.length > 1 ? "s" : ""} con fecha hasta el corte (${mxn2(antes.reduce((s, x) => s + x.monto, 0))}) no se suma${antes.length > 1 ? "n" : ""} otra vez, porque ese periodo ya está marcado como pagado completo.</p>` : ""}
+    ${p.tipo === "interes" ? `<p class="note">Interés del ${u}: ${p.pagoFijo ? "acordado en " + mxn2(p.pagoFijo) : p.tasa + "% de " + mxn2(a.capital) + " = " + mxn2(a.corrida.pago)}. Los abonos a capital no cuentan como interés.</p>` : ""}
+  </details>`;
+}
 function fichaHTML(p) {
   const a = avance(p), e = estadoCuenta(p), SI = p.tipo === "interes", sem = p.tipo === "semanal", venc = vencido(p, a), adm = isAdmin();
   const unidad = sem ? "Semana" : "Mes", clientes = USERS.filter((u) => u.rol === "cliente");
@@ -1619,6 +1642,7 @@ function fichaHTML(p) {
       ${SI ? `<div><span>Capital</span><b>${mxn2(a.capital)}</b></div><div><span>Interés al mes</span><b>${mxn2(a.corrida.pago)}</b></div>`
         : `<div><span>${p.tipo === "capfijo" ? "Capital pendiente" : "Resta"}</span><b>${mxn2(p.tipo === "capfijo" ? a.capital : a.restante)}</b></div><div><span>Avance</span><b>${a.cubiertos} de ${a.total}</b></div>`}
     </div>
+    ${a.liquidado ? "" : cuadreBox(p, a, e)}
     <div class="grid4">
       ${a.liquidado ? "" : `<button class="btn${fx === "pago" ? "" : " primary"}" type="button" data-fx="pago">${fx === "pago" ? "Cerrar" : "Registrar pago o abono"}</button>`}
       ${adm ? `<button class="btn" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button>` : ""}
@@ -1636,7 +1660,7 @@ function fichaHTML(p) {
         <button class="btn primary" type="submit">Guardar pago</button></form>` : ""}
     ${fx === "corte" ? `<form data-corte="${p.id}" class="edit" novalidate><h3>Último mes pagado completo</h3>
         <p class="muted">Para clientes atrasados o que ya traías de antes: marca hasta qué ${sem ? "semana" : "mes"} te pagó completo y desde ahí la app lleva la cuenta. No necesitas capturar los pagos viejos.</p>
-        <label>Fecha de pago de ese ${sem ? "semana" : "mes"}<select name="c"><option value="">Ninguno (cuenta desde el primer pago)</option>${(SI ? avance({ ...p, corte: "" }).corrida.filas.map((f) => iso(f.fecha)) : a.corrida.filas.map((f) => iso(fechaPago(p.inicio, f.n, p.tipo)))).filter((f) => f <= plusDays(40)).map((f) => `<option value="${f}"${f === p.corte ? " selected" : ""}>${fcorta(new Date(f + "T12:00:00"))}</option>`).join("")}</select></label>
+        ${SI ? `<label>Fecha en que debía pagar el último mes que pagó completo<input name="c" type="date" value="${p.corte || ""}" max="${today()}"></label><p class="note">Ejemplo: si debe de mayo en adelante y paga los días 4, pon el 4 de abril. Déjalo vacío para contar desde el primer pago.</p>` : `<label>Fecha de pago de ese ${sem ? "semana" : "mes"}<select name="c"><option value="">Ninguno (cuenta desde el primer pago)</option>${(SI ? avance({ ...p, corte: "" }).corrida.filas.map((f) => iso(f.fecha)) : a.corrida.filas.map((f) => iso(fechaPago(p.inicio, f.n, p.tipo)))).filter((f) => f <= plusDays(40)).map((f) => `<option value="${f}"${f === p.corte ? " selected" : ""}>${fcorta(new Date(f + "T12:00:00"))}</option>`).join("")}</select></label>`}
         ${SI ? `<label>Interés que paga cada mes<input name="i" inputmode="decimal" value="${(p.pagoFijo || Math.round(p.monto * p.tasa) / 100).toLocaleString("es-MX")}"></label><p class="note">Si cambias el interés, solo afecta a este préstamo. Calculado con la tasa: ${mxn2((p.monto * p.tasa) / 100)}.</p>` : ""}
         <p class="note">Si la fecha que buscas no aparece, cambia primero la fecha del primer pago en Editar préstamo.</p>
         <p class="err" hidden></p>
@@ -1670,6 +1694,8 @@ function fichaBind(p) {
   if (fc) fc.onsubmit = async (e) => {
     e.preventDefault();
     const d = { corte: fc.querySelector("[name=c]").value };
+    // En solo interés, si el primer pago registrado es posterior al corte, el calendario empieza en el corte para que cuenten los meses atrasados.
+    if (p.tipo === "interes" && d.corte && (!p.inicio || p.inicio > d.corte)) d.inicio = d.corte;
     const i = fc.querySelector("[name=i]"); if (i) { const v = num(i.value), calc = Math.round(p.monto * p.tasa) / 100; d.pagoFijo = v && Math.abs(v - calc) > 0.005 ? v : null; }
     try { await updateDoc(doc(db, "prestamos", p.id), d); FX = ""; vPrestamos(); }
     catch (er) { const x = fc.querySelector(".err"); x.hidden = false; x.textContent = "No se pudo guardar. Revisa tu conexión."; }

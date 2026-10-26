@@ -221,3 +221,4 @@ details.sec[open]>summary::after{content:"\2013"}
 .viewer.asc{grid-template-rows:auto 1fr}
 .viewer.asc .vbody{display:block;background:var(--bg);place-items:initial}
 .viewer.asc .wrap{padding-top:16px}
+.cuadre table{table-layout:fixed;width:100%} .cuadre td{border-bottom:1px solid var(--line);white-space:normal;vertical-align:top} .cuadre td.r{display:table-cell;width:40%;text-align:right;white-space:nowrap}

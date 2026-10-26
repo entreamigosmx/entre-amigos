@@ -57,6 +57,8 @@ export function fechaPago(inicioISO, n, tipo) {
   else d.setMonth(d.getMonth() + (n - 1));
   return d;
 }
+// Con "último mes pagado" (corte), los pagos con fecha hasta el corte ya están dentro de lo saldado: no se vuelven a contar.
+export const cuentaPago = (p, x) => !p.corte || (x.fecha || "") > p.corte;
 const isoD = (d) => (d ? d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") : "");
 export const fcorta = (d) => (d ? d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }) : "");
 
@@ -64,7 +66,7 @@ export const fcorta = (d) => (d ? d.toLocaleDateString("es-MX", { day: "numeric"
 export function avance(p) {
   if (p.tipo === "interes") return avanceInteres(p);
   const c = p.tipo === "semanal" ? corridaSemanal(p.monto, p.plazo, p.tasa, p.pagoFijo) : p.tipo === "capfijo" ? corridaCapFijo(p.monto, p.tasa, p.abono) : corridaMensual(p.monto, p.tasa, p.plazo, p.pagoFijo);
-  const pagado = (p.pagos || []).reduce((s, x) => s + (x.monto || 0), 0);
+  const pagado = (p.pagos || []).filter((x) => cuentaPago(p, x)).reduce((s, x) => s + (x.monto || 0), 0);
   // "Último mes pagado completo": las cuotas hasta esa fecha cuentan como pagadas sin capturar pagos viejos.
   const credito = p.corte ? r2(c.filas.filter((f) => isoD(fechaPago(p.inicio, f.n, p.tipo)) <= p.corte).reduce((s, f) => s + f.pago, 0)) : 0;
   const ef = pagado + credito;
@@ -86,7 +88,7 @@ export function avanceInteres(p, hoyISO) {
   const r = (p.tasa || 0) / 100;
   const pagos = p.pagos || [];
   const caps = pagos.filter((x) => x.tipo === "capital").sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
-  const intPagado = r2(pagos.filter((x) => x.tipo !== "capital").reduce((s, x) => s + (x.monto || 0), 0));
+  const intPagado = r2(pagos.filter((x) => x.tipo !== "capital" && cuentaPago(p, x)).reduce((s, x) => s + (x.monto || 0), 0));
   const capPagado = r2(caps.reduce((s, x) => s + (x.monto || 0), 0));
   const capital = Math.max(0, r2(p.monto - capPagado));
   const hoy = hoyISO || hoyLocal();
@@ -141,6 +143,7 @@ export function desglosePagos(p) {
   return pagos.map((x) => {
     const out = { ...x, capital: 0, interes: 0, debia: null, n: null };
     if (p.tipo === "interes" && x.tipo === "capital") { out.capital = x.monto; return out; }
+    if (!cuentaPago(p, x)) { out.antes = true; return out; }
     let m = x.monto || 0;
     for (let k = 0; k < filas.length && m > 0.005; k++) {
       if (rest[k] <= 0.005) continue;
@@ -170,6 +173,7 @@ export function estadoCuenta(p, hoyISO) {
   const out = pagos.map((x) => {
     const r = { ...x, aplica: [] };
     if (p.tipo === "interes" && x.tipo === "capital") return r;
+    if (!cuentaPago(p, x)) { r.antes = true; return r; }
     let m = x.monto || 0;
     for (const f of meses) {
       if (m <= 0.005) break;
