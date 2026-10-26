@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, deleteField, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta } from "./calc.js?v=10";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta, liquidacion } from "./calc.js?v=11";
 
 const CONF = {
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -788,11 +788,17 @@ function bindLoan() {
   const bus = $("p-buscar"); if (bus) bus.addEventListener("input", () => { FILT_P = bus.value; const q = FILT_P.trim().toLowerCase(); $("panel").querySelectorAll("[data-cli]").forEach((el) => (el.hidden = q && !el.dataset.cli.includes(q))); });
   if (FILT_P && bus) bus.dispatchEvent(new Event("input"));
   $("panel").querySelectorAll("[data-liq]").forEach((b) => (b.onclick = async () => {
-    const p = PRES.find((x) => x.id === b.dataset.liq); if (!p) return; const a = avance(p), m = Math.round((debeDe(p, a) || 0) * 100) / 100;
+    const p = PRES.find((x) => x.id === b.dataset.liq); if (!p) return;
+    const L = liquidacion(p), todo = b.dataset.modo === "todo", m = Math.round((todo ? L.completoTotal : L.total) * 100) / 100;
     if (!m) return;
     if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez: registra " + mxn2(m) + " y lo liquida"; return; }
     b.disabled = true;
-    await updateDoc(doc(db, "prestamos", p.id), { pagos: arrayUnion({ monto: m, fecha: today(), reg: new Date().toISOString(), regPor: ME.uid, ...(p.tipo === "interes" ? { tipo: "capital" } : {}), nota: "Liquidación" }) });
+    const base = { fecha: today(), reg: new Date().toISOString(), regPor: ME.uid, nota: "Liquidación" };
+    // Solo interés: se registra por separado el interés pendiente y el capital, para que cada cosa cuente donde va.
+    const nuevos = p.tipo === "interes"
+      ? [L.interes > 0.005 ? { ...base, monto: L.interes } : null, { ...base, reg: base.reg + "b", monto: L.capital, tipo: "capital" }].filter(Boolean)
+      : [{ ...base, monto: m, liq: true }];
+    await updateDoc(doc(db, "prestamos", p.id), { pagos: arrayUnion(...nuevos) });
   }));
   $("panel").querySelectorAll("[data-comp]").forEach((b) => (b.onclick = () => { const [pid, id] = b.dataset.comp.split(":"); const c = (COMPS[pid] || []).find((x) => x.id === id); verDoc(c, "Comprobante de pago"); }));
   $("panel").querySelectorAll("textarea[data-nota]").forEach((t) => t.addEventListener("change", () => updateDoc(doc(db, "prestamos", t.dataset.nota), { nota: t.value.trim() })));
@@ -1286,10 +1292,12 @@ function obligaciones() {
     const recK = p.recibe ? persKey({ uid: p.recibe }) : "";
     let filas;
     try { filas = desgloseFilas(p); } catch (e) { filas = []; }
+    // Si el préstamo se liquidó antes del plazo, no hay intereses de meses posteriores.
+    const lp = (p.pagos || []).filter((y) => y.liq || y.nota === "Liquidación"), liqF = lp.length ? lp.map((y) => y.fecha).sort().at(-1) : "";
     L.forEach((x) => {
       const k = persKey(x); if (k === recK) return; const dh = diasDe(k);
       filas.forEach((f) => {
-        if (!f.fecha || f.fecha > lim || (x.desde && f.fecha < x.desde)) return;
+        if (!f.fecha || f.fecha > lim || (x.desde && f.fecha < x.desde) || (p.corte && f.fecha <= p.corte) || (liqF && f.fecha > liqF)) return;
         const q = parteDe({ p, interes: f.interes, capital: 0 }, x); if (q.int < 0.005) return;
         O.push({ k, x, p, fecha: f.fecha, limite: masHabiles(f.fecha, dh), monto: q.int, concepto: (p.tipo === "interes" ? "Interés del mes " : "Interés, pago ") + f.n, futuro: f.fecha > hoy });
       });
@@ -1563,8 +1571,9 @@ function schedule(p, a, edit, sinPagos) {
 }
 
 /* ---------- Ficha de un préstamo (pantalla completa) ---------- */
+const mesC = (f, sem) => { const d = new Date(f + "T12:00:00"); return sem ? d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }) : d.toLocaleDateString("es-MX", { month: "short", year: "2-digit" }); };
 const mesLbl = (f, sem) => { const d = new Date(f + "T12:00:00"); return sem ? fcorta(d) : d.toLocaleDateString("es-MX", { month: "short", year: "numeric" }); };
-const ESTC = { pagado: ["Pagado", "ok"], parcial: ["Parcial", "warn"], vencido: ["Vencido", "warn"], proximo: ["Próximo", ""], corte: ["Pagado", "ok"] };
+const ESTC = { pagado: ["Pagado", "ok"], parcial: ["Parcial", "warn"], vencido: ["Vencido", "warn"], proximo: ["Pendiente", ""], corte: ["Pagado", "ok"], liq: ["Liquidado", "ok"] };
 const docKey = (p) => p.clienteUid || "p_" + p.id;
 // Estado de cuenta por mes: lo ve el administrador y, solo para consultar, el cliente.
 function estadoBox(p, admin) {
@@ -1573,17 +1582,19 @@ function estadoBox(p, admin) {
   const debe = e.debeHoy > 0.5;
   return `<details class="sec"${admin || debe ? " open" : ""}><summary>${admin ? "Estado de cuenta" : "Tu estado de cuenta"}</summary>
     ${p.corte ? `<p class="muted">${admin ? "Último mes completo pagado" : "Pagado completo hasta"}: <b>${mesLbl(p.corte, sem)}</b>${admin ? ` (pago del ${fcorta(new Date(p.corte + "T12:00:00"))}). Lo anterior cuenta como pagado sin capturar pagos viejos. <button class="link" type="button" data-fx="corte">Cambiar</button>` : ""}</p>` : ""}
-    <div class="tbl"><table><tr><th>${u}</th><th>Debía</th><th>Abonó</th><th>Falta</th><th></th></tr>
-    ${p.corte ? `<tr class="done"><td colspan="4">${mesLbl(p.corte, sem)} y antes</td><td><span class="pill ok">Pagado</span></td></tr>` : ""}
-    ${e.meses.map((f) => { const st = ESTC[f.estado]; return `<tr${f.estado === "pagado" ? ' class="done"' : ""}><td>${mesLbl(f.fecha, sem)}</td><td>${mxn(f.pago)}</td><td>${mxn(f.abono)}</td><td>${mxn(f.falta)}</td><td><span class="pill ${st[1]}">${st[0]}</span></td></tr>`; }).join("")}
+    <div class="tbl"><table class="edo"><tr><th>${u}</th><th>Debía</th><th>Abonó</th><th>Falta</th><th></th></tr>
+    ${(() => { const C = e.todos.filter((f) => f.corte), ver = C.slice(-12), viejos = C.length - ver.length;
+      return (viejos ? `<tr class="done"><td colspan="4">${viejos} ${sem ? "semanas" : "meses"} hasta ${mesLbl(C[viejos - 1].fecha, sem)}</td><td><span class="pill ok">Pagado</span></td></tr>` : "")
+        + ver.map((f) => `<tr class="done"><td>${mesC(f.fecha, sem)}</td><td>${mxn(f.pago)}</td><td colspan="2">Saldado</td><td><span class="pill ok">Pagado</span></td></tr>`).join(""); })()}
+    ${e.meses.map((f) => { const st = ESTC[f.estado]; return `<tr${f.estado === "pagado" ? ' class="done"' : ""}><td>${mesC(f.fecha, sem)}</td><td>${mxn(f.pago)}</td><td>${mxn(f.abono)}</td><td>${mxn(f.falta)}</td><td><span class="pill ${st[1]}">${st[0]}</span></td></tr>`; }).join("")}
     </table></div>
-    <p class="note">Cada abono se aplica ${sem ? "a la semana" : "al mes"} más ${sem ? "antigua" : "antiguo"} que tenga pendiente${p.tipo === "interes" ? ". Los abonos a capital bajan el interés de los meses siguientes" : ""}.</p>
+    <p class="note">Pagado: cubierto completo. Parcial: abonó una parte. Vencido: ya pasó su fecha y no lo ha pagado. Pendiente: todavía no vence. Cada abono se aplica ${sem ? "a la semana" : "al mes"} más ${sem ? "antigua" : "antiguo"} que tenga pendiente${p.tipo === "interes" ? ". Los abonos a capital bajan el interés de los meses siguientes" : ""}.</p>
   </details>`;
 }
 // Pagos y abonos recibidos, con la cuota a la que se aplicó cada uno.
 function pagosBox(p, admin) {
   const e = estadoCuenta(p), sem = p.tipo === "semanal", n2f = Object.fromEntries(e.todos.map((f) => [f.n, f.fecha]));
-  const aq = (x) => (p.tipo === "interes" && x.tipo === "capital" ? "Capital" : x.antes ? "Antes del corte (ya saldado)" : x.aplica.length ? x.aplica.map((n) => mesLbl(n2f[n], sem)).join(", ") : x.sobra ? "Adelanto" : "");
+  const aq = (x) => (p.tipo === "interes" && x.tipo === "capital" ? "Capital" : x.antes ? "Antes del corte (ya saldado)" : x.liq ? "Liquidación" : x.aplica.length ? x.aplica.map((n) => mesLbl(n2f[n], sem)).join(", ") : x.sobra ? "Adelanto" : "");
   const pend = admin ? (COMPS[p.id] || []).filter((c) => c.estado === "por revisar") : [];
   return `${pend.length ? `<div class="sec avis"><h3>El cliente avisa que pagó</h3>${pend.map((c) => `<div class="item"><div class="item-top"><b>${mxn2(c.monto)}</b><span>${fcorta(new Date(c.fecha + "T12:00:00"))}</span></div>
       ${c.nota ? `<div class="item-mid">${esc(c.nota)}</div>` : ""}
@@ -1679,9 +1690,19 @@ function fichaHTML(p) {
       <div id="pdocs"></div>${compBox(p)}</details>` : ""}
     ${adm ? `<details class="sec"${p.nota ? " open" : ""}><summary>Notas internas</summary><textarea data-nota="${p.id}" rows="2" placeholder="Ej. Paga siempre los viernes">${esc(p.nota || "")}</textarea></details>` : ""}
     ${adm ? `<div class="sec">${repartoBox(p)}</div>` : ""}
-    ${adm ? `<details class="sec"><summary>Liquidar o borrar</summary>
-      <p class="muted">Liquidar registra lo que falta y lo pasa a Liquidados. Borrar lo elimina con todos sus pagos; pide que toques dos veces.</p>
-      <div class="actions">${!a.liquidado ? `<button class="btn sm" type="button" data-liq="${p.id}">Liquidar préstamo</button>` : ""}<button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button></div></details>` : ""}
+    ${adm ? `<details class="sec"><summary>Liquidar o borrar</summary>${(() => {
+      if (a.liquidado) return "";
+      const L = liquidacion(p), dif = L.completoTotal && L.completoTotal - L.total > 0.5;
+      return `<div class="tbl cuadre"><table>
+        <tr><td>Capital pendiente</td><td class="r">${mxn2(L.capital)}</td></tr>
+        ${L.interes > 0.005 ? `<tr><td>Interés vencido sin pagar</td><td class="r">${mxn2(L.interes)}</td></tr>` : ""}
+        <tr><td><b>Para liquidar hoy</b></td><td class="r"><b>${mxn2(L.total)}</b></td></tr>
+        ${dif ? `<tr><td>Si cobras todos los intereses del plazo</td><td class="r">${mxn2(L.completoTotal)}</td></tr>` : ""}</table></div>
+      <p class="note">${p.tipo === "semanal" ? "En semanal se cobra lo que resta del pago acordado." : "Para liquidar hoy no incluye intereses de meses que todavía no vencen."}</p>
+      <div class="actions"><button class="btn sm" type="button" data-liq="${p.id}">Liquidar con ${mxn2(L.total)}</button>${dif ? `<button class="btn sm" type="button" data-liq="${p.id}" data-modo="todo">Liquidar con ${mxn2(L.completoTotal)}</button>` : ""}</div>`;
+    })()}
+      <p class="muted">Borrar elimina el préstamo con todos sus pagos; pide que toques dos veces.</p>
+      <div class="actions"><button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button></div></details>` : ""}
   </div>`;
 }
 const MIGR = {};
@@ -2296,7 +2317,7 @@ function cuotas() {
     a.corrida.filas.forEach((f) => {
       acum += f.pago;
       const fecha = iso(fechaPago(p.inicio, f.n, p.tipo));
-      const ef = a.pagado + (a.credito || 0), pagada = ef + 0.5 >= acum;
+      const ef = a.pagado + (a.credito || 0), pagada = a.liquidado || ef + 0.5 >= acum;
       const debe = pagada ? 0 : Math.round(Math.min(f.pago, acum - ef) * 100) / 100;
       out.push({ p, n: f.n, total: a.total, monto: f.pago, debe, fecha, pagada, atrasada: !pagada && fecha < hoy, noPago: p.noPago?.[f.n] || "", restante: a.restante, pagado: a.pagado, capital: a.capital });
     });

@@ -17,7 +17,8 @@ export function corridaMensual(monto, tasaMensualPct, meses, pagoFijo) {
   const filas = [];
   for (let i = 1; i <= meses; i++) {
     const int = r2(saldo * r);
-    const p = i === meses ? r2(saldo + int) : pago;
+    // Nunca se cobra más de lo que se debe (si el pago acordado salda antes, las cuotas siguientes quedan en 0).
+    const p = i === meses ? r2(saldo + int) : Math.min(pago, r2(saldo + int));
     const cap = r2(p - int);
     saldo = Math.max(0, r2(saldo - cap));
     intereses += int;
@@ -53,9 +54,11 @@ export function factorGarantia(meses) { return meses > 12 ? 3 : 2; }
 export function fechaPago(inicioISO, n, tipo) {
   if (!inicioISO) return null;
   const d = new Date(inicioISO + "T12:00:00");
-  if (tipo === "semanal") d.setDate(d.getDate() + (n - 1) * 7);
-  else d.setMonth(d.getMonth() + (n - 1));
-  return d;
+  if (tipo === "semanal") { d.setDate(d.getDate() + (n - 1) * 7); return d; }
+  // Mismo día cada mes; si el mes es más corto (p. ej. día 31 en febrero), el último día de ese mes.
+  const dia = d.getDate(), m = d.getMonth() + (n - 1), y = d.getFullYear() + Math.floor(m / 12), mm = ((m % 12) + 12) % 12;
+  const ult = new Date(y, mm + 1, 0).getDate();
+  return new Date(y, mm, Math.min(dia, ult), 12);
 }
 // Con "último mes pagado" (corte), los pagos con fecha hasta el corte ya están dentro de lo saldado: no se vuelven a contar.
 export const cuentaPago = (p, x) => !p.corte || (x.fecha || "") > p.corte;
@@ -72,8 +75,10 @@ export function avance(p) {
   const ef = pagado + credito;
   let cubiertos = 0, acum = 0;
   for (const f of c.filas) { if (acum + f.pago <= ef + 0.5) { acum += f.pago; cubiertos++; } else break; }
-  const restante = Math.max(0, r2(c.total - ef));
-  const sig = cubiertos < c.filas.length ? c.filas[cubiertos] : null;
+  // Un pago marcado como liquidación cierra el préstamo aunque no se hayan cobrado los intereses futuros.
+  const liq = (p.pagos || []).some((x) => x.liq);
+  const restante = liq ? 0 : Math.max(0, r2(c.total - ef));
+  const sig = !liq && cubiertos < c.filas.length ? c.filas[cubiertos] : null;
   return {
     corrida: c, pagado: r2(pagado), credito, restante, cubiertos, total: c.filas.length,
     siguiente: sig ? { n: sig.n, monto: r2(acum + sig.pago - ef), fecha: fechaPago(p.inicio, sig.n, p.tipo) } : null,
@@ -95,7 +100,7 @@ export function avanceInteres(p, hoyISO) {
   const lim = new Date(hoy + "T12:00:00"); lim.setDate(lim.getDate() + 35);
   const filas = [];
   for (let n = 1; n <= 600 && p.inicio; n++) {
-    const f = fechaPago(p.inicio, n, "mensual"); const fi = f.toISOString().slice(0, 10);
+    const f = fechaPago(p.inicio, n, "mensual"); const fi = isoD(f);
     const capN = Math.max(0, r2(p.monto - caps.filter((x) => x.fecha < fi).reduce((s, x) => s + x.monto, 0)));
     if (capN <= 0.5) break;
     if (f > lim && filas.length) break;
@@ -112,7 +117,7 @@ export function avanceInteres(p, hoyISO) {
     tipo: "interes", corrida: { pago: r2(p.pagoFijo ? (p.pagoFijo * capital) / p.monto : capital * r), filas, total: null }, pagado: intPagado, credito, capPagado, capital,
     interesAdeudado: Math.max(0, r2(vencido - ef)), restante: capital, cubiertos, total: null,
     siguiente: capital > 0.5 && sig ? { n: sig.n, monto: r2(acum + sig.pago - ef), fecha: sig.fecha } : null,
-    liquidado: capital <= 0.5,
+    liquidado: capital <= 0.5 && vencido - ef <= 0.5,
   };
 }
 
@@ -121,7 +126,7 @@ export function vencido(p, a, hoyISO) {
   const hoy = hoyISO || hoyLocal();
   if (a.liquidado || !p.inicio) return 0;
   if (p.tipo === "interes") return a.interesAdeudado || 0;
-  const debido = a.corrida.filas.filter((f) => isoD(fechaPago(p.inicio, f.n, p.tipo)) < hoy).reduce((s, f) => s + f.pago, 0);
+  const debido = a.corrida.filas.filter((f) => isoD(fechaPago(p.inicio, f.n, p.tipo)) <= hoy).reduce((s, f) => s + f.pago, 0);
   return Math.max(0, r2(debido - a.pagado - (a.credito || 0)));
 }
 
@@ -129,7 +134,7 @@ export function vencido(p, a, hoyISO) {
 // cuánto fue capital y cuánto interés. Sirve para el historial y el reparto.
 export function desglosePagos(p) {
   const pagos = (p.pagos || []).map((x, i) => ({ ...x, i })).sort((a, b) => (a.fecha === b.fecha ? ((a.reg || "") < (b.reg || "") ? -1 : 1) : a.fecha < b.fecha ? -1 : 1));
-  const iso = (d) => (d ? d.toISOString().slice(0, 10) : null);
+  const iso = (d) => (d ? isoD(d) : null);
   let filas;
   if (p.tipo === "interes") {
     const a = avanceInteres(p);
@@ -140,12 +145,15 @@ export function desglosePagos(p) {
     filas = c.filas.map((f) => ({ n: f.n, pago: f.pago, interes: f.interes ?? r2(f.pago * fr), fecha: iso(fechaPago(p.inicio, f.n, p.tipo)) }));
   }
   const rest = filas.map((f) => (p.corte && f.fecha && f.fecha <= p.corte ? 0 : f.pago));
+  // Si se liquidó, ninguna cuota posterior a la liquidación se cobró: lo pagado de más antes de esa fecha es capital.
+  const liqF = (p.pagos || []).filter((x) => x.liq).map((x) => x.fecha).sort().at(-1) || "";
   return pagos.map((x) => {
     const out = { ...x, capital: 0, interes: 0, debia: null, n: null };
     if (p.tipo === "interes" && x.tipo === "capital") { out.capital = x.monto; return out; }
     if (!cuentaPago(p, x)) { out.antes = true; return out; }
     let m = x.monto || 0;
     for (let k = 0; k < filas.length && m > 0.005; k++) {
+      if (liqF && filas[k].fecha > liqF) break; // al liquidar, lo que sobra de las cuotas vencidas es capital
       if (rest[k] <= 0.005) continue;
       if (out.n === null) { out.n = filas[k].n; out.debia = filas[k].fecha; }
       const take = Math.min(m, rest[k]);
@@ -169,6 +177,7 @@ export function estadoCuenta(p, hoyISO) {
     filas = c.filas.map((f) => ({ n: f.n, pago: f.pago, fecha: isoD(fechaPago(p.inicio, f.n, p.tipo)) }));
   }
   const meses = filas.map((f) => ({ ...f, corte: !!(p.corte && f.fecha <= p.corte), abono: 0 }));
+  const liqF = (p.pagos || []).filter((x) => x.liq).map((x) => x.fecha).sort().at(-1) || "";
   const pagos = (p.pagos || []).map((x, i) => ({ ...x, i })).sort((a, b) => (a.fecha === b.fecha ? ((a.reg || "") < (b.reg || "") ? -1 : 1) : a.fecha < b.fecha ? -1 : 1));
   const out = pagos.map((x) => {
     const r = { ...x, aplica: [] };
@@ -177,6 +186,7 @@ export function estadoCuenta(p, hoyISO) {
     let m = x.monto || 0;
     for (const f of meses) {
       if (m <= 0.005) break;
+      if (liqF && f.fecha > liqF) break;
       if (f.corte) continue;
       const falta = r2(f.pago - f.abono); if (falta <= 0.005) continue;
       const t = Math.min(m, falta); f.abono = r2(f.abono + t); m -= t; r.aplica.push(f.n);
@@ -185,14 +195,34 @@ export function estadoCuenta(p, hoyISO) {
     return r;
   });
   meses.forEach((f) => {
+    if (liqF && f.fecha > liqF && f.abono < 0.005) { f.falta = 0; f.estado = "liq"; return; }
     f.falta = f.corte ? 0 : Math.max(0, r2(f.pago - f.abono));
     f.estado = f.corte ? "corte" : f.falta <= 0.005 ? "pagado" : f.fecha <= hoy ? (f.abono > 0 ? "parcial" : "vencido") : f.abono > 0 ? "parcial" : "proximo";
   });
   // Se muestran las cuotas desde el corte hasta la siguiente que vence (más las ya pagadas por adelantado).
-  const vis = meses.filter((f) => !f.corte);
+  const vis = meses.filter((f) => !f.corte && f.estado !== "liq");
   const idxNext = vis.findIndex((f) => f.fecha > hoy);
   const hasta = idxNext < 0 ? vis.length : Math.max(idxNext + 1, vis.filter((f) => f.abono > 0).length);
   const ultCorte = meses.filter((f) => f.corte).at(-1) || null;
   const pagadoHasta = [...meses].reverse().find((f, k, arr) => (f.corte || f.estado === "pagado") && meses.slice(0, meses.indexOf(f) + 1).every((g) => g.corte || g.estado === "pagado")) || null;
   return { meses: vis.slice(0, hasta), todos: meses, pagos: out.reverse(), ultCorte, pagadoHasta, debeHoy: r2(vis.filter((f) => f.fecha <= hoy).reduce((s, f) => s + f.falta, 0)) };
+}
+
+// Cuánto se necesita para liquidar hoy: lo vencido sin pagar (con su interés) + el capital que aún no vence.
+// No incluye intereses de cuotas futuras. En semanal se cobra lo que resta (pago fijo acordado).
+export function liquidacion(p, hoyISO) {
+  const hoy = hoyISO || hoyLocal(), a = avance(p);
+  if (a.liquidado) return { total: 0, capital: 0, interes: 0 };
+  if (p.tipo === "interes") { const int = Math.max(0, a.interesAdeudado || 0); return { total: r2(a.capital + int), capital: a.capital, interes: r2(int) }; }
+  if (p.tipo === "semanal") return { total: a.restante, capital: a.restante, interes: 0, completo: true };
+  const c = a.corrida, ef = a.pagado + (a.credito || 0);
+  const due = c.filas.filter((f) => isoD(fechaPago(p.inicio, f.n, p.tipo)) <= hoy);
+  const sumDue = due.reduce((s, f) => s + f.pago, 0), intDue = due.reduce((s, f) => s + (f.interes || 0), 0);
+  const saldo = due.length ? due.at(-1).saldo : p.monto;
+  const pendDue = Math.max(0, sumDue - ef), adelanto = Math.max(0, ef - sumDue);
+  // De lo vencido sin pagar, la parte de interés es la de las cuotas más recientes (los pagos cubren primero las antiguas).
+  let porCubrir = pendDue, intPend = 0;
+  for (let k = due.length - 1; k >= 0 && porCubrir > 0.005; k--) { const t = Math.min(porCubrir, due[k].pago); intPend += t * ((due[k].interes || 0) / due[k].pago); porCubrir -= t; }
+  const capital = Math.max(0, r2(saldo - adelanto)), interes = r2(intPend);
+  return { total: r2(capital + pendDue), capital: r2(capital + pendDue - interes), interes, completoTotal: a.restante };
 }

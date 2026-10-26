@@ -222,3 +222,4 @@ details.sec[open]>summary::after{content:"\2013"}
 .viewer.asc .vbody{display:block;background:var(--bg);place-items:initial}
 .viewer.asc .wrap{padding-top:16px}
 .cuadre table{table-layout:fixed;width:100%} .cuadre td{border-bottom:1px solid var(--line);white-space:normal;vertical-align:top} .cuadre td.r{display:table-cell;width:40%;text-align:right;white-space:nowrap}
+.sec table.edo{table-layout:fixed;width:100%} .edo th,.edo td{padding:7px 2px;white-space:nowrap} .edo td:last-child,.edo th:last-child{width:76px;text-align:right} .edo .pill{font-size:9.5px;padding:2px 5px;letter-spacing:.02em}
