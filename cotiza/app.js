@@ -1303,6 +1303,9 @@ function vInv() {
 /* ---------- Inversionistas y cuentas (admin) ---------- */
 let CU_MONTH = null, CU_OPEN = "", ENTEDIT = "", INVS = [], INV_OPEN = "", INV_FORM = "", INVCFG = {};
 const cfgKey = (k) => k.replace(/[\/]/g, "_");
+// Apodo que el administrador le pone a cada inversionista para ubicarlo (solo lo ve él; a ellos les llega su nombre real).
+const apodoDe = (k) => (INVCFG[cfgKey(k)]?.apodo || "").trim();
+const verNom = (k, nombre) => apodoDe(k) || nombre || "";
 const diasDe = (k) => { const d = INVCFG[cfgKey(k)]?.dias; return d === 0 || d ? Number(d) : 5; };
 const uidDe = (e) => e.x.uid || INVCFG[cfgKey(e.k)]?.uid || "";
 const METODO = { transferencia: "Transferencia", efectivo: "Efectivo", otro: "Otro" };
@@ -1409,7 +1412,7 @@ function estadoPersonas() {
     e.pend = e.obl.filter((o) => o.falta > 0.5);
     e.capPuesto = r2(e.aportes - e.retiros);
     e.capPrestado = r2(e.prestamos.reduce((s, q) => s + (q.x.aporte ? Math.min(q.x.aporte, debeDe(q.p, q.a) || q.x.aporte) : debeDe(q.p, q.a) || q.p.monto) , 0));
-    e.nombre = persName(e.x);
+    e.nombre = persName(e.x); e.ver = verNom(e.k, e.nombre);
     e.inv = e.prestamos.length || e.aportes || USERS.find((u) => u.uid === e.x.uid)?.inversionista;
   });
   return P;
@@ -1421,6 +1424,7 @@ function personasInv() {
   const M = new Map();
   USERS.filter((u) => u.rol !== "admin" && u.rol !== "bloqueado" && (u.inversionista || u.rol === "equipo")).forEach((u) => M.set(u.uid, u.nombre || u.email));
   INVS.forEach((m) => { if (m.tipo === "retiro" || INV_OFF.includes(m.estado || "")) return; const k = persKey(m); if (!M.has(k)) M.set(k, m.nombre); });
+  [...M.keys()].forEach((k) => { if (apodoDe(k)) M.set(k, apodoDe(k) + " (" + M.get(k) + ")"); });
   return [...M.entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 }
 function prestamoInvBox(p) {
@@ -1434,7 +1438,7 @@ function prestamoInvBox(p) {
       <tr><td>El cliente te paga al mes</td><td class="r">${mxn2(int)}</td></tr>
       <tr><td>Pagas a inversionistas por este préstamo</td><td class="r">− ${mxn2(r2(paga))}</td></tr>
       <tr><td><b>Te queda al mes</b></td><td class="r"><b>${sgn2(r2(int - paga))}</b></td></tr></table></div>` : `<p class="muted">Este préstamo es con tu dinero. Si lo fondeó un inversionista, agrégalo aquí.</p>`}
-    <div class="list">${C.map((m) => { const d = (MG[m.id]?.det || []).find((z) => z.p.id === p.id); return `<div class="item"><div class="item-top"><b>${esc(m.nombre)} · ${m.tasa}% al mes</b><span>${mxn2(mensualDe(m))} cada día ${diaDe(m)}</span></div>
+    <div class="list">${C.map((m) => { const d = (MG[m.id]?.det || []).find((z) => z.p.id === p.id); return `<div class="item"><div class="item-top"><b>${esc(verNom(persKey(m), m.nombre))} · ${m.tasa}% al mes</b><span>${mxn2(mensualDe(m))} cada día ${diaDe(m)}</span></div>
       <div class="item-mid">Su inversión: ${mxn(vigenteDe(m))} del ${fdate(m.fecha)}${d ? ` · en este préstamo ${mxn(d.monto)}` : ""}${(m.pids || []).length > 1 ? ` · también en ${m.pids.length - 1} préstamo${m.pids.length > 2 ? "s" : ""} más` : ""}</div>
       <div class="actions"><button class="btn sm" type="button" data-pinv="ed:${m.id}">${PINV === "ed:" + m.id ? "Cerrar" : "Cambiar monto o %"}</button><button class="btn sm" type="button" data-pinv="ret:${m.id}">${PINV === "ret:" + m.id ? "Cerrar" : "Le regresé capital"}</button><button class="link del" type="button" data-pinvq="${m.id}">Quitar de este préstamo</button></div>
       ${PINV === "ed:" + m.id ? `<form class="edit" data-pinvf="ed:${m.id}" novalidate><div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${Number(m.monto).toLocaleString("es-MX")}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" value="${m.tasa}"></label></div>
@@ -1511,7 +1515,7 @@ function drawInvAlert0() {
   const sol = SOLINV.filter((x) => x.estado === "pendiente").length;
   if (!L.length && !sol) { box.innerHTML = ""; return; }
   const atr = L.filter((z) => z.o.fecha < hoy), hoyL = L.filter((z) => z.o.fecha === hoy);
-  const fila = (z) => `<li><b>${esc(z.e.nombre)}</b> ${mxn2(z.o.falta)}${z.o.fecha < hoy ? ` · tocaba el ${fdate(z.o.fecha)}${z.o.vencida ? " (fuera de plazo)" : ""}` : ""}</li>`;
+  const fila = (z) => `<li><b>${esc(z.e.ver || z.e.nombre)}</b> ${mxn2(z.o.falta)}${z.o.fecha < hoy ? ` · tocaba el ${fdate(z.o.fecha)}${z.o.vencida ? " (fuera de plazo)" : ""}` : ""}</li>`;
   box.innerHTML = `<div class="card notice"><h3>Pagos a inversionistas</h3>
     ${hoyL.length ? `<p class="lbl">Hoy</p><ul class="ul">${hoyL.map(fila).join("")}</ul>` : ""}
     ${atr.length ? `<p class="lbl">Pendientes de días anteriores</p><ul class="ul">${atr.map(fila).join("")}</ul>` : ""}
@@ -1528,7 +1532,7 @@ function contratoForm(m, dataKey, preset) {
   const per = USERS.filter((u) => u.rol !== "admin" && u.rol !== "bloqueado"), ids = new Set(m?.pids || []);
   return `<form class="edit" data-ivf="${dataKey}" novalidate>
     <h3>${m && m.id ? (dataKey.startsWith("aut:") ? "Autorizar inversión de " + esc(m.nombre) : "Editar inversión de " + esc(m.nombre)) : "Nueva inversión"}</h3>
-    ${m && m.id ? "" : `<div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${per.map((u) => `<option value="${u.uid}"${preset?.uid === u.uid ? " selected" : ""}>${esc(u.nombre)}</option>`).join("")}</select></label><label data-nomw${preset?.uid ? " hidden" : ""}>Nombre de la persona<input name="nombre" placeholder="Ej. Mamá" value="${esc(preset && !preset.uid ? preset.nombre : "")}"></label></div>`}
+    ${m && m.id ? "" : `<div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${per.map((u) => `<option value="${u.uid}"${preset?.uid === u.uid ? " selected" : ""}>${esc(apodoDe(u.uid) ? apodoDe(u.uid) + " (" + u.nombre + ")" : u.nombre)}</option>`).join("")}</select></label><label data-nomw${preset?.uid ? " hidden" : ""}>Nombre de la persona<input name="nombre" placeholder="Ej. Mamá" value="${esc(preset && !preset.uid ? preset.nombre : "")}"></label></div>`}
     <div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${m?.monto ? Number(m.monto).toLocaleString("es-MX") : ""}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" value="${m?.tasa ?? ""}" placeholder="Ej. 2.5"></label></div>
     <label>Fecha en que te prestó (le pagas ese día cada mes, desde el mes siguiente)<input name="f" type="date" value="${m?.fecha || today()}"></label>
     <p class="lbl">¿En qué préstamos lo colocaste? (solo tú lo ves)</p>
@@ -1588,7 +1592,7 @@ function inversionesCard(solo) {
     ${IVF === "nuevo" ? contratoForm(null, "nuevo", preset) : ""}
     <div class="list">${C.length ? C.map((m) => {
       const g = M[m.id], px = proxInv(m), cambio = m.gcalMonto && Math.abs(m.gcalMonto - mensualDe(m)) > 0.5;
-      return `<div class="item"><div class="item-top"><b>${esc(m.nombre)} · ${mxn(vigenteDe(m))} al ${m.tasa}%</b><span>${mxn2(mensualDe(m))} cada día ${diaDe(m)}</span></div>
+      return `<div class="item"><div class="item-top"><b>${esc(verNom(persKey(m), m.nombre))} · ${mxn(vigenteDe(m))} al ${m.tasa}%</b><span>${mxn2(mensualDe(m))} cada día ${diaDe(m)}</span></div>
         <div class="item-mid">Te prestó el ${fdate(m.fecha)}${vigenteDe(m) < m.monto ? ` (${mxn(m.monto)}; le has regresado ${mxn(m.monto - vigenteDe(m))})` : ""}${px ? ` · Próximo pago ${mxn2(px.monto)} el ${fdate(px.fecha)}` : ""}</div>
         <div class="item-mid">${g.det.length ? `Colocado en ${g.det.map((d) => `${esc(d.p.cliente)} (${d.tasa}%, te paga ${mxn2(d.cobras)})`).join(", ")} · te quedan <b>${sgn2(g.queda)}</b> al mes` : ""}${g.sinColocar > 0.5 ? `${g.det.length ? " · " : ""}<span class="warn-t">Sin colocar ${mxn(g.sinColocar)}</span>` : ""}</div>
         ${cambio ? `<p class="note" style="color:var(--warn)">El pago mensual cambió a ${mxn2(mensualDe(m))}. Vuelve a anotarlo en Google Calendar y borra el evento anterior.</p>` : ""}
@@ -1673,7 +1677,7 @@ let INV_SEL = "";
 function selectorInv(PL) {
   const L = PL.filter((e) => e.inv || CONTRATOS().some((m) => persKey(m) === e.k));
   if (!L.length) return "";
-  return `<div class="chips" role="tablist"><button type="button" class="chip${INV_SEL ? "" : " on"}" data-isel="">Todos</button>${L.map((e) => `<button type="button" class="chip${INV_SEL === e.k ? " on" : ""}" data-isel="${esc(e.k)}">${esc(nom1(e.nombre))}</button>`).join("")}</div>`;
+  return `<div class="chips" role="tablist"><button type="button" class="chip${INV_SEL ? "" : " on"}" data-isel="">Todos</button>${L.map((e) => `<button type="button" class="chip${INV_SEL === e.k ? " on" : ""}" data-isel="${esc(e.k)}">${esc(apodoDe(e.k) || nom1(e.nombre))}</button>`).join("")}</div>`;
 }
 function personaInvView(e, formPago) {
   const hoy = today(), r2 = (n) => Math.round(n * 100) / 100, C = CONTRATOS().filter((m) => persKey(m) === e.k);
@@ -1682,14 +1686,14 @@ function personaInvView(e, formPago) {
   const filas = [...e.obl, ...e.futuro.slice(0, 3)].sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
   const st = (o) => o.futuro ? ["Próximo", ""] : (o.falta ?? o.monto) <= 0.5 ? ["Pagado", "ok"] : o.vencida ? ["Atrasado", "late"] : (o.cubierto || 0) > 0.005 ? ["Parcial", "warn"] : ["Por pagar", "warn"];
   return `<div class="card">
-    <div class="head"><h2>${esc(e.nombre)}</h2><span class="muted">${u ? "Tiene cuenta en la app" : "Sin cuenta en la app"}</span></div>
+    <div class="head"><h2>${esc(e.ver)}</h2><span class="muted">${apodoDe(e.k) ? esc(e.nombre) + " · " : ""}${u ? "Tiene cuenta en la app" : "Sin cuenta en la app"}</span></div>
     <div class="facts">
       <div><span>Te ha prestado</span><b>${mxn(e.aportes)}</b></div><div><span>Le has regresado</span><b>${mxn(e.retiros)}</b></div>
       <div><span>Tienes de su dinero</span><b>${mxn(e.capPuesto)}</b></div><div><span>Le pagas al mes</span><b>${mxn2(mensual)}</b></div>
       <div><span>Le has pagado</span><b>${mxn2(e.pagado)}</b></div><div><span>Le debes hoy</span><b class="${debe > 0.5 ? "warn-t" : "lime"}">${mxn2(debe)}</b></div>
     </div>
     ${prox ? `<p class="muted" style="margin:0">Próximo pago: <b>${mxn2(prox.monto)}</b> el ${fdate(prox.fecha)}${prox.limite !== prox.fecha ? " (a más tardar el " + fdate(prox.limite) + ")" : ""}.</p>` : ""}
-    <div class="actions"><button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Ya le pagué</button>${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-icfg="${esc(e.k)}">Su app y plazos</button></div>
+    <div class="actions"><button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Ya le pagué</button>${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-icfg="${esc(e.k)}">${apodoDe(e.k) ? "Apodo, app y plazos" : "Ponerle apodo, app y plazos"}</button></div>
     ${INV_FORM === "pag:" + e.k ? formPago(e, Math.min(debe, Math.max(0, e.neto)) || (prox ? prox.monto : 0), "a") : ""}
     ${INV_FORM === "rec:" + e.k ? formPago(e, -e.neto, "de") : ""}
     ${INV_FORM === "cfg:" + e.k ? cfgForm(e) : ""}
@@ -1737,7 +1741,7 @@ function vCuentas() {
   </div>
   ${inversionesCard()}
   <div class="card"><h2>Pagos por hacer</h2>
-    <div class="list">${porPagar.length ? porPagar.slice(0, 30).map(({ e, o }) => `<div class="item"><div class="item-top"><b>${esc(e.nombre)} · ${mxn2(o.falta)}</b><span>${o.vencida ? `<span class="pill warn">Fuera de plazo</span>` : `Pagar a más tardar el ${fcorta(new Date(o.limite + "T12:00:00"))}`}</span></div>
+    <div class="list">${porPagar.length ? porPagar.slice(0, 30).map(({ e, o }) => `<div class="item"><div class="item-top"><b>${esc(e.ver || e.nombre)} · ${mxn2(o.falta)}</b><span>${o.vencida ? `<span class="pill warn">Fuera de plazo</span>` : `Pagar a más tardar el ${fcorta(new Date(o.limite + "T12:00:00"))}`}</span></div>
       <div class="item-mid">${o.p ? esc(o.p.cliente) + " · " + esc(o.concepto) + " · el cliente paga el " : esc(o.concepto) + " · toca el "}${fcorta(new Date(o.fecha + "T12:00:00"))}${o.cubierto > 0.005 ? " · ya cubierto " + mxn2(o.cubierto) : ""}</div>
       <div class="actions"><button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Ya le pagué</button></div></div>`).join("") : `<p class="muted">Estás al corriente con tus inversionistas.</p>`}</div></div>
   <div class="card"><div class="head"><h2>Por persona</h2><button class="btn sm" type="button" id="inv-new">${INV_FORM === "nuevo" ? "Cancelar" : "Registrar aportación de alguien nuevo"}</button></div>
@@ -1779,7 +1783,7 @@ function vCuentas() {
   P.querySelectorAll("[data-icfg]").forEach((b) => (b.onclick = () => { INV_FORM = INV_FORM === "cfg:" + b.dataset.icfg ? "" : "cfg:" + b.dataset.icfg; vCuentas(); }));
   P.querySelectorAll("form[data-cfgf]").forEach((f) => (f.onsubmit = async (ev) => {
     ev.preventDefault(); const k = f.dataset.cfgf, g = (n) => f.querySelector(`[name=${n}]`);
-    const d = { dias: Math.max(0, parseInt(g("dias").value, 10) || 0), ver: g("ver").value, uid: g("uid") ? g("uid").value : (EP[k]?.x.uid || ""), tel: tel10(g("tel").value), mail: g("mail").value.trim().toLowerCase() };
+    const d = { apodo: (g("apodo")?.value || "").trim().slice(0, 40), dias: Math.max(0, parseInt(g("dias").value, 10) || 0), ver: g("ver").value, uid: g("uid") ? g("uid").value : (EP[k]?.x.uid || ""), tel: tel10(g("tel").value), mail: g("mail").value.trim().toLowerCase() };
     INV_FORM = ""; await setDoc(doc(db, "invcfg", cfgKey(k)), d);
     if (d.uid) updateDoc(doc(db, "usuarios", d.uid), { inversionista: true }).catch(() => {});
   }));
@@ -1831,6 +1835,7 @@ function movRow({ col, m, txt }) {
 function cfgForm(e) {
   const c = INVCFG[cfgKey(e.k)] || {}, u = USERS.find((x) => x.uid === uidDe(e)) || {};
   return `<form class="edit" data-cfgf="${esc(e.k)}" novalidate><h3>Su app y plazos</h3>
+    <label>Apodo para ubicarlo (solo lo ves tú)<input name="apodo" value="${esc(c.apodo || "")}" placeholder="Ej. Pily, Tía Pilar"></label>
     <div class="row"><label>Días hábiles que tengo para pagarle<input name="dias" inputmode="numeric" value="${diasDe(e.k)}"></label>
     <label>Qué ve en su app<select name="ver"><option value="total"${c.ver !== "detalle" ? " selected" : ""}>Solo su inversión en Entre Amigos</option><option value="detalle"${c.ver === "detalle" ? " selected" : ""}>También en qué tipo de préstamos está (sin nombres)</option></select></label></div>
     ${e.x.uid ? "" : `<label>Su cuenta en la app<select name="uid"><option value="">Todavía no tiene cuenta</option>${USERS.filter((x) => x.rol !== "admin").map((x) => `<option value="${x.uid}"${x.uid === c.uid ? " selected" : ""}>${esc(x.nombre)} · ${esc(x.email)}</option>`).join("")}</select></label>`}
@@ -2781,7 +2786,7 @@ function tareasDia(k, all, rcv) {
     const hace = (d) => (d === 0 ? "llegó hoy" : d === 1 ? "lleva 1 día" : "lleva " + d + " días");
     if (isAdmin()) SOLS.filter((x) => x.estado === "nueva").forEach((x) => { const d = dias(x.fecha); T.push({ t: "sol", cls: d >= 2 ? "late" : "msg", txt: `Revisar solicitud de ${x.nombre}: ${mxn(x.monto)} a ${x.plazo} ${x.unidad === "semanas" ? "semanas" : "meses"} (${hace(d)})`, x }); });
     if (isAdmin()) VENTAS.filter((v) => v.estado === "nueva").forEach((v) => { const d = dias(v.fecha); T.push({ t: "venta", cls: d >= 2 ? "late" : "msg", txt: `Revisar auto ofrecido: ${v.marca} ${v.modelo} ${v.anio} de ${v.nombre} (${hace(d)})`, v }); });
-    if (isAdmin()) { try { Object.values(estadoPersonas()).forEach((e) => e.pend.filter((o) => o.limite <= iso(new Date(new Date(hoy + "T12:00:00").getTime() + 2 * 864e5))).forEach((o) => T.push({ t: "inv", cls: o.vencida ? "late" : "msg", txt: `Pagar a ${e.nombre} ${mxn2(o.falta)} (${o.p ? o.p.cliente : "su inversión"}, ${o.vencida ? "fuera de plazo" : "a más tardar el " + fcorta(new Date(o.limite + "T12:00:00"))})` }))); } catch (er) {} }
+    if (isAdmin()) { try { Object.values(estadoPersonas()).forEach((e) => e.pend.filter((o) => o.limite <= iso(new Date(new Date(hoy + "T12:00:00").getTime() + 2 * 864e5))).forEach((o) => T.push({ t: "inv", cls: o.vencida ? "late" : "msg", txt: `Pagar a ${e.ver || e.nombre} ${mxn2(o.falta)} (${o.p ? o.p.cliente : "su inversión"}, ${o.vencida ? "fuera de plazo" : "a más tardar el " + fcorta(new Date(o.limite + "T12:00:00"))})` }))); } catch (er) {} }
     COTS.filter((c) => c.estado === "cotizado" && !c.aceptadoPor && c.tipo !== "auto" && dias(c.fecha) >= 3 && dias(c.fecha) <= 30 && !PRES.some((p) => p.cotId === c.id))
       .forEach((c) => T.push({ t: "segcot", cls: "msg", txt: `Dar seguimiento: ${c.cliente || "cliente"} no ha confirmado su cotización de ${mxn(c.monto)} (${hace(dias(c.fecha))})`, c2: c }));
   }
@@ -2842,9 +2847,9 @@ function vAgenda() {
     const iv = INVD[k] || [];
     const cls = !l.length && !iv.length ? "" : l.some((c) => c.atrasada) || iv.some((z) => z.est === "late") ? "late" : l.every((c) => c.pagada) && iv.every((z) => z.est === "paid") ? "paid" : "due";
     const T = tareasDia(k, all, rcv).filter((x) => x.t === "cobrar" || x.t === "pago" || x.t === "entro");
-    (INVD[k] || []).forEach((z) => T.push({ t: "invd", cls: z.est, txt: "Pagar " + nom1(z.e.nombre), z }));
+    (INVD[k] || []).forEach((z) => T.push({ t: "invd", cls: z.est, txt: "Pagar " + (apodoDe(z.e.k) || nom1(z.e.nombre)), z }));
     if (k === hoy) { const ns = tareasDia(k, all, rcv).filter((x) => x.t === "sol" || x.t === "segcot" || x.t === "venta" || x.t === "inv").length; if (ns) T.unshift({ t: "solchip", cls: "msg", n: ns }); }
-    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : x.t === "invd" ? "→ " + nom1(x.z.e.nombre) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}${isAdmin() && VIS[k] && VIS[k].personas ? `<em class="vis" title="Personas que entraron a la página">${VIS[k].personas}</em>` : ""}</button>`;
+    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : x.t === "invd" ? "→ " + (apodoDe(x.z.e.k) || nom1(x.z.e.nombre)) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}${isAdmin() && VIS[k] && VIS[k].personas ? `<em class="vis" title="Personas que entraron a la página">${VIS[k].personas}</em>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   const nSol = isAdmin() ? SOLS.filter((x) => x.estado === "nueva").length : 0, visHoy = isAdmin() ? (VIS[hoy] || {}).personas || 0 : 0;
@@ -2856,7 +2861,7 @@ function vAgenda() {
     { n: nSol, big: nSol, txt: nSol === 1 ? "Solicitud de préstamo por revisar" : "Solicitudes de préstamo por revisar", ir: "sol", cls: "warn" },
     { n: atr.length, big: mxn(sum(atr, "debe")), txt: `${atr.length} ${atr.length === 1 ? "cliente atrasado" : "clientes atrasados"}`, ir: "atr", cls: "warn" },
     { n: nAvis, big: nAvis, txt: nAvis === 1 ? "Cliente avisa que pagó" : "Clientes avisan que pagaron", ir: "tab:prestamos", cls: "warn" },
-    { n: invHoy.length, big: mxn(invHoy.reduce((s2, z) => s2 + z.o.falta, 0)), txt: "Pagar a " + [...new Set(invHoy.map((z) => esc(nom1(z.e.nombre))))].join(", "), ir: "tab:cuentas", cls: invHoy.some((z) => z.o.fecha < hoy) ? "warn" : "" },
+    { n: invHoy.length, big: mxn(invHoy.reduce((s2, z) => s2 + z.o.falta, 0)), txt: "Pagar a " + [...new Set(invHoy.map((z) => esc(apodoDe(z.e.k) || nom1(z.e.nombre))))].join(", "), ir: "tab:cuentas", cls: invHoy.some((z) => z.o.fecha < hoy) ? "warn" : "" },
     { n: invSol, big: invSol, txt: invSol === 1 ? "Inversionista te avisa que prestó" : "Inversionistas te avisan que prestaron", ir: "tab:cuentas" },
     { n: porHoy.length, big: mxn(sum(porHoy, "debe")), txt: `${porHoy.length} por cobrar hoy`, ir: "phoy" },
     { n: nVen, big: nVen, txt: nVen === 1 ? "Auto ofrecido por revisar" : "Autos ofrecidos por revisar", ir: "tab:autos" },
@@ -2882,7 +2887,7 @@ function vAgenda() {
     <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día${isAdmin() ? " · → Pago a inversionista" : ""}${isAdmin() ? ` <small class="vis">12</small> Personas que entraron a la página` : ""}</p>
     ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3>
       ${(() => { const T = tareasDia(AG_DAY, all, rcv); return T.length ? `<p class="lbl">Tareas del día</p><div class="tasks">${T.map(tareaRow).join("")}</div>` : ""; })()}
-      ${(INVD[AG_DAY] || []).length ? `<p class="lbl">Pagos a inversionistas</p><div class="list">${INVD[AG_DAY].map((z) => `<div class="item"><div class="item-top"><b>${esc(z.e.nombre)} · ${mxn2(z.o.monto)}</b>${z.est === "paid" ? `<span class="pill ok">Pagado</span>` : z.est === "late" ? `<span class="pill warn">Pendiente, ya pasó</span>` : `<span class="pill">Por pagar</span>`}</div><div class="item-mid">${esc(z.o.concepto)}${z.falta > 0.5 && z.falta < z.o.monto - 0.5 ? " · falta " + mxn2(z.falta) : ""}</div>${z.est !== "paid" ? `<div class="actions"><button class="btn sm primary" type="button" data-goinv>Registrar pago</button></div>` : ""}</div>`).join("")}</div>` : ""}
+      ${(INVD[AG_DAY] || []).length ? `<p class="lbl">Pagos a inversionistas</p><div class="list">${INVD[AG_DAY].map((z) => `<div class="item"><div class="item-top"><b>${esc(z.e.ver || z.e.nombre)} · ${mxn2(z.o.monto)}</b>${z.est === "paid" ? `<span class="pill ok">Pagado</span>` : z.est === "late" ? `<span class="pill warn">Pendiente, ya pasó</span>` : `<span class="pill">Por pagar</span>`}</div><div class="item-mid">${esc(z.o.concepto)}${z.falta > 0.5 && z.falta < z.o.monto - 0.5 ? " · falta " + mxn2(z.falta) : ""}</div>${z.est !== "paid" ? `<div class="actions"><button class="btn sm primary" type="button" data-goinv>Registrar pago</button></div>` : ""}</div>`).join("")}</div>` : ""}
       ${sel.length ? `<p class="lbl">Pagos que tocaban ese día</p><div class="list">${sel.map((c) => cuotaRow(c, false)).join("")}</div>` : ""}
       ${(rcv[AG_DAY] || []).length ? `<p class="lbl">Pagos recibidos ese día</p><div class="list">${rcv[AG_DAY].map(pagoRow).join("")}</div>` : ""}
       ${!sel.length && !(rcv[AG_DAY] || []).length ? `<p class="muted">Sin movimientos ese día.</p>` : ""}
