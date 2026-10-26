@@ -4,9 +4,9 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, sendEmailVerification, deleteUser,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, deleteField,
+  getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, deleteField, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos } from "./calc.js?v=8";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta } from "./calc.js?v=9";
 
 const CONF = {
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -219,6 +219,7 @@ function startApp() {
   if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); drawTabs(); }, () => {}));
   const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); if (!isAdmin()) drawTabs(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
+  if (isAdmin()) unsubs.push(onSnapshot(query(collection(db, "comprobantes"), where("estado", "==", "por revisar")), (s) => { AVIS = {}; s.docs.forEach((d) => { const x = d.data(); AVIS[x.pid] = (AVIS[x.pid] || 0) + 1; }); if (TAB === "prestamos") draw(); }, () => {}));
   if (isAdmin()) getDoc(doc(db, "config", "reglas")).then((x) => { RULES_CUR = x.exists() ? x.data().v || 0 : 0; drawRulesBanner(); }).catch(() => { RULES_CUR = 0; drawRulesBanner(); });
   if (isAdmin()) getDoc(doc(db, "config", "convenioInfo")).then((x) => { if (!x.exists() || x.data().v !== CONV_V) setDoc(doc(db, "config", "convenioInfo"), { v: CONV_V, html: CONV_HTML }); }).catch(() => {});
   if (isAdmin()) { listenP("all", collection(db, "prestamos")); unsubs.push(onSnapshot(collection(db, "altas"), (s) => { ALTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "empresas") draw(); }, () => {})); unsubs.push(onSnapshot(collection(db, "empresas"), (s) => { EMPS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nombre.localeCompare(b.nombre)); if (TAB === "empresas" || TAB === "prestamos") draw(); }, () => {})); }
@@ -678,6 +679,9 @@ function ownerFilter(rerender) {
   return `<label for="own-f">Cartera de<select id="own-f"><option value="">Todos</option>${ids.map((i) => `<option value="${esc(i)}"${i === OWN ? " selected" : ""}>${esc(i === ME.uid ? "Yo" : nameOf(i))}</option>`).join("")}</select></label>`;
 }
 function vPrestamos() {
+  const PF = OPEN ? PRES.find((x) => x.id === OPEN) : null;
+  if (OPEN && !PF) OPEN = "";
+  if (PF) { $("panel").innerHTML = fichaHTML(PF); bindLoan(); fichaBind(PF); return; }
   const clientes = USERS.filter((u) => u.rol === "cliente");
   const d = DRAFT || {};
   const VP = visibles();
@@ -766,11 +770,15 @@ function vPrestamos() {
       notice(p.cliente, p.telefono, `Hola ${p.cliente}, ya está listo tu préstamo por ${mxn(p.monto)}.${sig ? " Tu primer pago es de " + mxn2(sig.monto) + (sig.fecha ? " el " + fcorta(sig.fecha) : "") + "." : ""}\n\nPuedes ver tu préstamo, tus pagos, tus fechas y tus documentos aquí:\n${p.clienteUid ? PORTAL() : invLink(ref.id)}${p.clienteUid ? "" : "\n\nEntra al enlace y crea tu cuenta" + (p.clienteEmail ? " con este correo: " + p.clienteEmail : "") + ". Así verás tu préstamo desde tu celular."}\n\nEntre Amigos`, "Préstamo guardado", p.clienteEmail);
     } catch (er) { $("p-err").hidden = false; $("p-err").textContent = "No se pudo guardar. Revisa tu conexión."; }
   });
-  $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { OPEN = OPEN === b.dataset.open ? "" : b.dataset.open; vPrestamos(); }));
+  bindLoan();
+}
+function bindLoan() {
+  $("panel").querySelectorAll("[data-open]").forEach((b) => (b.onclick = (e) => { if (e.target.closest("a")) return; OPEN = b.dataset.open; FX = ""; EDIT = ""; PEDIT = ""; vPrestamos(); window.scrollTo(0, 0); }));
   $("panel").querySelectorAll("form[data-pay]").forEach((f) => f.addEventListener("submit", async (e) => {
     e.preventDefault();
     const m = num(f.querySelector("[name=m]").value), fe = f.querySelector("[name=f]").value || today(), t = f.querySelector("[name=t]")?.value;
     if (!m) return;
+    FX = "";
     const pg = { monto: m, fecha: fe, reg: new Date().toISOString(), regPor: ME.uid }; if (t === "capital") pg.tipo = "capital";
     const file = f.querySelector("[name=c]")?.files?.[0];
     await updateDoc(doc(db, "prestamos", f.dataset.pay), { pagos: arrayUnion(pg) });
@@ -788,8 +796,6 @@ function vPrestamos() {
   }));
   $("panel").querySelectorAll("[data-comp]").forEach((b) => (b.onclick = () => { const [pid, id] = b.dataset.comp.split(":"); const c = (COMPS[pid] || []).find((x) => x.id === id); verDoc(c, "Comprobante de pago"); }));
   $("panel").querySelectorAll("textarea[data-nota]").forEach((t) => t.addEventListener("change", () => updateDoc(doc(db, "prestamos", t.dataset.nota), { nota: t.value.trim() })));
-  $("panel").querySelectorAll("[data-pdocs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.pdocs ? "" : b.dataset.pdocs; vPrestamos(); }));
-  if (DOCS_OPEN && $("pdocs-" + DOCS_OPEN)) docsCard($("pdocs-" + DOCS_OPEN), DOCS_OPEN, true);
   $("panel").querySelectorAll("[data-undo]").forEach((b) => (b.onclick = async () => {
     const p = PRES.find((x) => x.id === b.dataset.undo); if (!p?.pagos?.length) return;
     if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para borrar el último pago"; return; }
@@ -798,6 +804,7 @@ function vPrestamos() {
   $("panel").querySelectorAll("select[data-link]").forEach((s) => (s.onchange = () => { const u = USERS.find((x) => x.uid === s.value); updateDoc(doc(db, "prestamos", s.dataset.link), u ? { clienteUid: s.value, clienteEmail: u.email || "" } : { clienteUid: "" }); }));
   $("panel").querySelectorAll("input[data-mail]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "prestamos", i.dataset.mail), { clienteEmail: i.value.trim().toLowerCase() })));
 }
+let FX = "", AVIS = {};
 let EXOPEN = false, EXMODO = "interes";
 const EX_HELP = {
   interes: "Cada mes te paga el interés sobre lo que debe. Los abonos a capital los registras cuando lleguen y el interés baja solo.",
@@ -1509,40 +1516,22 @@ function loanItem(p) {
 function loanItem0(p) {
   const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
   const SI = p.tipo === "interes";
-  const pct = SI ? Math.min(100, Math.round((a.capPagado / p.monto) * 100)) : Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
+  const pct = SI ? Math.min(100, Math.round((a.capPagado / p.monto) * 100)) : Math.min(100, Math.round(((a.pagado + (a.credito || 0)) / a.corrida.total) * 100));
   const venc = vencido(p, a);
   const rec = SI && a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago de interés del mes por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Tu capital pendiente es de ${mxn2(a.capital)}.\n\nEntre Amigos` : a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago ${a.siguiente.n} de ${a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Llevas ${mxn2(a.pagado)} pagados y ${p.tipo === "capfijo" ? "tu capital pendiente es de " + mxn2(a.capital) : "te restan " + mxn2(a.restante)}.\n\nEntre Amigos` : "";
-  const open = OPEN === p.id, clientes = USERS.filter((u) => u.rol === "cliente");
-  return `<div class="item">
+  return `<div class="item tapi" data-open="${p.id}" role="button" tabindex="0">
     <div class="item-top"><b>${esc(p.cliente)}${isAdmin() && ownerOf(p) !== ME.uid ? ` <span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${isAdmin() && p.recibe ? ` <span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : SI ? `Capital ${mxn(a.capital)}` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
     <div class="item-mid">${loanDesc(p, a)}</div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-    <div class="item-bot"><span>${SI ? `Intereses pagados ${mxn2(a.pagado)} · Abonos a capital ${mxn2(a.capPagado)}${a.interesAdeudado ? " · Interés vencido " + mxn2(a.interesAdeudado) : ""}` : p.tipo === "capfijo" ? `Pagado ${mxn2(a.pagado)} · Capital pendiente ${mxn2(a.capital)}` : `Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}`}</span>${a.siguiente ? `<span>Próximo: ${mxn2(a.siguiente.monto)} ${a.siguiente.fecha ? "el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}</div>
-    <div class="item-bot"><button class="link" type="button" data-open="${p.id}">${open ? "Cerrar" : "Registrar pago y más"}</button>${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.telefono && !p.clienteUid && !USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<a href="${waTo(p.telefono, invMsg(p))}" target="_blank" rel="noopener">Invitar a ver su préstamo</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Ve su avance</span>` : p.clienteEmail ? `<span class="pill">Aún no crea cuenta</span>` : ""}</div>
-    ${open ? `<form data-pay="${p.id}" class="row" novalidate style="margin-top:8px">
-        ${SI ? `<label>Concepto<select name="t"><option value="interes">Pago de interés</option><option value="capital">Abono a capital</option></select></label>` : ""}
-        <label>Monto del pago<input name="m" inputmode="decimal" value="${a.siguiente ? a.siguiente.monto : ""}"></label>
-        <label>Fecha<input name="f" type="date" value="${today()}"></label>
-        <label>Comprobante (opcional)<input name="c" type="file" accept="image/*,application/pdf"></label>
-        <button class="btn primary" type="submit">Registrar pago</button>
-        ${p.pagos?.length && isAdmin() ? `<button class="btn" type="button" data-undo="${p.id}">Borrar último pago</button>` : ""}
-      </form>
-      <label>Correo del cliente<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
-      <label${isAdmin() ? "" : " hidden"}>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>
-      ${schedule(p, a, isAdmin())}
-      ${isAdmin() ? compBox(p) : ""}
-      ${isAdmin() ? `<label>Notas internas (solo tú las ves)<textarea data-nota="${p.id}" rows="2" placeholder="Ej. Paga siempre los viernes">${esc(p.nota || "")}</textarea></label>` : ""}
-      ${isAdmin() && p.clienteUid ? `<div class="actions"><button class="btn sm" type="button" data-pdocs="${p.clienteUid}">${DOCS_OPEN === p.clienteUid ? "Ocultar documentos" : "Documentos del cliente"}</button></div>${DOCS_OPEN === p.clienteUid ? `<div id="pdocs-${p.clienteUid}"></div>` : ""}` : ""}
-      ${isAdmin() ? `<div class="actions" style="margin-top:6px"><button class="btn sm" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button>${!a.liquidado ? `<button class="btn sm" type="button" data-liq="${p.id}">Liquidar préstamo</button>` : ""}<button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button></div>
-      ${EDIT === p.id ? editForm(p) : ""}` : ""}
-      ${isAdmin() ? repartoBox(p) : ""}` : ""}
+    <div class="item-bot"><span>${SI ? `Intereses pagados ${mxn2(a.pagado)} · Abonos a capital ${mxn2(a.capPagado)}${a.interesAdeudado ? " · Interés vencido " + mxn2(a.interesAdeudado) : ""}` : p.tipo === "capfijo" ? `Pagado ${mxn2(a.pagado)} · Capital pendiente ${mxn2(a.capital)}` : `Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}`}</span></div>
+    <div class="item-bot">${AVIS[p.id] ? `<span class="pill warn">Avisó un pago</span>` : ""}${a.siguiente && !venc ? `<span>Próximo: ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? " el " + fcorta(a.siguiente.fecha) : ""}</span>` : ""}${p.telefono && rec ? `<a href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a>` : ""}${p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail) ? `<span class="pill ok">Tiene cuenta</span>` : `<span class="pill">Sin cuenta</span>`}</div>
   </div>`;
 }
 let PEDIT = "", FILT_P = "", COMPS = {};
 // Comprobantes de pago del préstamo abierto.
 function compBox(p) {
   if (!COMPS[p.id]) { COMPS[p.id] = []; onSnapshot(query(collection(db, "comprobantes"), where("pid", "==", p.id)), (s) => { COMPS[p.id] = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "prestamos" && OPEN === p.id) vPrestamos(); }, () => {}); }
-  const L = COMPS[p.id];
+  const L = COMPS[p.id].filter((c) => !c.estado || c.estado === "confirmado");
   return L.length ? `<p class="lbl">Comprobantes de pago</p><div class="actions">${L.map((c) => `<button class="btn sm" type="button" data-comp="${p.id}:${c.id}">${fcorta(new Date(c.fecha + "T12:00:00"))} · ${mxn2(c.monto)}</button>`).join("")}</div>` : "";
 }
 function payForm(p, i) {
@@ -1567,10 +1556,164 @@ function bindPayEdit(rerender) {
     await updateDoc(doc(db, "prestamos", id), { pagos });
   }));
 }
-function schedule(p, a, edit) {
+function schedule(p, a, edit, sinPagos) {
   const pagos = (p.pagos || []).map((x, i) => ({ ...x, i })).reverse();
-  return `<details${edit && PEDIT.startsWith(p.id + ":") ? " open" : ""}><summary>Corrida y pagos</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>${p.tipo === "interes" ? `<p class="note">Solo interés: cada mes se paga el interés sobre el capital pendiente. Los abonos a capital bajan el interés de los meses siguientes.</p>` : ""}
-  ${pagos.length ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th>${edit ? "<th></th>" : ""}</tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td>${edit ? `<td><button class="link" type="button" data-payed="${p.id}:${x.i}">Editar</button> <button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>${edit && PEDIT.startsWith(p.id + ":") ? payForm(p, Number(PEDIT.split(":")[1])) : ""}` : ""}</details>`;
+  return `<details${edit && PEDIT.startsWith(p.id + ":") ? " open" : ""}><summary>${sinPagos ? "Calendario completo" : "Corrida y pagos"}</summary><div class="tbl"><table><tr><th>${p.tipo === "semanal" ? "Semana" : "Mes"}</th><th>Fecha</th><th>Pago</th><th>Estado</th></tr>${a.corrida.filas.map((f, i) => `<tr class="${i < a.cubiertos ? "done" : i === a.cubiertos ? "next" : ""}"><td>${f.n}</td><td>${fcorta(fechaPago(p.inicio, f.n, p.tipo))}</td><td>${mxn2(f.pago)}</td><td>${i < a.cubiertos ? "Pagado" : i === a.cubiertos ? "Siguiente" : ""}</td></tr>`).join("")}</table></div>${p.tipo === "interes" ? `<p class="note">Solo interés: cada mes se paga el interés sobre el capital pendiente. Los abonos a capital bajan el interés de los meses siguientes.</p>` : ""}
+  ${pagos.length && !sinPagos ? `<h3 style="margin-top:12px">Pagos recibidos</h3><div class="tbl"><table><tr><th>Fecha</th><th>Concepto</th><th>Monto</th>${edit ? "<th></th>" : ""}</tr>${pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${x.tipo === "capital" ? "Abono a capital" : x.nota ? esc(x.nota) : p.tipo === "interes" ? "Interés" : "Pago"}</td><td>${mxn2(x.monto)}</td>${edit ? `<td><button class="link" type="button" data-payed="${p.id}:${x.i}">Editar</button> <button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>${edit && PEDIT.startsWith(p.id + ":") ? payForm(p, Number(PEDIT.split(":")[1])) : ""}` : ""}</details>`;
+}
+
+/* ---------- Ficha de un préstamo (pantalla completa) ---------- */
+const mesLbl = (f, sem) => { const d = new Date(f + "T12:00:00"); return sem ? fcorta(d) : d.toLocaleDateString("es-MX", { month: "short", year: "numeric" }); };
+const ESTC = { pagado: ["Pagado", "ok"], parcial: ["Parcial", "warn"], vencido: ["Vencido", "warn"], proximo: ["Próximo", ""], corte: ["Pagado", "ok"] };
+const docKey = (p) => p.clienteUid || "p_" + p.id;
+// Estado de cuenta por mes: lo ve el administrador y, solo para consultar, el cliente.
+function estadoBox(p, admin) {
+  const e = estadoCuenta(p), sem = p.tipo === "semanal", u = sem ? "Semana" : "Mes";
+  if (!e.meses.length && !p.corte) return "";
+  const debe = e.debeHoy > 0.5;
+  return `<details class="sec"${admin || debe ? " open" : ""}><summary>${admin ? "Estado de cuenta" : "Tu estado de cuenta"}</summary>
+    ${p.corte ? `<p class="muted">${admin ? "Último mes completo pagado" : "Pagado completo hasta"}: <b>${mesLbl(p.corte, sem)}</b>${admin ? ` (pago del ${fcorta(new Date(p.corte + "T12:00:00"))}). Lo anterior cuenta como pagado sin capturar pagos viejos. <button class="link" type="button" data-fx="corte">Cambiar</button>` : ""}</p>` : ""}
+    <div class="tbl"><table><tr><th>${u}</th><th>Debía</th><th>Abonó</th><th>Falta</th><th></th></tr>
+    ${p.corte ? `<tr class="done"><td colspan="4">${mesLbl(p.corte, sem)} y antes</td><td><span class="pill ok">Pagado</span></td></tr>` : ""}
+    ${e.meses.map((f) => { const st = ESTC[f.estado]; return `<tr${f.estado === "pagado" ? ' class="done"' : ""}><td>${mesLbl(f.fecha, sem)}</td><td>${mxn(f.pago)}</td><td>${mxn(f.abono)}</td><td>${mxn(f.falta)}</td><td><span class="pill ${st[1]}">${st[0]}</span></td></tr>`; }).join("")}
+    </table></div>
+    <p class="note">Cada abono se aplica ${sem ? "a la semana" : "al mes"} más ${sem ? "antigua" : "antiguo"} que tenga pendiente${p.tipo === "interes" ? ". Los abonos a capital bajan el interés de los meses siguientes" : ""}.</p>
+  </details>`;
+}
+// Pagos y abonos recibidos, con la cuota a la que se aplicó cada uno.
+function pagosBox(p, admin) {
+  const e = estadoCuenta(p), sem = p.tipo === "semanal", n2f = Object.fromEntries(e.todos.map((f) => [f.n, f.fecha]));
+  const aq = (x) => (p.tipo === "interes" && x.tipo === "capital" ? "Capital" : x.aplica.length ? x.aplica.map((n) => mesLbl(n2f[n], sem)).join(", ") : x.sobra ? "Adelanto" : "");
+  const pend = admin ? (COMPS[p.id] || []).filter((c) => c.estado === "por revisar") : [];
+  return `${pend.length ? `<div class="sec avis"><h3>El cliente avisa que pagó</h3>${pend.map((c) => `<div class="item"><div class="item-top"><b>${mxn2(c.monto)}</b><span>${fcorta(new Date(c.fecha + "T12:00:00"))}</span></div>
+      ${c.nota ? `<div class="item-mid">${esc(c.nota)}</div>` : ""}
+      <div class="item-bot">${c.data ? `<button class="btn sm" type="button" data-comp="${p.id}:${c.id}">Ver comprobante</button>` : ""}<button class="btn sm primary" type="button" data-cok="${c.id}">Confirmar, sí lo recibí</button><button class="link del" type="button" data-cno="${c.id}">No lo recibí</button></div>
+      ${RECH === c.id ? `<form class="edit" data-cnof="${c.id}" novalidate><label>Motivo (lo verá el cliente)<input name="m" placeholder="Ej. No aparece en mi cuenta, mándame otro comprobante"></label><div class="actions"><button class="btn sm danger" type="submit">Rechazar aviso</button></div></form>` : ""}</div>`).join("")}</div>` : ""}
+  <details class="sec"${admin || PEDIT.startsWith(p.id + ":") ? " open" : ""}><summary>${admin ? "Pagos recibidos" : "Tus pagos"} (${e.pagos.length})</summary>
+    ${e.pagos.length ? `<div class="tbl"><table><tr><th>Fecha</th><th>Monto</th><th>${sem ? "Semana" : "Mes"}</th>${admin ? "<th></th>" : ""}</tr>${e.pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${admin ? mxn(x.monto) : mxn2(x.monto)}</td><td>${aq(x)}</td>${admin ? `<td class="r"><button class="link" type="button" data-payed="${p.id}:${x.i}">Editar</button><button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>` : `<p class="muted">Todavía no hay pagos registrados${p.corte ? " desde el corte" : ""}.</p>`}
+    ${admin && PEDIT.startsWith(p.id + ":") ? payForm(p, Number(PEDIT.split(":")[1])) : ""}
+  </details>`;
+}
+let RECH = "";
+function fichaHTML(p) {
+  const a = avance(p), e = estadoCuenta(p), SI = p.tipo === "interes", sem = p.tipo === "semanal", venc = vencido(p, a), adm = isAdmin();
+  const unidad = sem ? "Semana" : "Mes", clientes = USERS.filter((u) => u.rol === "cliente");
+  const tieneCuenta = p.clienteUid || USERS.some((u) => p.clienteEmail && u.email === p.clienteEmail);
+  const faltan = e.meses.filter((f) => f.falta > 0.5 && f.fecha <= today());
+  const rec = venc > 0.5 ? `Hola ${p.cliente}, te recordamos que tienes ${mxn2(venc)} pendientes de ${SI ? "intereses" : "tus pagos"} (${faltan.map((f) => mesLbl(f.fecha, sem)).join(", ")}). Por favor ponte al corriente o avísanos si necesitas ayuda.\n\nEntre Amigos`
+    : a.siguiente ? `Hola ${p.cliente}, te recordamos tu ${SI ? "pago de interés" : "pago " + a.siguiente.n + " de " + a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}.\n\nEntre Amigos` : "";
+  const pct = SI ? Math.min(100, Math.round((a.capPagado / p.monto) * 100)) : Math.min(100, Math.round(((a.pagado + (a.credito || 0)) / a.corrida.total) * 100));
+  const fx = FX, dk = docKey(p);
+  return `<button class="back" type="button" data-back>‹ ${adm ? "Préstamos" : "Mis clientes"}</button>
+  <div class="card ficha">
+    <div class="head"><h2>${esc(p.cliente)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc > 0.5 ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
+    ${adm && (ownerOf(p) !== ME.uid || p.recibe) ? `<div class="item-bot">${ownerOf(p) !== ME.uid ? `<span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${p.recibe ? `<span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</div>` : ""}
+    <p class="muted">${loanDesc(p, a)}</p>
+    ${a.liquidado ? `<p class="ok">Préstamo liquidado.</p>` : venc > 0.5 ? `<div class="big"><span>Debe hoy</span><b>${mxn2(venc)}</b></div>
+      <p class="muted">Le falta${faltan.length > 1 ? "n" : ""} ${faltan.map((f) => mxn(f.falta) + " de " + mesLbl(f.fecha, sem)).join(" y ")}.${e.meses.find((f) => f.fecha > today()) ? " El " + fcorta(new Date(e.meses.find((f) => f.fecha > today()).fecha + "T12:00:00")) + " se suman " + mxn(e.meses.find((f) => f.fecha > today()).pago) + "." : ""}</p>`
+      : a.siguiente ? `<div class="big"><span>Próximo pago${SI ? "" : " · " + unidad + " " + a.siguiente.n + " de " + a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : ""}
+    ${SI ? "" : `<div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>`}
+    <div class="facts">
+      <div><span>Pagado completo</span><b>${e.pagadoHasta ? "Hasta " + mesLbl(e.pagadoHasta.fecha, sem) : "Aún ninguno"}</b></div>
+      <div><span>${p.corte ? "Abonado desde el corte" : "Pagado"}</span><b>${mxn2(a.pagado)}</b></div>
+      ${SI ? `<div><span>Capital</span><b>${mxn2(a.capital)}</b></div><div><span>Interés al mes</span><b>${mxn2(a.corrida.pago)}</b></div>`
+        : `<div><span>${p.tipo === "capfijo" ? "Capital pendiente" : "Resta"}</span><b>${mxn2(p.tipo === "capfijo" ? a.capital : a.restante)}</b></div><div><span>Avance</span><b>${a.cubiertos} de ${a.total}</b></div>`}
+    </div>
+    <div class="grid4">
+      ${a.liquidado ? "" : `<button class="btn${fx === "pago" ? "" : " primary"}" type="button" data-fx="pago">${fx === "pago" ? "Cerrar" : "Registrar pago o abono"}</button>`}
+      ${adm ? `<button class="btn" type="button" data-edit="${p.id}">${EDIT === p.id ? "Cerrar edición" : "Editar préstamo"}</button>` : ""}
+      ${adm && !a.liquidado ? `<button class="btn" type="button" data-fx="corte">${fx === "corte" ? "Cerrar" : "Último mes pagado"}</button>` : ""}
+      <button class="btn" type="button" data-asc>Ver como el cliente</button>
+      ${p.telefono && rec ? `<a class="btn" href="${waTo(p.telefono, rec)}" target="_blank" rel="noopener">Recordatorio WhatsApp</a>` : ""}
+      ${p.telefono && !tieneCuenta ? `<a class="btn" href="${waTo(p.telefono, invMsg(p))}" target="_blank" rel="noopener">Invitar a su cuenta</a>` : ""}
+    </div>
+    ${fx === "pago" ? `<form data-pay="${p.id}" class="edit" novalidate><h3>Registrar pago o abono</h3>
+        ${SI ? `<label>Concepto<select name="t"><option value="interes">Abono a interés</option><option value="capital">Abono a capital</option></select></label>` : ""}
+        <p class="note">Puede ser cualquier cantidad, aunque sea parcial. Se aplica ${sem ? "a la semana más antigua pendiente" : "al mes más antiguo pendiente"}.</p>
+        <div class="row"><label>Monto<input name="m" inputmode="decimal" value="${venc > 0.5 ? "" : a.siguiente ? a.siguiente.monto : ""}" placeholder="Ej. 5,000"></label>
+        <label>Fecha en que pagó<input name="f" type="date" value="${today()}"></label></div>
+        <label>Comprobante (opcional)<input name="c" type="file" accept="image/*,application/pdf"></label>
+        <button class="btn primary" type="submit">Guardar pago</button></form>` : ""}
+    ${fx === "corte" ? `<form data-corte="${p.id}" class="edit" novalidate><h3>Último mes pagado completo</h3>
+        <p class="muted">Para clientes atrasados o que ya traías de antes: marca hasta qué ${sem ? "semana" : "mes"} te pagó completo y desde ahí la app lleva la cuenta. No necesitas capturar los pagos viejos.</p>
+        <label>Fecha de pago de ese ${sem ? "semana" : "mes"}<select name="c"><option value="">Ninguno (cuenta desde el primer pago)</option>${(SI ? avance({ ...p, corte: "" }).corrida.filas.map((f) => iso(f.fecha)) : a.corrida.filas.map((f) => iso(fechaPago(p.inicio, f.n, p.tipo)))).filter((f) => f <= plusDays(40)).map((f) => `<option value="${f}"${f === p.corte ? " selected" : ""}>${fcorta(new Date(f + "T12:00:00"))}</option>`).join("")}</select></label>
+        ${SI ? `<label>Interés que paga cada mes<input name="i" inputmode="decimal" value="${(p.pagoFijo || Math.round(p.monto * p.tasa) / 100).toLocaleString("es-MX")}"></label><p class="note">Si cambias el interés, solo afecta a este préstamo. Calculado con la tasa: ${mxn2((p.monto * p.tasa) / 100)}.</p>` : ""}
+        <p class="note">Si la fecha que buscas no aparece, cambia primero la fecha del primer pago en Editar préstamo.</p>
+        <p class="err" hidden></p>
+        <button class="btn primary" type="submit">Guardar</button></form>` : ""}
+    ${adm && EDIT === p.id ? editForm(p) : ""}
+    ${pagosBox(p, adm)}
+    ${estadoBox(p, true)}
+    ${schedule(p, a, false, true).replace("<details", '<details class="sec"')}
+    <details class="sec"><summary>Datos del cliente</summary>
+      <p class="muted">${tieneCuenta ? "Ya creó su cuenta y ve su préstamo desde su celular." : "Todavía no crea su cuenta."}${p.telefono ? " WhatsApp: " + esc(p.telefono) + "." : ""}</p>
+      <label>Correo (con este correo verá su préstamo)<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
+      ${adm ? `<label>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>` : ""}
+    </details>
+    ${adm ? `<details class="sec" data-docsec${DOCS_OPEN === dk ? " open" : ""}><summary>Documentos y comprobantes</summary>
+      ${tieneCuenta && !p.clienteUid ? `<p class="note">Elige su cuenta en Datos del cliente para juntar sus documentos con los que él suba.</p>` : ""}
+      <div id="pdocs"></div>${compBox(p)}</details>` : ""}
+    ${adm ? `<details class="sec"${p.nota ? " open" : ""}><summary>Notas internas</summary><textarea data-nota="${p.id}" rows="2" placeholder="Ej. Paga siempre los viernes">${esc(p.nota || "")}</textarea></details>` : ""}
+    ${adm ? `<div class="sec">${repartoBox(p)}</div>` : ""}
+    ${adm ? `<details class="sec"><summary>Liquidar o borrar</summary>
+      <p class="muted">Liquidar registra lo que falta y lo pasa a Liquidados. Borrar lo elimina con todos sus pagos; pide que toques dos veces.</p>
+      <div class="actions">${!a.liquidado ? `<button class="btn sm" type="button" data-liq="${p.id}">Liquidar préstamo</button>` : ""}<button class="btn sm danger" type="button" data-delp="${p.id}">Borrar préstamo</button></div></details>` : ""}
+  </div>`;
+}
+const MIGR = {};
+function fichaBind(p) {
+  const P = $("panel");
+  P.querySelector("[data-back]").onclick = () => { OPEN = ""; FX = ""; EDIT = ""; PEDIT = ""; RECH = ""; vPrestamos(); };
+  P.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { FX = FX === b.dataset.fx ? "" : b.dataset.fx; EDIT = ""; vPrestamos(); }));
+  P.querySelector("[data-asc]").onclick = () => verComoCliente(p);
+  const fc = P.querySelector("form[data-corte]");
+  if (fc) fc.onsubmit = async (e) => {
+    e.preventDefault();
+    const d = { corte: fc.querySelector("[name=c]").value };
+    const i = fc.querySelector("[name=i]"); if (i) { const v = num(i.value), calc = Math.round(p.monto * p.tasa) / 100; d.pagoFijo = v && Math.abs(v - calc) > 0.005 ? v : null; }
+    try { await updateDoc(doc(db, "prestamos", p.id), d); FX = ""; vPrestamos(); }
+    catch (er) { const x = fc.querySelector(".err"); x.hidden = false; x.textContent = "No se pudo guardar. Revisa tu conexión."; }
+  };
+  // Avisos de pago del cliente: confirmar los agrega como pago; rechazar le avisa el motivo.
+  P.querySelectorAll("[data-cok]").forEach((b) => (b.onclick = async () => {
+    const c = (COMPS[p.id] || []).find((x) => x.id === b.dataset.cok); if (!c) return;
+    b.disabled = true;
+    const pg = { monto: c.monto, fecha: c.fecha, reg: c.reg || new Date().toISOString(), regPor: ME.uid, nota: "Avisado por el cliente" };
+    if (c.tipo === "capital") pg.tipo = "capital";
+    await updateDoc(doc(db, "prestamos", p.id), { pagos: arrayUnion(pg) });
+    await updateDoc(doc(db, "comprobantes", c.id), { estado: "confirmado", reg: pg.reg, revisado: new Date().toISOString() });
+  }));
+  P.querySelectorAll("[data-cno]").forEach((b) => (b.onclick = () => { RECH = RECH === b.dataset.cno ? "" : b.dataset.cno; vPrestamos(); }));
+  P.querySelectorAll("form[data-cnof]").forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault(); const m = f.querySelector("[name=m]").value.trim();
+    if (!m) { f.querySelector("[name=m]").focus(); return; }
+    await updateDoc(doc(db, "comprobantes", f.dataset.cnof), { estado: "rechazado", motivo: m, revisado: new Date().toISOString() }); RECH = "";
+    if (p.telefono) notice(p.cliente, p.telefono, `Hola ${p.cliente}, revisamos tu aviso de pago y no lo encontramos.\nMotivo: ${m}\n\nEscríbenos para aclararlo.\n\nEntre Amigos`, "Aviso rechazado", p.clienteEmail);
+  }));
+  if (!isAdmin()) return;
+  const dk = docKey(p), ds = P.querySelector("[data-docsec]");
+  const loadDocs = () => docsCard($("pdocs"), dk, true, { extra: true, who: { nombre: p.cliente, telefono: p.telefono } });
+  if (ds) { ds.ontoggle = () => { if (ds.open) { DOCS_OPEN = dk; loadDocs(); } else if (DOCS_OPEN === dk) DOCS_OPEN = ""; }; if (ds.open) loadDocs(); }
+  // Documentos subidos antes de que el cliente tuviera cuenta: pasarlos a su cuenta.
+  if (p.clienteUid && !MIGR[p.id]) {
+    MIGR[p.id] = 1;
+    getDocs(collection(db, "expedientes", "p_" + p.id, "archivos")).then(async (sn) => {
+      for (const d of sn.docs) {
+        const ya = await getDoc(doc(db, "expedientes", p.clienteUid, "archivos", d.id));
+        if (!ya.exists()) { await setDoc(doc(db, "expedientes", p.clienteUid, "archivos", d.id), d.data()); updateDoc(doc(db, "usuarios", p.clienteUid), { ["docs." + d.id]: d.data().estado }).catch(() => {}); }
+        await deleteDoc(d.ref);
+      }
+    }).catch(() => {});
+  }
+}
+// Muestra exactamente lo que ve el cliente en su app.
+function verComoCliente(p) {
+  const ov = document.createElement("div"); ov.className = "viewer asc";
+  ov.innerHTML = `<div class="vbar"><b>Así lo ve ${esc((p.cliente || "el cliente").split(" ")[0])}</b><button class="btn sm primary" type="button">Cerrar</button></div><div class="vbody"><div class="wrap">${clienteLoanCard(p)}</div></div>`;
+  ov.querySelectorAll("a,button:not(.vbar button),input,select,textarea").forEach((x) => { x.setAttribute("tabindex", "-1"); x.style.pointerEvents = "none"; });
+  ov.querySelectorAll("form").forEach((f) => (f.onsubmit = (e) => e.preventDefault()));
+  ov.querySelector(".vbar button").onclick = () => ov.remove();
+  document.body.appendChild(ov);
 }
 
 /* ---------- Mis préstamos (cliente) ---------- */
@@ -1664,6 +1807,71 @@ function solicitudForm() {
   };
 }
 let VERI_T = null;
+function clienteLoanCard(p) {
+    const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
+    if (p.tipo === "interes") return `<div class="card">
+      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
+      <p class="muted">Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes. Puedes abonar a capital cuando quieras y tu interés baja.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}</p>
+      ${a.siguiente ? `<div class="big"><span>Tu próximo pago de interés</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : a.liquidado ? `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>` : ""}
+      <div class="facts"><div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div><div><span>Abonos a capital</span><b>${mxn2(a.capPagado)}</b></div><div><span>Intereses pagados</span><b>${mxn2(a.pagado)}</b></div></div>
+      ${estadoBox(p, false)}
+      ${pagosBox(p, false)}
+      ${avisoBox(p)}
+      ${schedule(p, a, false, true)}
+      <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, tengo una duda sobre mi préstamo.")}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+    </div>`;
+    const pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
+    return `<div class="card">
+      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
+      <p class="muted">${p.tipo === "semanal" ? `${a.total} pagos semanales` : p.tipo === "capfijo" ? `Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes más un abono a capital de ${mxn(p.abono)}. Tu pago baja cada mes.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}` : `${a.total} pagos mensuales${p.desc ? " · Garantía: " + esc(p.desc) : ""}`}</p>
+      ${a.siguiente ? `<div class="big"><span>Tu próximo pago · ${unidad} ${a.siguiente.n} de ${a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>`}
+      <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <div class="facts"><div><span>Pagado</span><b>${mxn2(a.pagado)}</b></div>${p.tipo === "capfijo" ? `<div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div>` : `<div><span>Te resta</span><b>${mxn2(a.restante)}</b></div>`}<div><span>Avance</span><b>${a.cubiertos} de ${a.total}</b></div></div>
+      ${estadoBox(p, false)}
+      ${pagosBox(p, false)}
+      ${avisoBox(p)}
+      ${schedule(p, a, false, true)}
+      <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, tengo una duda sobre mi préstamo.")}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+    </div>`;
+}
+
+// Aviso de pago del cliente: no cambia nada del préstamo; queda en revisión hasta que el administrador lo confirma o lo rechaza.
+let MISAV = null, AVFORM = "";
+function avisoBox(p) {
+  if (isAdmin() || !ME || p.clienteUid !== ME.uid) return "";
+  if (MISAV === null) { MISAV = []; onSnapshot(query(collection(db, "comprobantes"), where("por", "==", ME.uid)), (s) => { MISAV = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => ((a.creado || "") < (b.creado || "") ? 1 : -1)); if (TAB === "mis") draw(); }, () => {}); }
+  const L = MISAV.filter((c) => c.pid === p.id && c.estado).slice(0, 5), SI = p.tipo === "interes";
+  const EA = { "por revisar": ["En revisión", "warn"], confirmado: ["Confirmado", "ok"], rechazado: ["No se encontró", "no"] };
+  return `<div class="sec"><h3>¿Ya pagaste?</h3>
+    <p class="muted">Avísanos aquí con tu comprobante. Lo revisamos y, en cuanto lo confirmemos, aparece en tus pagos.</p>
+    ${L.length ? `<div class="list">${L.map((c) => `<div class="item"><div class="item-top"><b>${mxn2(c.monto)} · ${fcorta(new Date(c.fecha + "T12:00:00"))}</b><span class="pill ${EA[c.estado]?.[1] || ""}">${EA[c.estado]?.[0] || ""}</span></div>${c.estado === "rechazado" && c.motivo ? `<div class="item-mid">Motivo: ${esc(c.motivo)}</div>` : ""}</div>`).join("")}</div>` : ""}
+    ${AVFORM === p.id ? `<form class="edit" data-avf="${p.id}" novalidate>
+      ${SI ? `<label>¿Qué pagaste?<select name="t"><option value="interes">Interés</option><option value="capital">Abono a capital</option></select></label>` : ""}
+      <div class="row"><label>Monto que pagaste<input name="m" inputmode="decimal" placeholder="Ej. 5,000"></label><label>Fecha en que pagaste<input name="f" type="date" value="${today()}" max="${today()}"></label></div>
+      <label>Foto del comprobante<input name="c" type="file" accept="image/*,application/pdf"></label>
+      <label>Comentario (opcional)<input name="n" placeholder="Ej. Transferencia desde BBVA"></label>
+      <p class="err" hidden></p>
+      <button class="btn primary" type="submit">Enviar aviso de pago</button></form>`
+    : `<button class="btn primary" type="button" data-avo="${p.id}">Avisar que ya pagué</button>`}</div>`;
+}
+function bindAvisos() {
+  const P = $("panel");
+  P.querySelectorAll("[data-avo]").forEach((b) => (b.onclick = () => { AVFORM = b.dataset.avo; vMis(); }));
+  P.querySelectorAll("form[data-avf]").forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault();
+    const er = f.querySelector(".err"), m = num(f.querySelector("[name=m]").value), fe = f.querySelector("[name=f]").value, file = f.querySelector("[name=c]").files[0];
+    if (!m || !fe) { er.hidden = false; er.textContent = "Escribe el monto y la fecha en que pagaste."; return; }
+    if (!file) { er.hidden = false; er.textContent = "Agrega la foto de tu comprobante."; return; }
+    const btn = f.querySelector("button[type=submit]"); btn.disabled = true; er.hidden = false; er.className = "ok"; er.textContent = "Enviando…";
+    try {
+      const { data, mime } = await fileToData(file);
+      const d = { pid: f.dataset.avf, por: ME.uid, estado: "por revisar", monto: m, fecha: fe, nota: f.querySelector("[name=n]").value.trim().slice(0, 200), data, mime, creado: new Date().toISOString() };
+      const t = f.querySelector("[name=t]"); if (t && t.value === "capital") d.tipo = "capital";
+      await addDoc(collection(db, "comprobantes"), d);
+      AVFORM = ""; vMis();
+    } catch (x) { btn.disabled = false; er.className = "err"; er.textContent = x.message || "No se pudo enviar. Intenta de nuevo."; }
+  }));
+}
 function vMis() {
   const okv = QS.has("verificado") && ME.emailVerified ? `<div class="card"><p class="ok" style="margin:0">Tu correo quedó confirmado. Ya puedes ver tus préstamos y seguir con tu solicitud.</p></div>` : "";
   if (QS.has("verificado")) history.replaceState(null, "", location.pathname);
@@ -1683,30 +1891,11 @@ function vMis() {
   setTimeout(cotBox);
   setTimeout(() => { const f = $("my-tel"); if (f) f.onsubmit = async (e) => { e.preventDefault(); const t = tel10($("my-tel-i").value); if (t.length !== 10) return; await updateDoc(doc(db, "usuarios", ME.uid), { telefono: t }); USER.telefono = t; vMis(); }; });
   setTimeout(() => docsCard($("docs-box"), ME.uid, false));
+  setTimeout(bindAvisos);
   const telBox = USER.telefono ? "" : `<form class="card" id="my-tel" novalidate><h3>Agrega tu WhatsApp</h3><p class="muted">Para avisarte cuando tu préstamo esté listo o cuando revisemos tus documentos.</p><div class="row"><label for="my-tel-i">WhatsApp<input id="my-tel-i" type="tel" inputmode="tel" placeholder="33 1234 5678"></label><button class="btn primary" type="submit">Guardar</button></div></form>`;
   const conv = USER.solicita === "empresa" ? `<div class="card inv" id="conv-box">${USER.convenioOk ? `<p class="muted">Cargando…</p>` : `<p class="hi">Convenio para empresas</p><p class="big-t">Recibimos tu solicitud. La revisamos y te avisamos por WhatsApp; en cuanto la aprobemos, aquí verás toda la información.</p>`}</div>` : "";
   if (USER.solicita === "empresa" && USER.convenioOk) setTimeout(async () => { try { const s2 = await getDoc(doc(db, "config", "convenioInfo")); const box = $("conv-box"); if (box && s2.exists()) box.innerHTML = s2.data().html + `<a class="btn primary" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + ". Ya vi la información del convenio para mi empresa.")}" target="_blank" rel="noopener">Escribir a Entre Amigos</a>`; } catch (e) {} });
-  $("panel").innerHTML = ver + conv + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => {
-    const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes";
-    if (p.tipo === "interes") return `<div class="card">
-      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
-      <p class="muted">Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes. Puedes abonar a capital cuando quieras y tu interés baja.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}</p>
-      ${a.siguiente ? `<div class="big"><span>Tu próximo pago de interés</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : a.liquidado ? `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>` : ""}
-      <div class="facts"><div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div><div><span>Abonos a capital</span><b>${mxn2(a.capPagado)}</b></div><div><span>Intereses pagados</span><b>${mxn2(a.pagado)}</b></div></div>
-      ${schedule(p, a)}
-      <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, te envío el comprobante de mi pago.")}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
-    </div>`;
-    const pct = Math.min(100, Math.round((a.pagado / a.corrida.total) * 100));
-    return `<div class="card">
-      <div class="head"><h2>Préstamo de ${mxn(p.monto)}</h2>${estadoPill(p, a)}</div>${vencBox(p, a)}
-      <p class="muted">${p.tipo === "semanal" ? `${a.total} pagos semanales` : p.tipo === "capfijo" ? `Pagas cada mes el interés (${p.tasa}% mensual) sobre lo que debes más un abono a capital de ${mxn(p.abono)}. Tu pago baja cada mes.${p.desc ? " Garantía: " + esc(p.desc) + "." : ""}` : `${a.total} pagos mensuales${p.desc ? " · Garantía: " + esc(p.desc) : ""}`}</p>
-      ${a.siguiente ? `<div class="big"><span>Tu próximo pago · ${unidad} ${a.siguiente.n} de ${a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : `<p class="ok">Liquidaste tu préstamo. Gracias por tu confianza.</p>`}
-      <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-      <div class="facts"><div><span>Pagado</span><b>${mxn2(a.pagado)}</b></div>${p.tipo === "capfijo" ? `<div><span>Capital pendiente</span><b>${mxn2(a.capital)}</b></div>` : `<div><span>Te resta</span><b>${mxn2(a.restante)}</b></div>`}<div><span>Avance</span><b>${a.cubiertos} de ${a.total}</b></div></div>
-      ${schedule(p, a)}
-      <a class="btn" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, te envío el comprobante de mi pago.")}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
-    </div>`;
-  }).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard();
+  $("panel").innerHTML = ver + conv + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => clienteLoanCard(p)).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard();
   setTimeout(solicitudForm);
 
 }
@@ -1757,7 +1946,7 @@ function vPersonas() {
   $("panel").querySelectorAll("[data-convno]").forEach((b) => (b.onclick = () => { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez"; return; } updateDoc(doc(db, "usuarios", b.dataset.convno), { solicita: "" }); }));
   $("panel").querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "usuarios", b.dataset.no), { solicita: "" })));
   $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
-  if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true);
+  if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true, { extra: true });
   $("panel").querySelectorAll("input[data-inv]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.inv), { inversionista: i.checked })));
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
   // Borrar una cuenta por completo: acceso (usuario y contraseña), perfil y documentos. Sus préstamos y cotizaciones se conservan.
@@ -1802,7 +1991,7 @@ async function borrarCuenta(email, uid, btn) {
   }
   if (email) await setDoc(doc(db, "borrados", email.toLowerCase()), { fecha: new Date().toISOString() }).catch(() => {});
   if (uid) {
-    await Promise.all(Object.keys(DOCS).map((k) => deleteDoc(doc(db, "expedientes", uid, "archivos", k)).catch(() => {})));
+    await Promise.all(Object.keys({ ...DOCS_BASE, ...DOCS_EXTRA }).map((k) => deleteDoc(doc(db, "expedientes", uid, "archivos", k)).catch(() => {})));
     await deleteDoc(doc(db, "usuarios", uid)).catch(() => {});
   }
   if (acceso) { await deleteDoc(doc(db, "borrados", email.toLowerCase())).catch(() => {}); msg(`Listo: la cuenta de ${email} quedó borrada por completo. Ya puede registrarse de nuevo.`); }
@@ -1944,7 +2133,7 @@ function saveAuto() {
 
 
 /* ---------- Documentos del cliente ---------- */
-const DOCS = {
+const DOCS_BASE = {
   ine_f: "INE (frente)",
   ine_r: "INE (reverso)",
   domicilio: "Comprobante de domicilio (no mayor a 3 meses)",
@@ -1952,7 +2141,7 @@ const DOCS = {
 };
 const DEST = { pendiente: ["En revisión", "warn"], aprobado: ["Aprobado", "ok"], rechazado: ["Rechazado", "no"] };
 let DOCS_OPEN = "", docsUnsub = null;
-const docCount = (u) => { const d = u.docs || {}; const n = Object.keys(DOCS).filter((k) => d[k]).length; return `(${n}/${Object.keys(DOCS).length})`; };
+const docCount = (u) => { const d = u.docs || {}; const n = Object.keys(DOCS_BASE).filter((k) => d[k]).length; return `(${n}/${Object.keys(DOCS_BASE).length})`; };
 
 const BLOBS = {};
 function blobUrl(dataUrl) {
@@ -1984,7 +2173,9 @@ function fileToData(file) {
     img.src = url;
   });
 }
-function docsCard(box, uid, admin) {
+const DOCS_EXTRA = { factura: "Factura endosada", tarjeta: "Tarjeta de circulación", otro: "Otro documento" };
+function docsCard(box, uid, admin, opts = {}) {
+  const DOCS = opts.extra ? { ...DOCS_BASE, ...DOCS_EXTRA } : DOCS_BASE;
   if (!box) return;
   if (docsUnsub) { docsUnsub(); docsUnsub = null; }
   let FILES = {}, OPENF = "";
@@ -2002,7 +2193,7 @@ function docsCard(box, uid, admin) {
           ${f && f.nota ? `<div class="item-mid"><b>${f.estado === "rechazado" ? "Motivo" : "Nota"}:</b> ${esc(f.nota)}</div>` : ""}
           ${k === "domicilio" && puedeSubir && !(admin && f) ? `<label>Fecha que aparece en el comprobante${admin ? " (opcional)" : ""}<input type="date" data-fd="${k}" max="${today()}"></label>` : ""}
           <div class="item-bot">
-            ${puedeSubir ? `<label class="btn sm" style="cursor:pointer">${f && !na ? "Reemplazar" : "Subir foto o PDF"}<input type="file" accept="image/*,application/pdf" data-up="${k}" hidden></label>` : ""}
+            ${puedeSubir ? `<label class="btn sm" style="cursor:pointer">${f && !na ? "Reemplazar" : admin ? "Agregar foto o PDF" : "Subir foto o PDF"}<input type="file" accept="image/*,application/pdf" data-up="${k}" hidden></label>` : ""}
             ${f && !na ? `<button class="btn sm" type="button" data-see="${k}">Ver en grande</button>` : ""}
             ${admin && f && !na && f.estado !== "aprobado" ? `<button class="btn sm primary" type="button" data-ap="${k}">Aprobar</button>` : ""}
             ${admin && f && !na ? `<button class="link" type="button" data-dec="${k}">${OPENF === k ? "Cerrar" : "Aprobar con nota o rechazar"}</button>` : ""}
@@ -2026,9 +2217,9 @@ function docsCard(box, uid, admin) {
       } catch (e) { er.className = "err"; er.textContent = e.message || "No se pudo subir. Intenta de nuevo."; }
     }));
     box.querySelectorAll("[data-see]").forEach((b) => (b.onclick = () => verDoc(FILES[b.dataset.see], DOCS[b.dataset.see])));
-    const setEst = (k, estado, nota) => Promise.all([updateDoc(doc(db, "expedientes", uid, "archivos", k), { estado, nota }), updateDoc(doc(db, "usuarios", uid), { ["docs." + k]: estado })]);
+    const setEst = (k, estado, nota) => Promise.all([updateDoc(doc(db, "expedientes", uid, "archivos", k), { estado, nota }), updateDoc(doc(db, "usuarios", uid), { ["docs." + k]: estado }).catch(() => {})]);
     const avisaDoc = (k, ok, nota) => {
-      if (!admin) return; const u = USERS.find((x) => x.uid === uid) || {};
+      if (!admin) return; const u = USERS.find((x) => x.uid === uid) || opts.who || {};
       notice(u.nombre || "", u.telefono, ok ? `Hola ${u.nombre || ""}, ya revisamos tu ${DOCS[k]} y quedó aprobado.${nota ? " " + nota + "." : ""} Gracias.\n\nEntre Amigos` : `Hola ${u.nombre || ""}, revisamos tu ${DOCS[k]} y necesitamos que lo subas de nuevo.${nota ? "\nMotivo: " + nota : ""}\n\nPuedes hacerlo aquí:\n${PORTAL()}\n\nEntre Amigos`, ok ? "Documento aprobado" : "Documento rechazado", u.email);
     };
     box.querySelectorAll("[data-ap]").forEach((b) => (b.onclick = () => setEst(b.dataset.ap, "aprobado", "").then(() => avisaDoc(b.dataset.ap, true, ""))));
@@ -2076,8 +2267,8 @@ function cuotas() {
     a.corrida.filas.forEach((f) => {
       acum += f.pago;
       const fecha = iso(fechaPago(p.inicio, f.n, p.tipo));
-      const pagada = a.pagado + 0.5 >= acum;
-      const debe = pagada ? 0 : Math.round(Math.min(f.pago, acum - a.pagado) * 100) / 100;
+      const ef = a.pagado + (a.credito || 0), pagada = ef + 0.5 >= acum;
+      const debe = pagada ? 0 : Math.round(Math.min(f.pago, acum - ef) * 100) / 100;
       out.push({ p, n: f.n, total: a.total, monto: f.pago, debe, fecha, pagada, atrasada: !pagada && fecha < hoy, noPago: p.noPago?.[f.n] || "", restante: a.restante, pagado: a.pagado, capital: a.capital });
     });
   });

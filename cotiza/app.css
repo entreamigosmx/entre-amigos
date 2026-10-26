@@ -198,3 +198,26 @@ b.lime{color:var(--lime)}
 .inv .tiles b{font-size:20px}
 @media (max-width:420px){.inv .tiles{grid-template-columns:1fr}.inv .tiles div{grid-template-columns:1fr auto;align-items:baseline}}
 .inv .btn{min-height:52px;font-size:18px}
+/* Ficha de préstamo */
+.tapi{cursor:pointer;position:relative;padding-right:22px}
+.tapi::after{content:"";position:absolute;right:4px;top:50%;width:8px;height:8px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:translateY(-50%) rotate(45deg)}
+.tapi:active{background:var(--panel-2)}
+.back{background:none;border:0;color:var(--lime);font:700 16px var(--display);letter-spacing:.06em;text-transform:uppercase;padding:0;cursor:pointer;justify-self:start;min-height:36px}
+.ficha,.ficha>*,.sec,.sec>*{min-width:0}
+.ficha{grid-template-columns:minmax(0,1fr)}
+.grid4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid4 .btn{min-height:56px;font-size:15px;text-align:center;line-height:1.15}
+.sec{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+details.sec>summary{font:800 19px var(--display);text-transform:uppercase;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::after{content:"+";color:var(--lime);font-size:24px;line-height:1}
+details.sec[open]>summary::after{content:"\2013"}
+.sec .tbl{margin-top:0;max-width:100%}
+.sec table{font-size:13px} .sec th,.sec td{padding:7px 4px}
+.sec .pill{font-size:10.5px;padding:2px 6px}
+.sec td.r{text-align:right;white-space:nowrap;display:grid;gap:4px;justify-items:end}
+.sec .rep{border:0;padding:0}
+.avis{border:1px solid var(--warn);border-radius:12px;padding:12px}
+.viewer.asc{grid-template-rows:auto 1fr}
+.viewer.asc .vbody{display:block;background:var(--bg);place-items:initial}
+.viewer.asc .wrap{padding-top:16px}
