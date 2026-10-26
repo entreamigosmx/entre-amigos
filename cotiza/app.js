@@ -1458,7 +1458,10 @@ function propuestasConv() {
     const tasa = x.base === "puntos" ? x.valor : x.base === "pct" ? Math.round(p.tasa * x.valor) / 100 : monto ? Math.round((x.valor / monto) * 10000) / 100 : 0;
     const fecha = iso(fechaPago(x.desde || p.inicio || today(), 0, "mensual"));
     const ex = INVS.find((m) => m.tipo !== "retiro" && !(m.tasa > 0) && !INV_OFF.includes(m.estado || "") && persKey(m) === persKey(x));
-    L.push({ key: p.id + "_" + i, p, i, x, nombre: persName(x), monto, tasa, fecha, ex });
+    // Inversiones con tasa que ya registraste a esa persona (por cuenta o por nombre): se pueden ligar sin crear otra.
+    const nm = (t) => String(t || "").trim().toLowerCase().split(/\s+/)[0];
+    const ya = CONTRATOS().filter((m) => persKey(m) === persKey(x) || (nm(m.nombre) && nm(m.nombre) === nm(persName(x))));
+    L.push({ key: p.id + "_" + i, p, i, x, nombre: persName(x), monto, tasa, fecha, ex, ya });
   }));
   return L;
 }
@@ -1467,9 +1470,11 @@ function convCard() {
   const sueltas = INVS.filter((m) => m.tipo !== "retiro" && !(m.tasa > 0) && !INV_OFF.includes(m.estado || "") && !usados.has(m.id));
   if (!L.length && !sueltas.length) return "";
   return `<div class="card avis"><h2>Pasar a inversiones</h2>
-    <p class="muted">Encontré lo que ya tenías capturado. Revisa cada dato y corrígelo si hace falta; no se guarda nada hasta que toques Confirmar. Los préstamos y sus pagos no se modifican.</p>
+    <p class="muted">Encontré lo que ya tenías capturado. Mientras esté aquí, ese fondeo sigue contando por separado: si además ya lo registraste como inversión, se le estaría pagando dos veces. Revisa cada dato; no se guarda nada hasta que toques Confirmar. Los préstamos y sus pagos no se modifican.</p>
     <form id="convf" novalidate><div class="list">
     ${L.map((q) => `<div class="item" data-cq="${q.key}"><div class="item-top"><b>${esc(q.nombre)}</b><span>Fondeó el préstamo de ${esc(q.p.cliente)}</span></div>
+      ${q.ya.length ? `<label>¿Ya la registraste como inversión?<select name="link"><option value="">No, crear la inversión con estos datos</option>${q.ya.map((m) => `<option value="${m.id}"${(q.ya.find((z) => Math.abs(vigenteDe(z) - q.monto) < 1) || (q.ya.length === 1 ? q.ya[0] : null))?.id === m.id ? " selected" : ""}>Sí: ${esc(m.nombre)} · ${mxn(vigenteDe(m))} al ${m.tasa}% del ${fdate(m.fecha)}</option>`).join("")}</select></label>
+      <p class="note">Si eliges "Sí", solo se quita el fondeo antiguo de este préstamo y se liga a esa inversión. No se crea otra.</p>` : ""}
       <div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${Number(q.monto).toLocaleString("es-MX")}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" value="${q.tasa || ""}"></label></div>
       <label>Fecha en que te prestó<input name="f" type="date" value="${q.fecha}"></label>
       ${q.ex ? `<label class="chk"><input type="checkbox" name="ex" value="${q.ex.id}"${Math.abs(q.ex.monto - q.monto) < 1 ? " checked" : ""}> Es la misma aportación de ${mxn(q.ex.monto)} del ${fdate(q.ex.fecha)} que ya registraste (no la dupliques)</label>` : ""}</div>`).join("")}
@@ -1549,16 +1554,17 @@ function bindInversiones() {
   if (cf) cf.onsubmit = async (ev) => {
     ev.preventDefault(); const er = cf.querySelector(".err"), L = propuestasConv(), btn = cf.querySelector("button[type=submit]");
     const val = (el, n) => el.querySelector(`[name=${n}]`);
-    for (const el of cf.querySelectorAll("[data-cq]")) if (!num(val(el, "m").value) || !num(val(el, "t").value) || !val(el, "f").value) { er.hidden = false; er.textContent = "Cada inversión necesita monto, porcentaje y fecha."; el.scrollIntoView({ block: "center" }); return; }
+    for (const el of cf.querySelectorAll("[data-cq]")) if (!val(el, "link")?.value && (!num(val(el, "m").value) || !num(val(el, "t").value) || !val(el, "f").value)) { er.hidden = false; er.textContent = "Cada inversión necesita monto, porcentaje y fecha."; el.scrollIntoView({ block: "center" }); return; }
     btn.disabled = true; er.hidden = false; er.className = "ok"; er.textContent = "Guardando…";
     try {
       const porPres = {};
       for (const q of L) {
         const el = cf.querySelector(`[data-cq="${q.key}"]`); if (!el) continue;
         const d = { monto: num(val(el, "m").value), tasa: num(val(el, "t").value), fecha: val(el, "f").value, conv: true, editado: new Date().toISOString() };
-        const ex = val(el, "ex")?.checked ? val(el, "ex").value : "";
-        let aid = ex;
-        if (ex) { const m = INVS.find((x) => x.id === ex); await updateDoc(doc(db, "inversiones", ex), { ...d, pids: [...new Set([...(m?.pids || []), q.p.id])] }); }
+        const ex = val(el, "ex")?.checked ? val(el, "ex").value : "", link = val(el, "link")?.value || "";
+        let aid = link || ex;
+        if (link) { const m = INVS.find((x) => x.id === link); await updateDoc(doc(db, "inversiones", link), { pids: [...new Set([...(m?.pids || []), q.p.id])] }); }
+        else if (ex) { const m = INVS.find((x) => x.id === ex); await updateDoc(doc(db, "inversiones", ex), { ...d, pids: [...new Set([...(m?.pids || []), q.p.id])] }); }
         else { const ref = await addDoc(collection(db, "inversiones"), { uid: q.x.uid || "", nombre: q.nombre, tipo: "aporte", ...d, pids: [q.p.id], reg: new Date().toISOString() }); aid = ref.id; }
         (porPres[q.p.id] = porPres[q.p.id] || []).push({ i: q.i, aid });
       }
@@ -1852,6 +1858,13 @@ function pagosBox(p, admin) {
   </details>`;
 }
 let RECH = "";
+// Cuenta que ve este préstamo en su app (como deudor). Si es de un inversionista o colaborador, casi siempre es un error.
+const cuentaDe = (p) => USERS.find((u) => (p.clienteUid && u.uid === p.clienteUid) || (p.clienteEmail && (u.email || "").toLowerCase() === p.clienteEmail)) || null;
+function avisoCuenta(p) {
+  const u = cuentaDe(p); if (!u || !isAdmin()) return "";
+  const raro = u.inversionista || u.rol === "equipo" || u.rol === "admin";
+  return raro ? `<div class="avis"><p class="err" style="margin:0"><b>Revisa:</b> este préstamo está ligado a la cuenta de <b>${esc(u.nombre || u.email)}</b>${u.inversionista ? ", que es inversionista" : ", que es colaborador"}. En su app lo ve como si ${esc((u.nombre || "").split(" ")[0] || "esa persona")} debiera este préstamo, con el interés completo. Si no es el cliente, en Datos del cliente cambia "Cuenta del cliente" a la correcta (o "Sin cuenta") y borra su correo.</p></div>` : "";
+}
 // Cómo se calcula lo que debe hoy, paso por paso, para poder revisarlo a mano.
 function cuadreBox(p, a, e) {
   const hoy = today(), sem = p.tipo === "semanal", u = sem ? "semana" : "mes", us = sem ? "semanas" : "meses";
@@ -1889,6 +1902,7 @@ function fichaHTML(p) {
     <div class="head"><h2>${esc(p.cliente)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc > 0.5 ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
     ${adm && (ownerOf(p) !== ME.uid || p.recibe) ? `<div class="item-bot">${ownerOf(p) !== ME.uid ? `<span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${p.recibe ? `<span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</div>` : ""}
     <p class="muted">${loanDesc(p, a)}</p>
+    ${avisoCuenta(p)}
     ${a.liquidado ? `<p class="ok">Préstamo liquidado.</p>` : venc > 0.5 ? `<div class="big"><span>Debe hoy</span><b>${mxn2(venc)}</b></div>
       <p class="muted">Le falta${faltan.length > 1 ? "n" : ""} ${faltan.map((f) => mxn(f.falta) + " de " + mesLbl(f.fecha, sem)).join(" y ")}.${e.meses.find((f) => f.fecha > today()) ? " El " + fcorta(new Date(e.meses.find((f) => f.fecha > today()).fecha + "T12:00:00")) + " se suman " + mxn(e.meses.find((f) => f.fecha > today()).pago) + "." : ""}</p>`
       : a.siguiente ? `<div class="big"><span>Próximo pago${SI ? "" : " · " + unidad + " " + a.siguiente.n + " de " + a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : ""}
@@ -1927,7 +1941,7 @@ function fichaHTML(p) {
     ${estadoBox(p, true)}
     ${schedule(p, a, false, true).replace("<details", '<details class="sec"')}
     <details class="sec"><summary>Datos del cliente</summary>
-      <p class="muted">${tieneCuenta ? "Ya creó su cuenta y ve su préstamo desde su celular." : "Todavía no crea su cuenta."}${p.telefono ? " WhatsApp: " + esc(p.telefono) + "." : ""}</p>
+      <p class="muted">${tieneCuenta ? `Lo ve en su app la cuenta de <b>${esc(cuentaDe(p)?.nombre || cuentaDe(p)?.email || "")}</b>.` : "Todavía no crea su cuenta."}${p.telefono ? " WhatsApp: " + esc(p.telefono) + "." : ""}</p>
       <label>Correo (con este correo verá su préstamo)<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
       ${adm ? `<label>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>` : ""}
     </details>
@@ -2002,7 +2016,7 @@ function fichaBind(p) {
 // Muestra exactamente lo que ve el cliente en su app.
 function verComoCliente(p) {
   const ov = document.createElement("div"); ov.className = "viewer asc";
-  ov.innerHTML = `<div class="vbar"><b>Así lo ve ${esc((p.cliente || "el cliente").split(" ")[0])}</b><button class="btn sm primary" type="button">Cerrar</button></div><div class="vbody"><div class="wrap">${clienteLoanCard(p)}</div></div>`;
+  ov.innerHTML = `<div class="vbar"><b>Así lo ve ${esc(((cuentaDe(p)?.nombre) || p.cliente || "el cliente").split(" ")[0])}${cuentaDe(p) ? "" : " (cuando cree su cuenta)"}</b><button class="btn sm primary" type="button">Cerrar</button></div><div class="vbody"><div class="wrap">${clienteLoanCard(p)}</div></div>`;
   ov.querySelectorAll("a,button:not(.vbar button),input,select,textarea").forEach((x) => { x.setAttribute("tabindex", "-1"); x.style.pointerEvents = "none"; });
   ov.querySelectorAll("form").forEach((f) => (f.onsubmit = (e) => e.preventDefault()));
   ov.querySelector(".vbar button").onclick = () => ov.remove();
