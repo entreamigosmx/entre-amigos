@@ -247,7 +247,10 @@ function startApp() {
     unsubs.push(onSnapshot(collection(db, "solicitudes"), (s) => { SOLS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); drawTabs(); if (TAB === "cotizaciones" || TAB === "agenda") draw(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "ventas"), (s) => { VENTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); drawTabs(); if (TAB === "autos" || TAB === "agenda") draw(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "entregas"), (s) => { ENT = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); }, () => {}));
-    unsubs.push(onSnapshot(collection(db, "invcfg"), (s) => { INVCFG = {}; s.docs.forEach((d) => (INVCFG[d.id] = d.data())); if (TAB === "cuentas") draw(); else syncSoon(); }, () => {}));
+    unsubs.push(onSnapshot(collection(db, "invcfg"), (s) => { INVCFG = {}; s.docs.forEach((d) => (INVCFG[d.id] = d.data()));
+      // Ajustes guardados con la forma anterior del nombre (con acentos o mayúsculas): se leen también con la nueva.
+      s.docs.forEach((d) => { if (d.id.startsWith("n:")) { const k = cfgKey(nomKey(d.id.slice(2))); if (!INVCFG[k]) INVCFG[k] = d.data(); } });
+      if (TAB === "cuentas") draw(); else syncSoon(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "inversiones"), (s) => { INVS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); drawInvAlert(); }, () => {}));
     unsubs.push(onSnapshot(collection(db, "solinv"), (s) => { SOLINV = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "cuentas") draw(); drawInvAlert(); }, () => {}));
   }
@@ -1041,7 +1044,23 @@ const sigFecha = (p) => { const a = avance(p); return a.siguiente?.fecha ? iso(a
 function masHabiles(f, n) { const d = new Date(f + "T12:00:00"); let k = 0; while (k < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) k++; } return iso(d); }
 const PAPEL = { fondeo: "Fondeó el dinero", comision: "Comisión" };
 const BASE = { puntos: "puntos de interés al mes", pct: "% del interés cobrado", fijo: "fijo por pago" };
-const persKey = (x) => x.uid || "n:" + (x.nombre || "").trim().toLowerCase();
+// Identidad de una persona (inversionista o comisionista): su cuenta, o su nombre sin acentos, mayúsculas ni espacios de más.
+// Si alguien sin cuenta se llama igual que un inversionista con cuenta, es la misma persona. "Unir con…" (invcfg.unir) junta a mano.
+const nomKey = (n) => "n:" + String(n || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+let PK_SIG = "", PK_ALIAS = {};
+function pkAlias() {
+  const sig = USERS.length + "|" + Object.keys(INVCFG).length + "|" + USERS.map((u) => u.uid + (u.nombre || "") + (u.inversionista ? 1 : 0)).join(",") + JSON.stringify(Object.entries(INVCFG).map(([k, v]) => [k, v.unir || ""]));
+  if (sig === PK_SIG) return PK_ALIAS;
+  const A = {}, cnt = {};
+  USERS.filter((u) => u.rol !== "admin" && (u.inversionista || u.rol === "equipo")).forEach((u) => { const k = nomKey(u.nombre); cnt[k] = (cnt[k] || 0) + 1; A[k] = u.uid; });
+  Object.keys(cnt).forEach((k) => cnt[k] > 1 && delete A[k]);
+  Object.entries(INVCFG).forEach(([k, v]) => { if (v.unir) A[v.de || k] = v.unir; });
+  const fin = (k, n = 0) => (A[k] && A[k] !== k && n < 5 ? fin(A[k], n + 1) : k);
+  PK_ALIAS = {}; Object.keys(A).forEach((k) => (PK_ALIAS[k] = fin(k)));
+  PK_SIG = sig; return PK_ALIAS;
+}
+const persKey0 = (x) => x.uid || nomKey(x.nombre);
+const persKey = (x) => { const k = persKey0(x); return pkAlias()[k] || k; };
 const persName = (x) => (x.uid ? (x.uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === x.uid)?.nombre || x.nombre || "Colaborador") : x.nombre);
 function parteDe(r, x) {
   const p = r.p; let int = 0;
@@ -1641,7 +1660,7 @@ const sgn2 = (n) => (n < -0.005 ? "−" + mxn2(-n) : mxn2(n));
 const fdate = (f) => fcorta(new Date(f + "T12:00:00"));
 const activosPres = () => PRES.filter((p) => !avance(p).liquidado);
 function contratoForm(m, dataKey, preset) {
-  const per = personasInv(true), ids = new Set(m?.pids || []), pk = preset ? (preset.uid || "n:" + String(preset.nombre || "").trim().toLowerCase()) : "";
+  const per = personasInv(true), ids = new Set(m?.pids || []), pk = preset ? persKey({ uid: preset.uid, nombre: preset.nombre }) : "";
   return `<form class="edit" data-ivf="${dataKey}" novalidate>
     <h3>${m && m.id ? (dataKey.startsWith("aut:") ? "Autorizar inversión de " + esc(m.nombre) : "Editar inversión de " + esc(m.nombre)) : "Nueva inversión"}</h3>
     ${m && m.id ? "" : `<div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${per.map(([k, n]) => `<option value="${esc(k)}"${pk === k ? " selected" : ""}>${esc(n)}${USERS.some((u) => u.uid === k) ? "" : " · sin cuenta"}</option>`).join("")}</select></label><label data-nomw${pk && per.some(([k]) => k === pk) ? " hidden" : ""}>Nombre de la persona<input name="nombre" placeholder="Ej. Mamá" value="${esc(preset && !preset.uid && !per.some(([k]) => k === pk) ? preset.nombre : "")}"></label></div>`}
@@ -1806,7 +1825,9 @@ function personaInvView(e, formPago) {
       <div><span>Le has pagado</span><b>${mxn2(e.pagado)}</b></div><div><span>Le debes hoy</span><b class="${debe > 0.5 ? "warn-t" : "lime"}">${mxn2(debe)}</b></div>
     </div>
     ${prox ? `<p class="muted" style="margin:0">Próximo pago: <b>${mxn2(prox.monto)}</b> el ${fdate(prox.fecha)}${prox.limite !== prox.fecha ? " (a más tardar el " + fdate(prox.limite) + ")" : ""}.</p>` : ""}
-    <div class="actions"><button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Ya le pagué</button>${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-icfg="${esc(e.k)}">${apodoDe(e.k) ? "Apodo, app y plazos" : "Ponerle apodo, app y plazos"}</button><button class="btn sm" type="button" data-ivver="${esc(e.k)}">Ver como lo ve ${esc(nom1(e.nombre))}</button></div>
+    <div class="actions"><button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Ya le pagué</button>${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-icfg="${esc(e.k)}">${apodoDe(e.k) ? "Apodo, app y plazos" : "Ponerle apodo, app y plazos"}</button><button class="btn sm" type="button" data-ivver="${esc(e.k)}">Ver como lo ve ${esc(nom1(e.nombre))}</button><button class="btn sm" type="button" data-inom="${esc(e.k)}">${INV_FORM === "nom:" + e.k ? "Cancelar" : "Corregir nombre"}</button><button class="btn sm" type="button" data-iunir="${esc(e.k)}">${INV_FORM === "unir:" + e.k ? "Cancelar" : "Es la misma persona que…"}</button></div>
+    ${INV_FORM === "nom:" + e.k ? `<form class="edit" data-inomf="${esc(e.k)}" novalidate><label>Nombre completo<input name="n" value="${esc(e.nombre)}"></label><p class="note">Se cambia en todas sus inversiones, pagos e historial${USERS.some((u) => u.uid === e.k) ? " y en su cuenta" : ""}. Si escribes el mismo nombre que otro registro (por ejemplo "Rubí Reynoso"), quedan juntos como una sola persona.</p><p class="err" hidden></p><button class="btn sm primary" type="submit">Guardar</button></form>` : ""}
+    ${INV_FORM === "unir:" + e.k ? (() => { const O = Object.values(estadoPersonas()).filter((x) => x.k !== e.k && (x.inv || x.aportes > 0 || CONTRATOS().some((m) => persKey(m) === x.k))); return `<form class="edit" data-iunirf="${esc(e.k)}" novalidate><label>Juntar a ${esc(e.ver || e.nombre)} con<select name="a">${O.map((x) => `<option value="${esc(x.k)}">${esc(x.ver || x.nombre)}${USERS.some((u) => u.uid === x.k) ? "" : " · sin cuenta"}</option>`).join("")}</select></label><p class="note">Sus inversiones, pagos e historial quedan juntos en una sola persona. No se borra nada.</p><button class="btn sm primary" type="submit">Juntar</button></form>`; })() : ""}
     ${INV_FORM === "pag:" + e.k ? formPago(e, Math.min(debe, Math.max(0, e.neto)) || (prox ? prox.monto : 0), "a") : ""}
     ${INV_FORM === "rec:" + e.k ? formPago(e, -e.neto, "de") : ""}
     ${INV_FORM === "cfg:" + e.k ? cfgForm(e) : ""}
@@ -1885,6 +1906,36 @@ function vCuentas() {
         <div class="item-mid">${parts.map((q) => `${esc(persName(q.x))} ${q.x.base === "puntos" ? q.x.valor + "%" : ""} ${mxn2(q.v)}`).join(" · ")} · Para ti ${mxn2(mio)}${p.tasa && parts.every((q) => q.x.base === "puntos") ? " (" + Math.round((p.tasa - Lp.reduce((s, x) => s + x.valor, 0)) * 100) / 100 + "%)" : ""}</div>
         <div class="item-bot"><span>Próximo pago del cliente ${sig ? "el " + fcorta(new Date(sig.fecha + "T12:00:00")) + " · interés " + mxn2(intC) : "sin fecha"} · Capital ${mxn(debeDe(p, a) || p.monto)}</span></div></div>`;
     }).join("") || `<p class="muted">Ningún préstamo activo tiene inversionista.</p>`}</div></div>`);
+  $("panel").querySelectorAll("[data-inom]").forEach((b) => (b.onclick = () => { INV_FORM = INV_FORM === "nom:" + b.dataset.inom ? "" : "nom:" + b.dataset.inom; vCuentas(); }));
+  $("panel").querySelectorAll("form[data-inomf]").forEach((f) => (f.onsubmit = async (ev) => {
+    ev.preventDefault(); const k = f.dataset.inomf, n = f.querySelector("[name=n]").value.trim().replace(/\s+/g, " "), er = f.querySelector(".err");
+    if (!n) { er.hidden = false; er.textContent = "Escribe el nombre."; return; }
+    try {
+      const W = [];
+      INVS.filter((m) => persKey(m) === k).forEach((m) => W.push(updateDoc(doc(db, "inversiones", m.id), { nombre: n })));
+      ENT.filter((m) => persKey(m) === k).forEach((m) => W.push(updateDoc(doc(db, "entregas", m.id), { nombre: n })));
+      SOLINV.filter((m) => persKey(m) === k).forEach((m) => W.push(updateDoc(doc(db, "solinv", m.id), { nombre: n })));
+      Object.entries(REP).forEach(([pid, r]) => { if ((r.participantes || []).some((x) => persKey(x) === k)) W.push(setDoc(doc(db, "repartos", pid), { ...r, participantes: r.participantes.map((x) => (persKey(x) === k ? { ...x, nombre: n } : x)) })); });
+      if (USERS.some((u) => u.uid === k)) W.push(updateDoc(doc(db, "usuarios", k), { nombre: n }));
+      // Apodo y ajustes se conservan con el nombre nuevo (si no tiene cuenta).
+      const nk = USERS.some((u) => u.uid === k) ? k : nomKey(n), cOld = INVCFG[cfgKey(k)];
+      if (nk !== k && cOld && !INVCFG[cfgKey(nk)]) { const { unir, de, ...resto } = cOld; W.push(setDoc(doc(db, "invcfg", cfgKey(nk)), resto)); }
+      await Promise.all(W); INV_FORM = ""; INV_SEL = persKey({ uid: USERS.some((u) => u.uid === k) ? k : "", nombre: n }); vCuentas();
+    } catch (x) { er.hidden = false; er.textContent = "No se pudo guardar. Revisa tu conexión."; }
+  }));
+  $("panel").querySelectorAll("[data-iunir]").forEach((b) => (b.onclick = () => { INV_FORM = INV_FORM === "unir:" + b.dataset.iunir ? "" : "unir:" + b.dataset.iunir; vCuentas(); }));
+  $("panel").querySelectorAll("form[data-iunirf]").forEach((f) => (f.onsubmit = async (ev) => {
+    ev.preventDefault(); const de = f.dataset.iunirf, a = f.querySelector("[name=a]").value; if (!a || a === de) return;
+    // Se junta hacia quien tiene cuenta (si alguno la tiene); el otro queda como alias.
+    const aCuenta = USERS.some((u) => u.uid === a), deCuenta = USERS.some((u) => u.uid === de);
+    const [desde, hacia] = deCuenta && !aCuenta ? [a, de] : [de, a];
+    // Apodo, plazos, WhatsApp y correo pasan a la persona unida si ella no los tenía.
+    const cD = INVCFG[cfgKey(desde)] || {}, cH = INVCFG[cfgKey(hacia)] || {}, lleva = {};
+    ["apodo", "dias", "ver", "tel", "mail", "uid"].forEach((k) => { if ((cH[k] === undefined || cH[k] === "") && cD[k] !== undefined && cD[k] !== "") lleva[k] = cD[k]; });
+    if (Object.keys(lleva).length) await setDoc(doc(db, "invcfg", cfgKey(hacia)), { ...cH, ...lleva });
+    await setDoc(doc(db, "invcfg", cfgKey(desde)), { ...cD, unir: hacia, de: desde });
+    INV_FORM = ""; INV_SEL = hacia; vCuentas();
+  }));
   $("panel").querySelectorAll("[data-ivver]").forEach((b) => (b.onclick = () => {
     const e = EP[b.dataset.ivver]; if (!e) return;
     const ov = document.createElement("div"); ov.className = "viewer asc";
