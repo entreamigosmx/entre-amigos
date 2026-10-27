@@ -141,8 +141,8 @@
   "marca": "Chevrolet",
   "modelo": "Suburban RST",
   "anio": 2023,
-  "precio": 1199000,
-  "precioEspecial": false,
+  "precio": 1099000,
+  "precioEspecial": true,
   "categoria": "SUV",
   "kilometraje": 55000,
   "disponible": true,
@@ -173,7 +173,8 @@
   ],
   "portada": false,
   "nombre": "Chevrolet Suburban",
-  "version": "RST"
+  "version": "RST",
+  "precioAnterior": 1199000
  },
  {
   "title": "Porsche Macan S 2020",
@@ -465,8 +466,8 @@
   "marca": "Mercedes-Benz",
   "modelo": "E400 4MATIC",
   "anio": 2019,
-  "precio": 499000,
-  "precioEspecial": false,
+  "precio": 470000,
+  "precioEspecial": true,
   "categoria": "Sedán",
   "kilometraje": 96800,
   "disponible": true,
@@ -497,7 +498,8 @@
   ],
   "portada": false,
   "nombre": "Mercedes-Benz E400",
-  "version": "4MATIC"
+  "version": "4MATIC",
+  "precioAnterior": 499000
  },
  {
   "title": "Honda Odyssey Touring 2019",
@@ -577,8 +579,8 @@
   "marca": "Audi",
   "modelo": "Q5",
   "anio": 2018,
-  "precio": 385000,
-  "precioEspecial": false,
+  "precio": 269000,
+  "precioEspecial": true,
   "categoria": "SUV",
   "disponible": true,
   "destacado": false,
@@ -604,7 +606,8 @@
   ],
   "portada": false,
   "nombre": "Audi Q5",
-  "version": ""
+  "version": "",
+  "precioAnterior": 385000
  },
  {
   "title": "Audi Q3 S line 2020",
