@@ -1374,7 +1374,7 @@ function invPageHTML(d, nom, vista) {
     <button class="ix-a" type="button" data-ixbig>${INV_BIG ? "Letra normal" : "Letra más grande"}</button></div>
   <div class="card ix"><p class="ix-lbl">Tu dinero en Entre Amigos</p><p class="ix-num">${mxn(d.capital)}</p>
     ${d.mensual ? `<p class="ix-t">Te pagamos <b>${mxn(d.mensual)}</b> cada mes.</p>` : ""}</div>
-  ${d.proximo ? `<div class="card ix ix-next"><p class="ix-lbl">Tu próximo pago</p><p class="ix-num lime">${mxn(d.proximo.monto)}</p><p class="ix-t">${fechaLarga(d.proximo.fecha)}</p></div>` : ""}
+  ${d.proximo ? `<div class="card ix ix-next"><p class="ix-lbl">Tu próximo pago</p><p class="ix-num lime">${mxn(d.proximo.monto)}</p><p class="ix-t">${d.proximo.fecha < today() && d.proximo.limite ? "Te lo pagamos a más tardar el " + fechaLarga(d.proximo.limite).replace(/^\w/, (c) => c.toLowerCase()) + "." : fechaLarga(d.proximo.fecha)}</p></div>` : ""}
   ${INV.length ? `<div class="card ix"><p class="ix-lbl">${INV.length > 1 ? "Tus inversiones" : "Tu inversión"}</p>${INV.map((v) => `<div class="ix-row">
       <p class="ix-t">Nos prestaste <b>${mxn(v.original)}</b> el ${fechaMedia(v.desde)}.</p>
       ${v.original > v.monto + 0.5 ? `<p class="ix-t">Ya te regresamos <b>${mxn(v.original - v.monto)}</b>. Seguimos teniendo <b>${mxn(v.monto)}</b>.</p>` : ""}
@@ -1979,7 +1979,8 @@ function portafolioDe(e) {
   {
     const c = INVCFG[cfgKey(e.k)] || {}, r2 = (n) => Math.round(n * 100) / 100;
     const ganado = r2(e.obl.filter((o) => o.concepto !== "Capital que pagó el cliente").reduce((s, o) => s + o.monto, 0));
-    const prox = e.pend.length ? { monto: r2(e.pend.filter((o) => o.limite === e.pend[0].limite).reduce((s, o) => s + o.falta, 0)), fecha: e.pend[0].limite } : e.futuro[0] ? { monto: r2(e.futuro.filter((o) => o.limite === e.futuro[0].limite).reduce((s, o) => s + o.monto, 0)), fecha: e.futuro[0].limite } : null;
+    // Próximo pago: la fecha en que le toca (no el último día del margen). Si ya pasó y falta pagarle, se indica el límite.
+    const prox = e.pend.length ? { monto: r2(e.pend.filter((o) => o.fecha === e.pend[0].fecha).reduce((s, o) => s + o.falta, 0)), fecha: e.pend[0].fecha, limite: e.pend[0].limite } : e.futuro[0] ? { monto: r2(e.futuro.filter((o) => o.fecha === e.futuro[0].fecha).reduce((s, o) => s + o.monto, 0)), fecha: e.futuro[0].fecha, limite: e.futuro[0].limite } : null;
     const CI = CONTRATOS().filter((m) => persKey(m) === e.k && vigenteDe(m) > 0.5);
     const inversiones = CI.map((m) => { const px = proxInv(m); return { monto: vigenteDe(m), original: m.monto, tasa: m.tasa, mensual: mensualDe(m), dia: diaDe(m), desde: m.fecha, prox: px ? { fecha: px.fecha, monto: px.monto } : null }; });
     const mensual = r2(CI.reduce((s, m) => s + mensualDe(m), 0) + e.prestamos.reduce((s, q) => { const f = desgloseFilas(q.p).find((x) => x.fecha >= today()); return s + (f ? parteDe({ p: q.p, interes: f.interes, capital: 0 }, q.x).int : 0); }, 0));
