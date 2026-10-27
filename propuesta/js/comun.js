@@ -41,7 +41,7 @@ export function card(a) {
     <a class="cl" href="${ficha(a)}"><div class="ph">${img}${tag}${vtag}</div>
     <div class="cb"><h3>${esc(a.nombre || a.title)}</h3>${a.version ? `<p class="ver">${esc(a.version)}</p>` : ""}
       <div class="m">${meta.map((x) => `<span>${esc(x)}</span>`).join("")}</div>
-      <div class="pr"><b>${mxn(a.precio)}</b>${prev}</div></div></a>
+      <div class="pr"><b>${mxn(a.precio)}</b>${prev}</div>${prev && a.precioAnterior > a.precio ? `<span class="ahorro">Ahorras ${mxn(a.precioAnterior - a.precio)}</span>` : ""}</div></a>
     <div class="ca"><a class="btn sm quiet" href="${ficha(a)}">Ver detalles</a>${a.apartado ? `<span class="st res">Apartado</span>` : `<a class="btn sm ghost" href="${credito(a)}">Cotizar crédito</a>`}</div>
   </article>`;
 }
