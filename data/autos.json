@@ -823,8 +823,8 @@
   "marca": "Mercedes-Benz",
   "modelo": "CLA 250 Sport AMG",
   "anio": 2018,
-  "precio": 290000,
-  "precioEspecial": false,
+  "precio": 270000,
+  "precioEspecial": true,
   "categoria": "Sedán",
   "kilometraje": 99600,
   "disponible": true,
@@ -854,7 +854,8 @@
   ],
   "portada": false,
   "nombre": "Mercedes-Benz CLA 250",
-  "version": "Sport AMG"
+  "version": "Sport AMG",
+  "precioAnterior": 290000
  },
  {
   "title": "Toyota Sequoia Limited 2013",
