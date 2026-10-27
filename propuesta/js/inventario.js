@@ -24,7 +24,7 @@ function draw() {
 function chips() {
   const have = new Set(ALL.flatMap(cats));
   const list = ["", ...ORDEN.filter((c) => have.has(c))];
-  $("chips").innerHTML = list.map((c) => `<button class="chip" type="button" data-c="${esc(c)}" aria-pressed="${c === CAT}"${c === "Ofertas" ? ' data-of="1"' : ""}>${esc(c ? LBL[c] || c : "Todos")}${c === "Ofertas" ? ` <b>${ALL.filter(oferta).length}</b>` : ""}</button>`).join("");
+  $("chips").innerHTML = list.map((c) => `<button class="chip" type="button" data-c="${esc(c)}" aria-pressed="${c === CAT}"${c === "Ofertas" ? ' data-of="1"' : ""}>${esc(c ? LBL[c] || c : "Todos")}</button>`).join("");
   $("chips").querySelectorAll(".chip").forEach((b) => (b.onclick = () => { CAT = b.dataset.c; chips(); draw(); }));
 }
 autos().then((l) => {
