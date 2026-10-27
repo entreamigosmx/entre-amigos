@@ -683,15 +683,35 @@ function ownerFilter(rerender) {
 /* ---------- Préstamos por cliente: una persona con varios préstamos ---------- */
 let PVISTA = "lista", CLI_SEL = "", CLI_NOM = false;
 const normNom = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
-// Cómo se junta a la misma persona: unión hecha por el dueño > su cuenta > su WhatsApp > su nombre.
-const cliKey = (p) => p.persona || (p.clienteUid ? "u:" + p.clienteUid : "") || (tel10(p.telefono || "").length === 10 ? "t:" + tel10(p.telefono) : "") || "n:" + normNom(p.cliente);
+// Misma persona si sus préstamos coinciden en cualquiera de: unión hecha por el dueño, cuenta, WhatsApp o nombre
+// (sin importar acentos ni mayúsculas). "Separar" (p.solo) hace que ese préstamo no se una por nombre ni WhatsApp.
+let CLU_SIG = "", CLU = {};
+function clusters() {
+  const sig = PRES.map((p) => [p.id, p.persona, p.clienteUid, p.telefono, p.cliente, p.solo].join("|")).join("~");
+  if (sig === CLU_SIG) return CLU;
+  const par = {}, f = (x) => (par[x] === undefined ? (par[x] = x) : par[x] === x ? x : (par[x] = f(par[x]))), u = (a, b) => { const ra = f(a), rb = f(b); if (ra !== rb) par[ra] = rb; };
+  const keys = (p) => [p.persona, p.clienteUid ? "u:" + p.clienteUid : "", p.solo ? "" : tel10(p.telefono || "").length === 10 ? "t:" + tel10(p.telefono) : "", p.solo ? "" : normNom(p.cliente) ? "n:" + normNom(p.cliente) : ""].filter(Boolean);
+  PRES.forEach((p) => { f("p:" + p.id); keys(p).forEach((k) => u("p:" + p.id, k)); });
+  const comp = {}; PRES.forEach((p) => (comp[f("p:" + p.id)] = comp[f("p:" + p.id)] || []).push(p));
+  CLU = {};
+  Object.values(comp).forEach((L) => {
+    const per = L.map((p) => p.persona).filter(Boolean).sort()[0];
+    const k = per || L.flatMap(keys).sort()[0] || "p:" + L[0].id;
+    L.forEach((p) => (CLU[p.id] = k));
+  });
+  CLU_SIG = sig; return CLU;
+}
+const cliKey = (p) => clusters()[p.id] || "p:" + p.id;
 function gruposClientes(L) {
   const G = {};
   L.forEach((p) => { const k = cliKey(p); (G[k] = G[k] || { k, P: [] }).P.push(p); });
   return Object.values(G).map((g) => {
     const r2 = (n) => Math.round(n * 100) / 100, hoy = today();
     g.P.sort((a, b) => ((a.creado || "") < (b.creado || "") ? -1 : 1));
-    g.nombre = g.P.map((p) => p.cliente || "").sort((a, b) => b.length - a.length)[0] || "Cliente";
+    // Nombre a mostrar: el que más se repite; si empatan, el más completo y con mayúsculas en cada palabra.
+    const cnt = {}; g.P.forEach((p) => { const n = String(p.cliente || "").trim().replace(/\s+/g, " "); if (n) cnt[n] = (cnt[n] || 0) + 1; });
+    const caps = (n) => n.split(" ").filter((w) => w[0] && w[0] === w[0].toUpperCase()).length;
+    g.nombre = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || b.split(" ").length - a.split(" ").length || caps(b) - caps(a) || b.length - a.length)[0] || "Cliente";
     g.A = g.P.map((p) => ({ p, a: avance(p) }));
     g.act = g.A.filter((z) => !z.a.liquidado);
     g.capital = r2(g.act.reduce((s2, z) => s2 + ((z.p.tipo === "semanal" ? z.a.restante : z.a.capital) || 0), 0));
@@ -2149,7 +2169,7 @@ function fichaHTML(p) {
     <details class="sec"><summary>Datos del cliente</summary>
       <p class="muted">${tieneCuenta ? `Lo ve en su app la cuenta de <b>${esc(cuentaDe(p)?.nombre || cuentaDe(p)?.email || "")}</b>.` : "Todavía no crea su cuenta."}${p.telefono ? " WhatsApp: " + esc(p.telefono) + "." : ""}</p>
       <label>Correo (con este correo verá su préstamo)<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
-      ${adm ? (() => { const G = gruposClientes(PRES).filter((g) => g.k !== cliKey(p)); return G.length ? `<label>¿Es la misma persona que otro cliente? (para verlos juntos)<select data-mismo="${p.id}"><option value="">No, es otra persona</option>${G.map((g) => `<option value="${esc(g.k)}"${p.persona === g.k ? " selected" : ""}>${esc(g.nombre)} · ${g.P.length} préstamo${g.P.length > 1 ? "s" : ""}</option>`).join("")}</select></label>${p.persona ? `<button class="link" type="button" data-separa="${p.id}">Separar de ese cliente</button>` : ""}` : ""; })() : ""}
+      ${adm ? (() => { const G = gruposClientes(PRES).filter((g) => g.k !== cliKey(p)); return G.length ? `<label>¿Es la misma persona que otro cliente? (para verlos juntos)<select data-mismo="${p.id}"><option value="">No, es otra persona</option>${G.map((g) => `<option value="${esc(g.k)}"${p.persona === g.k ? " selected" : ""}>${esc(g.nombre)} · ${g.P.length} préstamo${g.P.length > 1 ? "s" : ""}</option>`).join("")}</select></label>${gruposClientes(PRES).find((g) => g.k === cliKey(p))?.P.length > 1 ? `<button class="link" type="button" data-separa="${p.id}">No es la misma persona: separar este préstamo</button>` : ""}` : ""; })() : ""}
       ${adm ? `<label>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>` : ""}
     </details>
     ${adm ? `<details class="sec" data-docsec${DOCS_OPEN === dk ? " open" : ""}><summary>Documentos y comprobantes</summary>
@@ -2181,9 +2201,9 @@ function fichaBind(p) {
   // Al unir, el préstamo toma el nombre de esa persona (y sus otros préstamos se ligan a la misma clave).
   P.querySelectorAll("select[data-mismo]").forEach((sl) => (sl.onchange = async () => {
     if (!sl.value) return; const g = gruposClientes(PRES).find((x) => x.k === sl.value); if (!g) return;
-    await Promise.all([p, ...g.P].map((q) => updateDoc(doc(db, "prestamos", q.id), { persona: sl.value, cliente: g.nombre })));
+    await Promise.all([p, ...g.P].map((q) => updateDoc(doc(db, "prestamos", q.id), { persona: sl.value, cliente: g.nombre, solo: deleteField() })));
   }));
-  P.querySelectorAll("[data-separa]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "prestamos", p.id), { persona: deleteField() })));
+  P.querySelectorAll("[data-separa]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "prestamos", p.id), { persona: deleteField(), solo: true })));
   bindPrestamoInv(p);
   const fc = P.querySelector("form[data-corte]");
   if (fc) fc.onsubmit = async (e) => {
