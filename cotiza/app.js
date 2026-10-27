@@ -284,29 +284,37 @@ function draw() { if (isAdmin()) { syncSoon(); drawInvAlert(); } const f = { emp
 const nameOf = (uid) => (uid === ME.uid ? "Yo" : USERS.find((u) => u.uid === uid)?.nombre || "Colaborador");
 
 /* ---------- Clientes que ya tengo (para no volver a capturarlos) ---------- */
+// Todos tus clientes, tengan o no cuenta en la app: los de tus préstamos (agrupados igual que en "Por cliente"),
+// los que se registraron y los de tus cotizaciones. Elegir uno liga el préstamo nuevo a esa misma persona.
 function clientesConocidos() {
-  const m = new Map();
+  const L = [], seen = new Set();
+  const nk = (n) => "n:" + normNom(n), tk = (t) => (tel10(t || "").length === 10 ? "t:" + tel10(t) : "");
+  const ya = (c) => [nk(c.nombre), tk(c.telefono), c.uid ? "u:" + c.uid : ""].some((k) => k && seen.has(k));
+  const mark = (c) => [nk(c.nombre), tk(c.telefono), c.uid ? "u:" + c.uid : ""].forEach((k) => k && seen.add(k));
+  gruposClientes(PRES).forEach((g) => {
+    const tel = g.P.map((p) => tel10(p.telefono || "")).find((t) => t.length === 10) || "", uid = g.P.map((p) => p.clienteUid).find(Boolean) || "", email = g.P.map((p) => p.clienteEmail).find(Boolean) || "";
+    const c = { nombre: g.nombre, telefono: tel, email, uid, persona: g.k, n: g.act.length };
+    g.P.forEach((p) => mark({ nombre: p.cliente, telefono: p.telefono, uid: p.clienteUid })); mark(c); L.push(c);
+  });
   const add = (nombre, tel, email, uid) => {
     nombre = (nombre || "").trim(); if (!nombre) return;
-    const t = tel10(tel), k = t.length === 10 ? t : "n:" + nombre.toLowerCase();
-    const o = m.get(k) || {};
-    m.set(k, { nombre: o.nombre || nombre, telefono: o.telefono || (t.length === 10 ? t : ""), email: o.email || email || "", uid: o.uid || uid || "" });
+    const c = { nombre, telefono: tel10(tel || "").length === 10 ? tel10(tel) : "", email: email || "", uid: uid || "" };
+    if (ya(c)) return; mark(c); L.push(c);
   };
-  PRES.forEach((p) => add(p.cliente, p.telefono, p.clienteEmail, p.clienteUid));
   COTS.forEach((c) => add(c.cliente || c.aceptadoNombre, c.telefono, c.aceptadoEmail, c.aceptadoPor));
   if (isAdmin()) USERS.filter((u) => u.rol === "cliente").forEach((u) => add(u.nombre, u.telefono, u.email, u.uid));
-  return [...m.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  return L.sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 // Selector "Cliente que ya tienes": llena nombre, WhatsApp y correo del formulario.
 function pickCliente(pre) {
   const L = clientesConocidos(); if (!L.length) return "";
-  return `<label for="${pre}-pick">Cliente que ya tienes<select id="${pre}-pick" data-pick="${pre}"><option value="">Cliente nuevo</option>${L.map((c, i) => `<option value="${i}">${esc(c.nombre)}${c.telefono ? " · " + c.telefono : ""}</option>`).join("")}</select></label>`;
+  return `<label for="${pre}-pick">Cliente que ya tienes<select id="${pre}-pick" data-pick="${pre}"><option value="">Cliente nuevo</option>${L.map((c, i) => `<option value="${i}">${esc(c.nombre)}${c.n ? " · " + c.n + (c.n === 1 ? " préstamo" : " préstamos") : ""}${c.uid ? "" : " · sin cuenta"}</option>`).join("")}</select></label>`;
 }
 function bindPick(pre, form) {
   const sel = $(pre + "-pick"); if (!sel) return;
   const L = clientesConocidos();
   sel.onchange = () => {
-    const c = L[sel.value]; form.dataset.uid = c?.uid || "";
+    const c = L[sel.value]; form.dataset.uid = c?.uid || ""; form.dataset.persona = c?.persona || "";
     if (!c) return;
     $(pre + "-nom").value = c.nombre; if ($(pre + "-tel")) $(pre + "-tel").value = c.telefono || "";
     if ($(pre + "-mail")) $(pre + "-mail").value = c.email || "";
@@ -852,7 +860,7 @@ function vPrestamos() {
     e.preventDefault();
     const tipo = $("p-tipo").value, monto = num($("p-monto").value), tasa = num($("p-tasa").value), plazo = parseInt($("p-plazo").value, 10) || 0;
     if (!$("p-nom").value.trim() || !monto || (!tasa && !num($("p-fijo").value)) || (!plazo && tipo !== "interes")) { $("p-err").hidden = false; $("p-err").textContent = "Completa cliente, monto, plazo y la tasa (o el pago acordado)."; return; }
-    const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), clienteUid: $("p-uid").value || $("fp").dataset.uid || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
+    const p = { tipo, cliente: $("p-nom").value.trim(), telefono: tel10($("p-tel").value), ...($("fp").dataset.persona ? { persona: $("fp").dataset.persona } : {}), clienteUid: $("p-uid").value || $("fp").dataset.uid || "", clienteEmail: $("p-mail").value.trim().toLowerCase(), monto, tasa, plazo, inicio: $("p-ini").value,
       por: ME.uid, cotId: DRAFT_COT || "", garantia: tipo === "semanal" ? "" : $("p-gar").value, desc: tipo === "semanal" ? "" : $("p-desc").value.trim(), pagos: [], creado: new Date().toISOString() };
     const fijo = num($("p-fijo").value); if (fijo) p.pagoFijo = fijo;
     if (tipo === "semanal" && $("p-emp")?.value) { p.empresa = $("p-emp").value; p.empresaNombre = EMPS.find((e) => e.id === p.empresa)?.nombre || ""; }
@@ -956,7 +964,7 @@ function exForm() {
     e.preventDefault();
     const p = build(), nom = $("e-nom").value.trim();
     if (!nom || !p || !p.inicio) { $("e-err").hidden = false; $("e-err").textContent = "Completa el nombre, la fecha del próximo pago y los datos de cómo te paga."; return; }
-    Object.assign(p, { cliente: nom, telefono: tel10($("e-tel").value), clienteUid: f.dataset.uid || "", clienteEmail: $("e-mail").value.trim().toLowerCase(),
+    Object.assign(p, { cliente: nom, telefono: tel10($("e-tel").value), ...(f.dataset.persona ? { persona: f.dataset.persona } : {}), clienteUid: f.dataset.uid || "", clienteEmail: $("e-mail").value.trim().toLowerCase(),
       por: $("e-own")?.value || ME.uid, cotId: "", garantia: EXMODO === "semanal" ? "" : $("e-gar").value, desc: EXMODO === "semanal" ? "" : $("e-desc").value.trim(),
       existente: true, creado: new Date().toISOString() });
     if (!p.plazo) delete p.plazo;
@@ -1521,10 +1529,13 @@ function estadoPersonas() {
 
 /* ---------- Inversionistas desde la ficha del préstamo: quién puso el dinero y cuánto le pagas ---------- */
 let PINV = "";
-function personasInv() {
+// Todas las personas que pueden ser inversionistas: con cuenta en la app o sin cuenta (por nombre) si ya las registraste.
+function personasInv(todos) {
   const M = new Map();
-  USERS.filter((u) => u.rol !== "admin" && u.rol !== "bloqueado" && (u.inversionista || u.rol === "equipo")).forEach((u) => M.set(u.uid, u.nombre || u.email));
-  INVS.forEach((m) => { if (m.tipo === "retiro" || INV_OFF.includes(m.estado || "")) return; const k = persKey(m); if (!M.has(k)) M.set(k, m.nombre); });
+  USERS.filter((u) => u.rol !== "admin" && u.rol !== "bloqueado" && (todos || u.inversionista || u.rol === "equipo")).forEach((u) => M.set(u.uid, u.nombre || u.email));
+  INVS.forEach((m) => { if (INV_OFF.includes(m.estado || "")) return; const k = persKey(m); if (!M.has(k) && m.nombre) M.set(k, m.nombre); });
+  ENT.forEach((m) => { const k = persKey(m); if (!M.has(k) && m.nombre) M.set(k, m.nombre); });
+  Object.values(REP).forEach((r) => (r.participantes || []).forEach((x) => { const k = persKey(x); if (!M.has(k) && (x.nombre || x.uid)) M.set(k, persName(x)); }));
   [...M.keys()].forEach((k) => { if (apodoDe(k)) M.set(k, apodoDe(k) + " (" + M.get(k) + ")"); });
   return [...M.entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
 }
@@ -1533,7 +1544,7 @@ function prestamoInvBox(p) {
   const C = CONTRATOS().filter((m) => (m.pids || []).includes(p.id) && vigenteDe(m) > 0.5), MG = margenes();
   const viejos = (REP[p.id]?.participantes || []).map((x, i) => ({ x, i })).filter(({ x }) => x.papel === "fondeo" && !x.migrado);
   const { int } = interesMesPrestamo(p), paga = C.reduce((s2, m) => s2 + ((MG[m.id]?.det || []).find((d) => d.p.id === p.id) ? mensualDe(m) * (MG[m.id].det.find((d) => d.p.id === p.id).monto / vigenteDe(m)) : 0), 0);
-  const P = personasInv(), r2 = (n) => Math.round(n * 100) / 100;
+  const P = personasInv(true), r2 = (n) => Math.round(n * 100) / 100;
   return `<details class="sec" data-pinvsec${C.length || viejos.length || PINV ? " open" : ""}><summary>Quién puso el dinero</summary>
     ${C.length ? `<div class="tbl cuadre"><table>
       <tr><td>El cliente te paga al mes</td><td class="r">${mxn2(int)}</td></tr>
@@ -1547,7 +1558,7 @@ function prestamoInvBox(p) {
       ${PINV === "ret:" + m.id ? `<form class="edit" data-pinvret="${m.id}" novalidate><div class="row"><label>Monto que le regresaste<input name="m" inputmode="decimal" value="${vigenteDe(m).toLocaleString("es-MX")}"></label><label>Fecha<input name="f" type="date" value="${today()}"></label></div><p class="note">Ese mes le toca el interés de lo regresado solo por los días que lo tuviste; desde ahí su pago baja.</p><p class="err" hidden></p><button class="btn sm primary" type="submit">Guardar</button></form>` : ""}</div>`; }).join("")}</div>
     ${viejos.map(({ x }) => `<p class="err" style="margin:0">${esc(persName(x))} aparece también con el sistema anterior en este préstamo. Pásalo en la pestaña Inversionistas, caja "Pasar a inversiones", para que no se le pague dos veces.</p>`).join("")}
     ${PINV === "nuevo" ? `<form class="edit" data-pinvnew novalidate><h3>Agregar inversionista a este préstamo</h3>
-      <label>¿Quién puso el dinero?<select name="who"><option value="">Otra persona (escribe el nombre)</option>${P.map(([k, n]) => `<option value="${esc(k)}">${esc(n)}</option>`).join("")}</select></label>
+      <label>¿Quién puso el dinero?<select name="who"><option value="">Otra persona (escribe el nombre)</option>${P.map(([k, n]) => `<option value="${esc(k)}">${esc(n)}${USERS.some((u) => u.uid === k) ? "" : " · sin cuenta"}</option>`).join("")}</select></label>
       <label data-w="nom">Nombre<input name="nombre" placeholder="Ej. Pilar"></label>
       <label data-w="usar">¿Qué dinero es?<select name="usar"></select></label>
       <div data-w="nueva"><div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${Number(debeDe(p, avance(p)) || p.monto).toLocaleString("es-MX")}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" placeholder="Ej. 2.5"></label></div>
@@ -1592,8 +1603,8 @@ function bindPrestamoInv(p) {
     try {
       if (usar.value) { const m = INVS.find((x) => x.id === usar.value); await updateDoc(doc(db, "inversiones", m.id), { pids: [...new Set([...(m.pids || []), p.id])] }); }
       else {
-        const k = sel.value, u = USERS.find((x) => x.uid === k), ex = INVS.find((m) => persKey(m) === k);
-        const nombre = u ? u.nombre || u.email : ex ? ex.nombre : g("nombre").trim(), uid = u ? u.uid : ex ? ex.uid || "" : "";
+        const k = sel.value, u = USERS.find((x) => x.uid === k), ex = INVS.find((m) => persKey(m) === k) || ENT.find((m) => persKey(m) === k) || Object.values(REP).flatMap((r) => r.participantes || []).find((x) => persKey(x) === k);
+        const nombre = u ? u.nombre || u.email : ex ? ex.nombre || persName(ex) : g("nombre").trim(), uid = u ? u.uid : ex ? ex.uid || "" : "";
         const monto = num(g("m")), tasa = num(g("t")), fecha = g("f");
         if (!nombre) { er.hidden = false; er.textContent = "Elige quién puso el dinero o escribe su nombre."; return; }
         if (!monto || !tasa || !fecha) { er.hidden = false; er.textContent = "Escribe monto, porcentaje y fecha."; return; }
@@ -1630,10 +1641,10 @@ const sgn2 = (n) => (n < -0.005 ? "−" + mxn2(-n) : mxn2(n));
 const fdate = (f) => fcorta(new Date(f + "T12:00:00"));
 const activosPres = () => PRES.filter((p) => !avance(p).liquidado);
 function contratoForm(m, dataKey, preset) {
-  const per = USERS.filter((u) => u.rol !== "admin" && u.rol !== "bloqueado"), ids = new Set(m?.pids || []);
+  const per = personasInv(true), ids = new Set(m?.pids || []), pk = preset ? (preset.uid || "n:" + String(preset.nombre || "").trim().toLowerCase()) : "";
   return `<form class="edit" data-ivf="${dataKey}" novalidate>
     <h3>${m && m.id ? (dataKey.startsWith("aut:") ? "Autorizar inversión de " + esc(m.nombre) : "Editar inversión de " + esc(m.nombre)) : "Nueva inversión"}</h3>
-    ${m && m.id ? "" : `<div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${per.map((u) => `<option value="${u.uid}"${preset?.uid === u.uid ? " selected" : ""}>${esc(apodoDe(u.uid) ? apodoDe(u.uid) + " (" + u.nombre + ")" : u.nombre)}</option>`).join("")}</select></label><label data-nomw${preset?.uid ? " hidden" : ""}>Nombre de la persona<input name="nombre" placeholder="Ej. Mamá" value="${esc(preset && !preset.uid ? preset.nombre : "")}"></label></div>`}
+    ${m && m.id ? "" : `<div class="row"><label>Persona<select name="uid"><option value="">Otra persona (escribe el nombre)</option>${per.map(([k, n]) => `<option value="${esc(k)}"${pk === k ? " selected" : ""}>${esc(n)}${USERS.some((u) => u.uid === k) ? "" : " · sin cuenta"}</option>`).join("")}</select></label><label data-nomw${pk && per.some(([k]) => k === pk) ? " hidden" : ""}>Nombre de la persona<input name="nombre" placeholder="Ej. Mamá" value="${esc(preset && !preset.uid && !per.some(([k]) => k === pk) ? preset.nombre : "")}"></label></div>`}
     <div class="row"><label>Monto que te prestó<input name="m" inputmode="decimal" value="${m?.monto ? Number(m.monto).toLocaleString("es-MX") : ""}"></label><label>Le pagas al mes (%)<input name="t" inputmode="decimal" value="${m?.tasa ?? ""}" placeholder="Ej. 2.5"></label></div>
     <label>Fecha en que te prestó (le pagas ese día cada mes, desde el mes siguiente)<input name="f" type="date" value="${m?.fecha || today()}"></label>
     <p class="lbl">¿En qué préstamos lo colocaste? (solo tú lo ves)</p>
@@ -1717,7 +1728,8 @@ function bindInversiones() {
     const d = { monto, tasa, fecha, pids, nota: g("n").value.trim(), editado: new Date().toISOString() };
     try {
       if (k === "nuevo") {
-        const uid = g("uid").value, nombre = uid ? USERS.find((u) => u.uid === uid)?.nombre || "" : g("nombre").value.trim();
+        const key = g("uid").value, u0 = USERS.find((u) => u.uid === key), m0 = !u0 && key ? personasInv(true).find(([k]) => k === key) : null;
+        const uid = u0 ? u0.uid : "", nombre = u0 ? u0.nombre || u0.email : m0 ? (INVS.find((m) => persKey(m) === key)?.nombre || ENT.find((m) => persKey(m) === key)?.nombre || m0[1].replace(/ \(.*\)$/, "")) : g("nombre").value.trim();
         if (!nombre) { er.hidden = false; er.textContent = "Elige la persona o escribe su nombre."; return; }
         await addDoc(collection(db, "inversiones"), { uid, nombre, tipo: "aporte", ...d, reg: new Date().toISOString() });
         if (uid) updateDoc(doc(db, "usuarios", uid), { inversionista: true }).catch(() => {});
@@ -1776,7 +1788,7 @@ function bindInversiones() {
 /* ---------- Vista de un inversionista: cuánto te prestó, cuánto le debes y todo su historial ---------- */
 let INV_SEL = "";
 function selectorInv(PL) {
-  const L = PL.filter((e) => e.inv || CONTRATOS().some((m) => persKey(m) === e.k));
+  const L = PL.filter((e) => e.inv || e.aportes > 0 || CONTRATOS().some((m) => persKey(m) === e.k));
   if (!L.length) return "";
   return `<div class="chips" role="tablist"><button type="button" class="chip${INV_SEL ? "" : " on"}" data-isel="">Todos</button>${L.map((e) => `<button type="button" class="chip${INV_SEL === e.k ? " on" : ""}" data-isel="${esc(e.k)}">${esc(apodoDe(e.k) || nom1(e.nombre))}</button>`).join("")}</div>`;
 }
