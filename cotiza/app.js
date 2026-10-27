@@ -1454,6 +1454,12 @@ const vigenteDe = (m, f) => Math.max(0, Math.round((m.monto - retirosDe(m).filte
 const mensualDe = (m) => Math.round(vigenteDe(m) * m.tasa) / 100;
 const diaDe = (m) => Number((m.fecha || "").slice(8, 10)) || 1;
 const proxInv = (m) => pagosInversion(m, retirosDe(m), iso(new Date(Date.now() + 400 * 864e5))).find((f) => f.fecha >= today()) || null;
+// Dinero de inversionistas que todavía no está en ningún préstamo (por persona).
+function sinColocarPorPersona() {
+  const MG = margenes(), P = {};
+  CONTRATOS().filter((m) => vigenteDe(m) > 0.5).forEach((m) => { const sc = MG[m.id]?.sinColocar || 0; if (sc > 0.5) { const k = persKey(m); (P[k] = P[k] || { k, nombre: verNom(k, m.nombre), monto: 0, mes: 0 }); P[k].monto += sc; P[k].mes += (mensualDe(m) * sc) / vigenteDe(m); } });
+  return Object.values(P).sort((a, b) => b.monto - a.monto);
+}
 // Cuánto te pagan los clientes de los préstamos donde colocaste ese dinero, contra lo que le pagas al inversionista.
 function interesMesPrestamo(p) {
   const a = avance(p); if (a.liquidado) return { int: 0, cap: 0 };
@@ -2972,6 +2978,7 @@ function tareasDia(k, all, rcv) {
     const dias = (f) => Math.max(0, Math.round((new Date(hoy + "T12:00:00") - new Date(String(f).slice(0, 10) + "T12:00:00")) / 864e5));
     const hace = (d) => (d === 0 ? "llegó hoy" : d === 1 ? "lleva 1 día" : "lleva " + d + " días");
     if (isAdmin()) SOLS.filter((x) => x.estado === "nueva").forEach((x) => { const d = dias(x.fecha); T.push({ t: "sol", cls: d >= 2 ? "late" : "msg", txt: `Revisar solicitud de ${x.nombre}: ${mxn(x.monto)} a ${x.plazo} ${x.unidad === "semanas" ? "semanas" : "meses"} (${hace(d)})`, x }); });
+    if (isAdmin() && k === hoy) { try { sinColocarPorPersona().forEach((z) => T.push({ t: "colocar", cls: "late", txt: `Buscar cliente para ${mxn(z.monto)} de ${z.nombre} (te cuesta ${mxn(z.mes)} al mes sin prestar)`, z })); } catch (er) {} }
     if (isAdmin()) VENTAS.filter((v) => v.estado === "nueva").forEach((v) => { const d = dias(v.fecha); T.push({ t: "venta", cls: d >= 2 ? "late" : "msg", txt: `Revisar auto ofrecido: ${v.marca} ${v.modelo} ${v.anio} de ${v.nombre} (${hace(d)})`, v }); });
     if (isAdmin()) { try { Object.values(estadoPersonas()).forEach((e) => e.pend.filter((o) => o.limite <= iso(new Date(new Date(hoy + "T12:00:00").getTime() + 2 * 864e5))).forEach((o) => T.push({ t: "inv", cls: o.vencida ? "late" : "msg", txt: `Pagar a ${e.ver || e.nombre} ${mxn2(o.falta)} (${o.p ? o.p.cliente : "su inversión"}, ${o.vencida ? "fuera de plazo" : "a más tardar el " + fcorta(new Date(o.limite + "T12:00:00"))})` }))); } catch (er) {} }
     COTS.filter((c) => c.estado === "cotizado" && !c.aceptadoPor && c.tipo !== "auto" && dias(c.fecha) >= 3 && dias(c.fecha) <= 30 && !PRES.some((p) => p.cotId === c.id))
@@ -2982,14 +2989,60 @@ function tareasDia(k, all, rcv) {
 function tareaRow(x) {
   const wa = x.c && x.c.p.telefono ? waTo(x.c.p.telefono, x.t === "msg" ? `Hola ${x.c.p.cliente}, te recordamos que mañana ${fcorta(new Date(x.c.fecha + "T12:00:00"))} toca tu pago ${x.c.p.tipo === "interes" ? "de interés" : x.c.n + " de " + x.c.total} por ${mxn2(x.c.debe)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos` : recMsg(x.c)) : "";
   const wa2 = x.t === "segcot" && x.c2.telefono ? waTo(x.c2.telefono, `Hola ${x.c2.cliente || ""}, ¿pudiste revisar la cotización de tu préstamo por ${mxn(x.c2.monto)}? Si tienes dudas o quieres ajustar el monto o el plazo, con gusto te ayudo.\n\nPara confirmarla entra aquí:\n${PORTAL()}?c=${x.c2.id}\n\nEntre Amigos`) : "";
-  return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}${x.t === "inv" ? `<button class="btn sm" type="button" data-goinv>Ir a Inversionistas</button>` : ""}</div>`;
+  return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}${x.t === "inv" ? `<button class="btn sm" type="button" data-goinv>Ir a Inversionistas</button>` : ""}${x.t === "colocar" ? `<button class="btn sm" type="button" data-goinvp="${esc(x.z.k)}">Ver su inversión</button>` : ""}</div>`;
+}
+
+/* ---------- Resumen global de la cartera (Agenda, solo administrador) ---------- */
+function resumenGlobal() {
+  const r2 = (n) => Math.round(n * 100) / 100, hoy = today(), mes = hoy.slice(0, 7);
+  const act = PRES.filter((p) => !avance(p).liquidado);
+  let cartera = 0, intMes = 0, comMes = 0, atras = 0;
+  act.forEach((p) => {
+    const a = avance(p), { int, cap } = interesMesPrestamo(p);
+    cartera += (p.tipo === "semanal" ? a.restante : a.capital) || cap || 0; intMes += int || 0; atras += vencido(p, a) || 0;
+    (REP[p.id]?.participantes || []).forEach((x) => { if (!x.migrado && x.papel === "comision") comMes += parteDe({ p, interes: int || 0, capital: 0 }, x).int; });
+  });
+  const C = CONTRATOS().filter((m) => vigenteDe(m) > 0.5), MG = margenes();
+  const invMes = C.reduce((s2, m) => s2 + mensualDe(m), 0), invCap = C.reduce((s2, m) => s2 + vigenteDe(m), 0);
+  const colocado = C.reduce((s2, m) => s2 + (vigenteDe(m) - (MG[m.id]?.sinColocar || 0)), 0), sinColocar = invCap - colocado;
+  const tuyo = Math.max(0, cartera - colocado), neto = intMes - invMes - comMes;
+  const L = ledger(PRES).filter((r) => r.fecha.startsWith(mes)), entro = L.reduce((s2, r) => s2 + (r.interes || 0), 0), capEntro = L.reduce((s2, r) => s2 + (r.capital || 0), 0);
+  const pagInv = ENT.filter((m) => m.dir !== "de" && (m.fecha || "").startsWith(mes)).reduce((s2, m) => s2 + (m.monto || 0), 0);
+  let porPagarInv = 0; try { Object.values(estadoPersonas()).forEach((e) => e.pend.forEach((o) => (porPagarInv += o.falta))); } catch (er) {}
+  const clientes = new Set(act.map((p) => cliKey(p))).size, pct = (x) => (cartera ? Math.round((x / cartera) * 1000) / 10 : 0);
+  const nombreMes = new Date(hoy + "T12:00:00").toLocaleDateString("es-MX", { month: "long" });
+  return { neto: r2(neto), html: `<div class="card"><h2>Resumen global</h2>
+    <p class="lbl">Tu cartera hoy</p>
+    <div class="facts"><div><span>Capital prestado</span><b>${mxn(cartera)}</b></div><div><span>Préstamos activos</span><b>${act.length}</b></div><div><span>Clientes</span><b>${clientes}</b></div></div>
+    <p class="lbl">Cada mes</p>
+    <div class="tbl cuadre"><table>
+      <tr><td>Te pagan de interés los clientes</td><td class="r">${mxn2(r2(intMes))}</td></tr>
+      <tr><td>Pagas a inversionistas</td><td class="r">− ${mxn2(r2(invMes))}</td></tr>
+      ${comMes > 0.5 ? `<tr><td>Pagas de comisiones</td><td class="r">− ${mxn2(r2(comMes))}</td></tr>` : ""}
+      <tr><td><b>Te queda al mes</b></td><td class="r"><b class="${neto < 0 ? "warn-t" : "lime"}">${sgn2(r2(neto))}</b></td></tr>
+      <tr><td>Equivale al año</td><td class="r">${sgn2(r2(neto * 12))}</td></tr>
+    </table></div>
+    <p class="lbl">De quién es el dinero prestado</p>
+    <div class="facts"><div><span>De inversionistas</span><b>${mxn(colocado)}</b></div><div><span>Tuyo</span><b>${mxn(tuyo)}</b></div><div><span>Cobras en promedio</span><b>${cartera ? pct(intMes) + "% al mes" : "—"}</b></div></div>
+    ${sinColocar > 0.5 ? (() => { const SC = sinColocarPorPersona(); return `<div class="avis"><p class="err" style="margin:0"><b>${mxn(sinColocar)} sin colocar.</b> Les pagas interés sin que un cliente te lo pague. Hay que buscarles cliente:</p>
+      <div class="list">${SC.map((z) => `<div class="item"><div class="item-top"><b>${esc(z.nombre)}</b><span>${mxn(z.monto)}</span></div><div class="item-mid">Te cuesta ${mxn2(z.mes)} al mes mientras no esté prestado</div><div class="actions"><button class="btn sm" type="button" data-goinvp="${esc(z.k)}">Ver su inversión</button></div></div>`).join("")}</div>
+      <p class="note">Para colocarlo: abre el préstamo del cliente → "Quién puso el dinero" → Agregar inversionista y elige su inversión sin colocar.</p></div>`; })() : ""}
+    <p class="lbl">En ${nombreMes}</p>
+    <div class="tbl cuadre"><table>
+      <tr><td>Interés que ya entró</td><td class="r">${mxn2(r2(entro))}</td></tr>
+      ${capEntro > 0.5 ? `<tr><td>Capital que te regresaron</td><td class="r">${mxn2(r2(capEntro))}</td></tr>` : ""}
+      <tr><td>Ya les pagaste a inversionistas</td><td class="r">${mxn2(r2(pagInv))}</td></tr>
+      <tr><td>Clientes atrasados te deben</td><td class="r"><span class="${atras > 0.5 ? "warn-t" : ""}">${mxn2(r2(atras))}</span></td></tr>
+      <tr><td>Debes a inversionistas hoy</td><td class="r"><span class="${porPagarInv > 0.5 ? "warn-t" : ""}">${mxn2(r2(porPagarInv))}</span></td></tr>
+    </table></div>
+    <p class="note">"Cada mes" usa el próximo interés de cada préstamo activo y lo que les toca a tus inversionistas. Cambia cuando agregas, cambias o liquidas préstamos.</p></div>` };
 }
 /* ---------- Pantalla principal: avisos arriba y secciones que se abren o se minimizan ---------- */
 // Al abrir la app todo empieza cerrado (menos el calendario, que siempre se ve); lo que abras se queda abierto mientras la usas.
 let FOLD = {};
 const saveFold = () => {};
-const FOLD_KEYS = [["Solicitudes", "sol"], ["Hoy", "hoy"], ["Tareas", "tareas"], ["Atrasados", "atr"], ["Pagos de hoy", "phoy"], ["Próximos", "prox"], ["Visitas", "vis"], ["Pagos recibidos", "rec"]];
-const FOLD_CORTO = { sol: "Solicitudes", hoy: "Resumen de hoy", tareas: "Tareas de hoy", atr: "Atrasados", phoy: "Cobros de hoy", prox: "Próximos 7 días", vis: "Visitas", cal: "Calendario", rec: "Recibido del mes" };
+const FOLD_KEYS = [["Resumen global", "glob"], ["Solicitudes", "sol"], ["Hoy", "hoy"], ["Tareas", "tareas"], ["Atrasados", "atr"], ["Pagos de hoy", "phoy"], ["Próximos", "prox"], ["Visitas", "vis"], ["Pagos recibidos", "rec"]];
+const FOLD_CORTO = { glob: "Te queda al mes", sol: "Solicitudes", hoy: "Resumen de hoy", tareas: "Tareas de hoy", atr: "Atrasados", phoy: "Cobros de hoy", prox: "Próximos 7 días", vis: "Visitas", cal: "Calendario", rec: "Recibido del mes" };
 function plegarPanel(res) {
   $("panel").querySelectorAll(":scope > .card").forEach((card) => {
     const h = card.querySelector("h2"); if (!h) return;
@@ -3040,7 +3093,8 @@ function vAgenda() {
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   const nSol = isAdmin() ? SOLS.filter((x) => x.estado === "nueva").length : 0, visHoy = isAdmin() ? (VIS[hoy] || {}).personas || 0 : 0;
-  let invHoy = [], invSol = 0;
+  let invHoy = [], invSol = 0, SINCOL = [];
+  if (isAdmin()) { try { SINCOL = sinColocarPorPersona(); } catch (er) {} }
   if (isAdmin()) { try { invHoy = Object.values(estadoPersonas()).flatMap((e) => e.pend.filter((o) => o.fecha <= hoy).map((o) => ({ e, o }))); } catch (er) {} invSol = SOLINV.filter((x) => x.estado === "pendiente").length; }
   const nAvis = isAdmin() ? Object.values(AVIS).reduce((s2, n) => s2 + n, 0) : 0, nVen = isAdmin() ? VENTAS.filter((v) => v.estado === "nueva").length : 0;
   const porHoy = deHoy.filter((c) => !c.pagada);
@@ -3049,6 +3103,7 @@ function vAgenda() {
     { n: atr.length, big: mxn(sum(atr, "debe")), txt: `${atr.length} ${atr.length === 1 ? "cliente atrasado" : "clientes atrasados"}`, ir: "atr", cls: "warn" },
     { n: nAvis, big: nAvis, txt: nAvis === 1 ? "Cliente avisa que pagó" : "Clientes avisan que pagaron", ir: "tab:prestamos", cls: "warn" },
     { n: invHoy.length, big: mxn(invHoy.reduce((s2, z) => s2 + z.o.falta, 0)), txt: "Pagar a " + [...new Set(invHoy.map((z) => esc(apodoDe(z.e.k) || nom1(z.e.nombre))))].join(", "), ir: "tab:cuentas", cls: invHoy.some((z) => z.o.fecha < hoy) ? "warn" : "" },
+    { n: SINCOL.length, big: mxn(SINCOL.reduce((s2, z) => s2 + z.monto, 0)), txt: "Sin colocar: buscar cliente para " + SINCOL.map((z) => esc(nom1(z.nombre))).join(", "), ir: "glob", cls: "warn" },
     { n: invSol, big: invSol, txt: invSol === 1 ? "Inversionista te avisa que prestó" : "Inversionistas te avisan que prestaron", ir: "tab:cuentas" },
     { n: porHoy.length, big: mxn(sum(porHoy, "debe")), txt: `${porHoy.length} por cobrar hoy`, ir: "phoy" },
     { n: nVen, big: nVen, txt: nVen === 1 ? "Auto ofrecido por revisar" : "Autos ofrecidos por revisar", ir: "tab:autos" },
@@ -3056,8 +3111,9 @@ function vAgenda() {
     { n: visHoy, big: visHoy, txt: visHoy === 1 ? "Persona entró hoy a tu página" : "Personas entraron hoy a tu página", ir: "vis" },
   ]);
   const tHoy = tareasDia(hoy, all, rcv).length;
-  const res = { sol: String(nSol), hoy: fcorta(new Date()).replace(/ \d{4}$/, ""), tareas: String(tHoy), atr: mxn(sum(atr, "debe")), phoy: mxn(sum(porHoy, "debe")), prox: String(prox.length), vis: isAdmin() ? String(visHoy) : "", cal: first.toLocaleDateString("es-MX", { month: "short" }).replace(".", ""), rec: mxn(sum(delMes, "monto")) };
-  $("panel").innerHTML = avisos + (isAdmin() ? solicitudesCard(3) : "") + `
+  let GLOB = { neto: 0, html: "" }; if (isAdmin()) { try { GLOB = resumenGlobal(); } catch (er) {} }
+  const res = { glob: isAdmin() ? sgn2(GLOB.neto) : "", sol: String(nSol), hoy: fcorta(new Date()).replace(/ \d{4}$/, ""), tareas: String(tHoy), atr: mxn(sum(atr, "debe")), phoy: mxn(sum(porHoy, "debe")), prox: String(prox.length), vis: isAdmin() ? String(visHoy) : "", cal: first.toLocaleDateString("es-MX", { month: "short" }).replace(".", ""), rec: mxn(sum(delMes, "monto")) };
+  $("panel").innerHTML = avisos + (isAdmin() ? GLOB.html : "") + (isAdmin() ? solicitudesCard(3) : "") + `
   <div class="card">
     <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
     ${legend()}
@@ -3100,5 +3156,6 @@ function vAgenda() {
   bindSolicitudes(vAgenda);
   $("panel").querySelectorAll("[data-goventa]").forEach((b) => (b.onclick = () => { VOPEN = b.dataset.goventa; go("autos"); }));
   $("panel").querySelectorAll("[data-goinv]").forEach((b) => (b.onclick = () => go("cuentas")));
+  $("panel").querySelectorAll("[data-goinvp]").forEach((b) => (b.onclick = () => { INV_SEL = b.dataset.goinvp; go("cuentas"); }));
 
 }
