@@ -1,10 +1,12 @@
-import { autos, card, esc, WA_ICON } from "./comun.js?v=p2";
+import { autos, card, esc, WA_ICON } from "./comun.js?v=p4";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const $ = (id) => document.getElementById(id);
-const ORDEN = ["SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Lujo", "Eléctricos", "Motos"];
+const ORDEN = ["Ofertas", "SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Lujo", "Eléctricos", "Motos"];
 const LBL = { Motos: "Motocicletas y trimotos" };
-const cats = (a) => (a.categorias && a.categorias.length ? a.categorias : [a.categoria].filter(Boolean));
+// "Ofertas" se llena sola: todo auto con precio especial y precio anterior mayor al actual.
+const oferta = (a) => !!(a.precioEspecial && a.precioAnterior && a.precioAnterior > a.precio);
+const cats = (a) => [...(oferta(a) ? ["Ofertas"] : []), ...(a.categorias && a.categorias.length ? a.categorias : [a.categoria].filter(Boolean))];
 let ALL = [], CAT = new URLSearchParams(location.search).get("cat") || "";
 
 function draw() {
@@ -14,6 +16,7 @@ function draw() {
   $("ftog").textContent = nf ? `Filtrar vehículos (${nf})` : "Filtrar vehículos";
   const by = { pa: (a, b) => a.precio - b.precio, pd: (a, b) => b.precio - a.precio, ad: (a, b) => b.anio - a.anio, km: (a, b) => (a.kilometraje ?? 1e9) - (b.kilometraje ?? 1e9) }[ord];
   if (by) l = l.slice().sort(by);
+  else if (CAT === "Ofertas") l = l.slice().sort((a, b) => (b.precioAnterior - b.precio) / b.precioAnterior - (a.precioAnterior - a.precio) / a.precioAnterior);
   $("count").textContent = `${l.length} ${l.length === 1 ? "vehículo" : "vehículos"}`;
   $("cars").innerHTML = l.length ? l.map(card).join("") : `<p class="empty">No hay vehículos con esos filtros. Prueba con otros filtros o escríbenos: si no lo tenemos, te lo buscamos.</p>`;
   const u = new URL(location); CAT ? u.searchParams.set("cat", CAT) : u.searchParams.delete("cat"); history.replaceState(null, "", u);
@@ -21,7 +24,7 @@ function draw() {
 function chips() {
   const have = new Set(ALL.flatMap(cats));
   const list = ["", ...ORDEN.filter((c) => have.has(c))];
-  $("chips").innerHTML = list.map((c) => `<button class="chip" type="button" data-c="${esc(c)}" aria-pressed="${c === CAT}">${esc(c ? LBL[c] || c : "Todos")}</button>`).join("");
+  $("chips").innerHTML = list.map((c) => `<button class="chip" type="button" data-c="${esc(c)}" aria-pressed="${c === CAT}"${c === "Ofertas" ? ' data-of="1"' : ""}>${esc(c ? LBL[c] || c : "Todos")}</button>`).join("");
   $("chips").querySelectorAll(".chip").forEach((b) => (b.onclick = () => { CAT = b.dataset.c; chips(); draw(); }));
 }
 autos().then((l) => {

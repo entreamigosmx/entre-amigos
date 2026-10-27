@@ -8,7 +8,9 @@ export async function autos() {
   if (cache) return cache;
   const r = await fetch(BASE + "data/autos.json", { cache: "no-cache" });
   if (!r.ok) throw new Error("inventario");
-  cache = (await r.json()).filter((a) => a.disponible && (BASE === "" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+  cache = (await r.json()).filter((a) => a.disponible && (BASE === "../" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+  // Vista previa: un video pendiente de aprobar (videoBorrador) solo se ve en propuesta/.
+  if (BASE === "../") cache.forEach((a) => { if (a.videoBorrador) { a.video = a.videoBorrador; a.videoPoster = a.videoPosterBorrador || a.videoPoster; } });
   return cache;
 }
 export function src(path, size) {
@@ -39,7 +41,7 @@ export function card(a) {
     <a class="cl" href="${ficha(a)}"><div class="ph">${img}${tag}${vtag}</div>
     <div class="cb"><h3>${esc(a.nombre || a.title)}</h3>${a.version ? `<p class="ver">${esc(a.version)}</p>` : ""}
       <div class="m">${meta.map((x) => `<span>${esc(x)}</span>`).join("")}</div>
-      <div class="pr"><b>${mxn(a.precio)}</b>${prev}</div></div></a>
+      <div class="pr"><b>${mxn(a.precio)}</b>${prev}</div>${prev && a.precioAnterior > a.precio ? `<span class="ahorro">Ahorras ${mxn(a.precioAnterior - a.precio)}</span>` : ""}</div></a>
     <div class="ca"><a class="btn sm quiet" href="${ficha(a)}">Ver detalles</a>${a.apartado ? `<span class="st res">Apartado</span>` : `<a class="btn sm ghost" href="${credito(a)}">Cotizar crédito</a>`}</div>
   </article>`;
 }

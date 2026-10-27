@@ -1,4 +1,4 @@
-import { wa, WA_ICON } from "./comun.js?v=p2";
+import { wa, WA_ICON } from "./comun.js?v=p4";
 // Préstamo semanal por convenio: solo se llega con el enlace privado de cada empresa (?c=CODIGO).
 const $ = (id) => document.getElementById(id);
 $("fixwa") && ($("fixwa").innerHTML = WA_ICON);

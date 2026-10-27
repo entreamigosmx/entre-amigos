@@ -1,4 +1,4 @@
-import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE } from "./comun.js?v=p2";
+import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE } from "./comun.js?v=p4";
 
 const root = document.getElementById("car");
 const back = `<a class="back" href="inventario.html">← Ver todo el inventario</a>`;
