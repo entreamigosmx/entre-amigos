@@ -261,8 +261,8 @@
   "marca": "RAM",
   "modelo": "1500 Limited",
   "anio": 2021,
-  "precio": 880000,
-  "precioEspecial": false,
+  "precio": 839000,
+  "precioEspecial": true,
   "categoria": "Pickup",
   "disponible": true,
   "destacado": true,
@@ -292,7 +292,8 @@
   ],
   "portada": true,
   "nombre": "RAM 1500",
-  "version": "Limited"
+  "version": "Limited",
+  "precioAnterior": 880000
  },
  {
   "title": "Mercedes-Benz A35 AMG 2024",
@@ -1082,8 +1083,8 @@
   "marca": "BMW",
   "modelo": "F 900 GS",
   "anio": 2024,
-  "precio": 329000,
-  "precioEspecial": false,
+  "precio": 296100,
+  "precioEspecial": true,
   "categoria": "Moto",
   "kilometraje": 9000,
   "disponible": true,
@@ -1106,7 +1107,8 @@
   ],
   "portada": false,
   "nombre": "BMW F 900 GS",
-  "version": ""
+  "version": "",
+  "precioAnterior": 329000
  },
  {
   "title": "Changan Hunter 4x4 2025",
