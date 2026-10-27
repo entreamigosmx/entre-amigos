@@ -265,3 +265,20 @@ details.card.fold>summary .fs{display:none}
 .chip{flex:0 0 auto;font:700 14px var(--display);letter-spacing:.05em;text-transform:uppercase;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--soft);cursor:pointer}
 .chip.on{background:var(--lime);color:var(--lime-ink);border-color:var(--lime)}
 .pill.late{border-color:#e07a6a;color:#e07a6a;text-decoration:none}
+/* Página del inversionista: fácil de leer */
+.invx{display:grid;gap:14px;font-size:19px}
+.ix{gap:10px}
+.ix-hola{font:800 30px var(--display);text-transform:none;margin:0}
+.ix-a{justify-self:start;background:none;border:1px solid var(--line);border-radius:999px;color:var(--soft);font:600 15px var(--body);padding:8px 14px;cursor:pointer}
+.ix-lbl{font-size:17px;font-weight:700;color:var(--soft);margin:0}
+.ix-num{font:800 clamp(46px,13vw,64px)/1 var(--display);margin:2px 0;font-variant-numeric:tabular-nums;color:var(--ink)}
+.ix-num.lime{color:var(--lime)}
+.ix-next{border-color:var(--lime)}
+.ix-t{font-size:19px;line-height:1.45;margin:0;color:var(--ink)}
+.ix-row{display:grid;gap:4px;padding:12px 0;border-top:1px solid var(--line)}
+.ix-row:first-of-type{border-top:0;padding-top:0}
+.ix-pagos{display:grid;gap:0}
+.ix-pago{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.ix-pago div{display:grid;gap:2px}.ix-pago b{font-size:22px;font-variant-numeric:tabular-nums}.ix-pago span{font-size:16px;color:var(--soft)}
+.ix-wa{min-height:56px;font-size:18px}
+.invx.big{font-size:23px}.invx.big .ix-t{font-size:23px}.invx.big .ix-lbl{font-size:20px}.invx.big .ix-num{font-size:clamp(56px,16vw,76px)}.invx.big .ix-pago b{font-size:26px}.invx.big .ix-pago span{font-size:19px}.invx.big .ix-hola{font-size:36px}
