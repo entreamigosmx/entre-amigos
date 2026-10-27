@@ -61,6 +61,8 @@ export function fechaPago(inicioISO, n, tipo) {
   return new Date(y, mm, Math.min(dia, ult), 12);
 }
 // Con "último mes pagado" (corte), los pagos con fecha hasta el corte ya están dentro de lo saldado: no se vuelven a contar.
+// Préstamo pausado con interés congelado: para cobrar, el tiempo se detiene en la fecha de la pausa.
+export const hoyDe = (p, hoyISO) => { const h = hoyISO || hoyLocal(); return p && p.pausa && p.pausa.congelar && p.pausa.desde && p.pausa.desde < h ? p.pausa.desde : h; };
 export const cuentaPago = (p, x) => !p.corte || (x.fecha || "") > p.corte;
 const isoD = (d) => (d ? d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") : "");
 export const fcorta = (d) => (d ? d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }) : "");
@@ -90,6 +92,7 @@ export function avance(p) {
 // Préstamo de solo interés: cada mes se paga el interés sobre el capital que se debe;
 // el capital se abona cuando el cliente quiera. Sin fecha fija de liquidación.
 export function avanceInteres(p, hoyISO) {
+  hoyISO = hoyDe(p, hoyISO);
   const r = (p.tasa || 0) / 100;
   const pagos = p.pagos || [];
   const caps = pagos.filter((x) => x.tipo === "capital").sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
@@ -136,7 +139,7 @@ export function avanceInteres(p, hoyISO) {
 
 // Lo que el cliente tiene vencido hoy (pagos con fecha pasada que no ha cubierto).
 export function vencido(p, a, hoyISO) {
-  const hoy = hoyISO || hoyLocal();
+  const hoy = hoyDe(p, hoyISO);
   if (a.liquidado || !p.inicio) return 0;
   if (p.tipo === "interes") return a.interesAdeudado || 0;
   const debido = a.corrida.filas.filter((f) => isoD(fechaPago(p.inicio, f.n, p.tipo)) <= hoy).reduce((s, f) => s + f.pago, 0);
@@ -183,7 +186,7 @@ export function desglosePagos(p) {
 // Estado de cuenta por mes (o semana): cuánto debía, cuánto abonó y cuánto falta de cada cuota,
 // y a qué cuotas se aplicó cada pago. Los pagos se aplican a la cuota más antigua pendiente.
 export function estadoCuenta(p, hoyISO) {
-  const hoy = hoyISO || hoyLocal();
+  const hoy = hoyDe(p, hoyISO);
   let filas;
   if (p.tipo === "interes") filas = avanceInteres(p, hoy).corrida.filas.map((f) => ({ n: f.n, pago: f.pago, fecha: isoD(f.fecha) }));
   else {
@@ -208,13 +211,15 @@ export function estadoCuenta(p, hoyISO) {
     if (m > 0.005) r.sobra = r2(m);
     return r;
   });
+  const cong = p.pausa && p.pausa.congelar && p.pausa.desde ? p.pausa.desde : "";
   meses.forEach((f) => {
     if (liqF && f.fecha > liqF && f.abono < 0.005) { f.falta = 0; f.estado = "liq"; return; }
+    if (cong && f.fecha > cong && f.abono < 0.005) { f.falta = 0; f.estado = "congelado"; return; } // interés congelado por la pausa
     f.falta = f.corte ? 0 : Math.max(0, r2(f.pago - f.abono));
     f.estado = f.corte ? "corte" : f.falta <= 0.005 ? "pagado" : f.fecha <= hoy ? (f.abono > 0 ? "parcial" : "vencido") : f.abono > 0 ? "parcial" : "proximo";
   });
   // Se muestran las cuotas desde el corte hasta la siguiente que vence (más las ya pagadas por adelantado).
-  const vis = meses.filter((f) => !f.corte && f.estado !== "liq");
+  const vis = meses.filter((f) => !f.corte && f.estado !== "liq" && f.estado !== "congelado");
   const idxNext = vis.findIndex((f) => f.fecha > hoy);
   const hasta = idxNext < 0 ? vis.length : Math.max(idxNext + 1, vis.filter((f) => f.abono > 0).length);
   const ultCorte = meses.filter((f) => f.corte).at(-1) || null;

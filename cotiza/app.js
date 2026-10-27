@@ -6,7 +6,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, deleteField, getDocs,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta, liquidacion, pagosInversion } from "./calc.js?v=13";
+import { num, mxn, mxn2, GARANTIAS, GN, corridaMensual, corridaSemanal, factorGarantia, fechaPago, fcorta, avance, avanceInteres, vencido, desglosePagos, estadoCuenta, liquidacion, pagosInversion } from "./calc.js?v=14";
 
 const CONF = {
   apiKey: "AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8",
@@ -727,7 +727,7 @@ function gruposClientes(L) {
     g.act = g.A.filter((z) => !z.a.liquidado);
     g.capital = r2(g.act.reduce((s2, z) => s2 + ((z.p.tipo === "semanal" ? z.a.restante : z.a.capital) || 0), 0));
     g.mes = r2(g.act.reduce((s2, z) => s2 + (z.a.siguiente ? (z.p.tipo === "interes" ? z.a.corrida.pago : (z.a.corrida.filas.find((f) => iso(fechaPago(z.p.inicio, f.n, z.p.tipo)) > hoy) || {}).pago || 0) : 0), 0));
-    g.debe = r2(g.act.reduce((s2, z) => s2 + vencido(z.p, z.a), 0));
+    g.debe = r2(g.act.filter((z) => !pausado(z.p)).reduce((s2, z) => s2 + vencido(z.p, z.a), 0));
     g.pagado = r2(g.A.reduce((s2, z) => s2 + (z.p.pagos || []).reduce((t, x) => t + (x.monto || 0), 0), 0));
     // Próximo pago que todavía no vence (lo atrasado ya se ve en "Debe hoy").
     g.prox = g.act.map((z) => { const f = estadoCuenta(z.p).meses.find((x) => x.fecha > hoy && x.falta > 0.5); return f ? { f: f.fecha, m: f.falta, p: z.p } : null; }).filter(Boolean).sort((a, b) => (a.f < b.f ? -1 : 1))[0] || null;
@@ -790,7 +790,7 @@ function vPrestamos() {
   const clientes = USERS.filter((u) => u.rol === "cliente");
   const d = DRAFT || {};
   const VP = visibles();
-  const act = VP.filter((p) => !avance(p).liquidado), liq = VP.filter((p) => avance(p).liquidado);
+  const pau = VP.filter((p) => pausado(p) && !avance(p).liquidado), act = VP.filter((p) => !pausado(p) && !avance(p).liquidado), liq = VP.filter((p) => avance(p).liquidado);
   const cartera = act.reduce((s, p) => s + debeDe(p, avance(p)), 0);
   const equipo = USERS.filter((u) => u.rol === "equipo");
   $("panel").innerHTML = vistaChips() + `
@@ -843,6 +843,7 @@ function vPrestamos() {
     <div class="stats"><span class="stat"><b>${act.length}</b> activos</span><span class="stat">Por cobrar <b>${mxn(cartera)}</b></span><span class="stat"><b>${liq.length}</b> liquidados</span></div>
     <div class="list">${act.length ? act.map(loanItem).join("") : `<p class="muted">Sin préstamos activos. Crea uno arriba o desde una cotización aceptada.</p>`}</div>
   </div>
+  ${pau.length ? `<div class="card"><details><summary>Pausados (${pau.length}) · ${mxn(pau.reduce((s2, p) => s2 + (debeDe(p, avance(p)) || 0), 0))} de capital</summary><div class="list" style="margin-top:12px">${pau.map(loanItem).join("")}</div></details></div>` : ""}
   ${liq.length ? `<div class="card"><details><summary>Liquidados (${liq.length})</summary><div class="list" style="margin-top:12px">${liq.map(loanItem).join("")}</div></details></div>` : ""}`;
   DRAFT_COT = d.cotId || ""; DRAFT_SOL = d.solId || DRAFT_SOL; DRAFT = null;
   exForm();
@@ -1401,6 +1402,7 @@ function invPageHTML(d, nom, vista) {
     <button class="ix-a" type="button" data-ixbig>${INV_BIG ? "Letra normal" : "Letra más grande"}</button></div>
   <div class="card ix"><p class="ix-lbl">Tu dinero en Entre Amigos</p><p class="ix-num">${mxn(d.capital)}</p>
     ${d.mensual ? `<p class="ix-t">Te pagamos <b>${mxn(d.mensual)}</b> cada mes.</p>` : ""}</div>
+  ${(d.avisos || []).length ? `<div class="card ix ix-av"><p class="ix-lbl">Aviso sobre tu inversión</p>${d.avisos.map((v) => `<div class="ix-row"><p class="ix-t"><b>${esc(v.motivo)}</b> · ${mxn(v.monto)} de tu dinero</p>${v.nota ? `<p class="ix-t">${esc(v.nota)}</p>` : ""}${v.pausaPago ? `<p class="ix-t">El pago de esa parte está en pausa desde el ${fechaMedia(v.desde)}.</p>` : ""}</div>`).join("")}</div>` : ""}
   ${d.proximo ? `<div class="card ix ix-next"><p class="ix-lbl">Tu próximo pago</p><p class="ix-num lime">${mxn(d.proximo.monto)}</p><p class="ix-t">${d.proximo.fecha < today() && d.proximo.limite ? "Te lo pagamos a más tardar el " + fechaLarga(d.proximo.limite).replace(/^\w/, (c) => c.toLowerCase()) + "." : fechaLarga(d.proximo.fecha)}</p></div>` : ""}
   ${INV.length ? `<div class="card ix"><p class="ix-lbl">${INV.length > 1 ? "Tus inversiones" : "Tu inversión"}</p>${INV.map((v) => `<div class="ix-row">
       <p class="ix-t">Nos prestaste <b>${mxn(v.original)}</b> el ${fechaMedia(v.desde)}.</p>
@@ -1451,7 +1453,10 @@ const INV_OFF = ["pendiente", "rechazada"];
 const CONTRATOS = () => INVS.filter((m) => m.tipo !== "retiro" && m.tasa > 0 && !INV_OFF.includes(m.estado || ""));
 const retirosDe = (m) => INVS.filter((z) => z.tipo === "retiro" && z.aid === m.id);
 const vigenteDe = (m, f) => Math.max(0, Math.round((m.monto - retirosDe(m).filter((z) => !f || z.fecha <= f).reduce((s, z) => s + z.monto, 0)) * 100) / 100);
-const mensualDe = (m) => Math.round(vigenteDe(m) * m.tasa) / 100;
+const mensualBruto = (m) => Math.round(vigenteDe(m) * m.tasa) / 100;
+// Parte de una inversión que está en préstamos pausados con su pago en pausa (0 a 1).
+const partePausada = (m, MG) => { const v = vigenteDe(m) || 1; return Math.min(1, ((MG || margenes())[m.id]?.det || []).filter((d) => d.p.pausa && d.p.pausa.pausaInv && d.p.pausa.desde <= today()).reduce((s2, d) => s2 + d.monto / v, 0)); };
+const mensualDe = (m, MG) => Math.round(mensualBruto(m) * (1 - partePausada(m, MG)) * 100) / 100;
 const diaDe = (m) => Number((m.fecha || "").slice(8, 10)) || 1;
 const proxInv = (m) => pagosInversion(m, retirosDe(m), iso(new Date(Date.now() + 400 * 864e5))).find((f) => f.fecha >= today()) || null;
 // Dinero de inversionistas que todavía no está en ningún préstamo (por persona).
@@ -1463,6 +1468,7 @@ function sinColocarPorPersona() {
 // Cuánto te pagan los clientes de los préstamos donde colocaste ese dinero, contra lo que le pagas al inversionista.
 function interesMesPrestamo(p) {
   const a = avance(p); if (a.liquidado) return { int: 0, cap: 0 };
+  if (pausado(p)) return { int: 0, cap: debeDe(p, a) || 0 }; // pausado: no se cuenta como ingreso del mes
   let f = null; try { f = desgloseFilas(p).find((x) => x.fecha >= today()); } catch (e) {}
   return { int: f ? f.interes : 0, cap: debeDe(p, a) || 0 };
 }
@@ -1480,7 +1486,8 @@ function margenes() {
       const c = Math.round(((int * usa) / cap) * 100) / 100;
       libre[pid] -= usa; resto -= usa; cobras += c; det.push({ p, cobras: c, tasa: p.tasa, monto: Math.round(usa) });
     });
-    const pagas = mensualDe(m);
+    const v = vigenteDe(m) || 1, pz = Math.min(1, det.filter((d) => d.p.pausa && d.p.pausa.pausaInv && d.p.pausa.desde <= today()).reduce((s2, d) => s2 + d.monto / v, 0));
+    const pagas = Math.round(mensualBruto(m) * (1 - pz) * 100) / 100;
     R[m.id] = { cobras: Math.round(cobras * 100) / 100, pagas, queda: Math.round((cobras - pagas) * 100) / 100, sinColocar: Math.max(0, Math.round(resto)), det };
   });
   return R;
@@ -1517,10 +1524,13 @@ function obligaciones() {
       if (x.capital) ledger([p]).forEach((r) => { if (r.capital > 0.005 && (!x.desde || r.fecha >= x.desde)) O.push({ k, x, p, fecha: r.fecha, limite: masHabiles(r.fecha, dh), monto: Math.round(r.capital * 100) / 100, concepto: "Capital que pagó el cliente", futuro: false }); });
     });
   });
+  const MGP = margenes();
   CONTRATOS().forEach((m) => {
-    const k = persKey(m), dh = diasDe(k);
-    pagosInversion(m, retirosDe(m), lim).forEach((f) => O.push({ k, x: { uid: m.uid || "", nombre: m.nombre }, p: null, inv: m, fecha: f.fecha, limite: masHabiles(f.fecha, dh), monto: f.monto,
-      concepto: f.final ? "Interés hasta el día que le regresaste su dinero" : f.parcial ? "Interés del mes (le regresaste capital)" : "Interés de su inversión", futuro: f.fecha > hoy }));
+    const k = persKey(m), dh = diasDe(k), vig = vigenteDe(m) || 1;
+    // Parte de su dinero que está en préstamos pausados con "pausar pago a inversionistas".
+    const PZ = (MGP[m.id]?.det || []).filter((d) => d.p.pausa && d.p.pausa.pausaInv).map((d) => ({ desde: d.p.pausa.desde, parte: Math.min(1, d.monto / vig) }));
+    pagosInversion(m, retirosDe(m), lim).forEach((f) => { const fr = PZ.filter((z) => f.fecha > z.desde).reduce((s2, z) => s2 + z.parte, 0); const monto = Math.round(f.monto * Math.max(0, 1 - fr) * 100) / 100; if (monto < 0.005) return; O.push({ k, x: { uid: m.uid || "", nombre: m.nombre }, p: null, inv: m, fecha: f.fecha, limite: masHabiles(f.fecha, dh), monto,
+      concepto: (f.final ? "Interés hasta el día que le regresaste su dinero" : f.parcial ? "Interés del mes (le regresaste capital)" : "Interés de su inversión") + (fr > 0.001 ? " (parte pausada)" : ""), futuro: f.fecha > hoy }); });
   });
   return O.sort((a, b) => (a.limite < b.limite ? -1 : 1));
 }
@@ -1568,7 +1578,7 @@ function prestamoInvBox(p) {
   if (!isAdmin()) return "";
   const C = CONTRATOS().filter((m) => (m.pids || []).includes(p.id) && vigenteDe(m) > 0.5), MG = margenes();
   const viejos = (REP[p.id]?.participantes || []).map((x, i) => ({ x, i })).filter(({ x }) => x.papel === "fondeo" && !x.migrado);
-  const { int } = interesMesPrestamo(p), paga = C.reduce((s2, m) => s2 + ((MG[m.id]?.det || []).find((d) => d.p.id === p.id) ? mensualDe(m) * (MG[m.id].det.find((d) => d.p.id === p.id).monto / vigenteDe(m)) : 0), 0);
+  const { int } = interesMesPrestamo(p), paga = C.reduce((s2, m) => { const d = (MG[m.id]?.det || []).find((z) => z.p.id === p.id); return s2 + (d && !(p.pausa && p.pausa.pausaInv) ? mensualBruto(m) * (d.monto / vigenteDe(m)) : 0); }, 0);
   const P = personasInv(true), r2 = (n) => Math.round(n * 100) / 100;
   return `<details class="sec" data-pinvsec${C.length || viejos.length || PINV ? " open" : ""}><summary>Quién puso el dinero</summary>
     ${C.length ? `<div class="tbl cuadre"><table>
@@ -1838,6 +1848,7 @@ function personaInvView(e, formPago) {
     ${INV_FORM === "rec:" + e.k ? formPago(e, -e.neto, "de") : ""}
     ${INV_FORM === "cfg:" + e.k ? cfgForm(e) : ""}
   </div>
+  ${(() => { const A = portafolioDe(e).avisos || []; return A.length ? `<div class="card avis"><h2>Avisos que ve en su app</h2>${A.map((v) => `<div class="item"><div class="item-top"><b>${esc(v.motivo)}</b><span>${mxn(v.monto)}</span></div>${v.nota ? `<div class="item-mid">"${esc(v.nota)}"</div>` : ""}<div class="item-mid">${v.pausaPago ? "Su pago de esa parte está en pausa" : "Se le sigue pagando normal"}</div></div>`).join("")}<p class="note">Se cambian desde la ficha del préstamo pausado.</p></div>` : ""; })()}
   ${inversionesCard(e.k)}
   <div class="card"><h2>Sus pagos</h2>
     <p class="note" style="margin:0">Lo que le toca cada mes y si ya se lo pagaste. Lo que le pagas se aplica a lo más antiguo.</p>
@@ -2051,9 +2062,11 @@ function portafolioDe(e) {
     // Próximo pago: la fecha en que le toca (no el último día del margen). Si ya pasó y falta pagarle, se indica el límite.
     const prox = e.pend.length ? { monto: r2(e.pend.filter((o) => o.fecha === e.pend[0].fecha).reduce((s, o) => s + o.falta, 0)), fecha: e.pend[0].fecha, limite: e.pend[0].limite } : e.futuro[0] ? { monto: r2(e.futuro.filter((o) => o.fecha === e.futuro[0].fecha).reduce((s, o) => s + o.monto, 0)), fecha: e.futuro[0].fecha, limite: e.futuro[0].limite } : null;
     const CI = CONTRATOS().filter((m) => persKey(m) === e.k && vigenteDe(m) > 0.5);
+    const MGx = margenes();
+    const avisos = CI.flatMap((m) => (MGx[m.id]?.det || []).filter((d) => d.p.pausa).map((d) => ({ motivo: motivoDe(d.p), nota: d.p.pausa.notaInv || "", desde: d.p.pausa.desde, monto: d.monto, pausaPago: !!d.p.pausa.pausaInv })));
     const inversiones = CI.map((m) => { const px = proxInv(m); return { monto: vigenteDe(m), original: m.monto, tasa: m.tasa, mensual: mensualDe(m), dia: diaDe(m), desde: m.fecha, prox: px ? { fecha: px.fecha, monto: px.monto } : null }; });
     const mensual = r2(CI.reduce((s, m) => s + mensualDe(m), 0) + e.prestamos.reduce((s, q) => { const f = desgloseFilas(q.p).find((x) => x.fecha >= today()); return s + (f ? parteDe({ p: q.p, interes: f.interes, capital: 0 }, q.x).int : 0); }, 0));
-    const d = { nombre: e.nombre, inversiones, capital: e.capPuesto || e.capPrestado, ganado, recibido: r2(e.pagado), pendiente: r2(e.pend.reduce((s, o) => s + o.falta, 0)), mensual, proximo: prox,
+    const d = { nombre: e.nombre, inversiones, avisos, capital: e.capPuesto || e.capPrestado, ganado, recibido: r2(e.pagado), pendiente: r2(e.pend.reduce((s, o) => s + o.falta, 0)), mensual, proximo: prox,
       pagos: movsDe(e).filter((m) => m.col === "entregas" && m.m.dir !== "de").slice(0, 36).map(({ m }) => ({ id: m.id, monto: m.monto, fecha: m.fecha, metodo: m.metodo || "", recibo: !!m.recibo })),
       aportes: INVS.filter((m) => persKey(m) === e.k && !INV_OFF.includes(m.estado || "")).map((m) => ({ tipo: m.tipo, monto: m.monto, fecha: m.fecha })),
       detalle: c.ver === "detalle" ? e.prestamos.map((q) => ({ tipo: q.p.tipo === "semanal" ? "Préstamo semanal" : "Préstamo con garantía" + (q.p.garantia && GARANTIAS[q.p.garantia] && !["sin", "ff"].includes(q.p.garantia) ? " (" + GARANTIAS[q.p.garantia].toLowerCase() + ")" : ""), monto: q.x.aporte || debeDe(q.p, q.a) || q.p.monto, tasa: q.x.base === "puntos" ? q.x.valor : null })) : [] };
@@ -2096,7 +2109,7 @@ function loanItem0(p) {
   const venc = vencido(p, a);
   const rec = SI && a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago de interés del mes por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Tu capital pendiente es de ${mxn2(a.capital)}.\n\nEntre Amigos` : a.siguiente ? `Hola ${p.cliente}, te recordamos tu pago ${a.siguiente.n} de ${a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}. Llevas ${mxn2(a.pagado)} pagados y ${p.tipo === "capfijo" ? "tu capital pendiente es de " + mxn2(a.capital) : "te restan " + mxn2(a.restante)}.\n\nEntre Amigos` : "";
   return `<div class="item tapi" data-open="${p.id}" role="button" tabindex="0">
-    <div class="item-top"><b>${esc(p.cliente)}${isAdmin() && ownerOf(p) !== ME.uid ? ` <span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${isAdmin() && p.recibe ? ` <span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : SI ? `Capital ${mxn(a.capital)}` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
+    <div class="item-top"><b>${esc(p.cliente)}${isAdmin() && ownerOf(p) !== ME.uid ? ` <span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${isAdmin() && p.recibe ? ` <span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</b><span>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : pausado(p) ? `<span class="pill">${esc(motivoDe(p))}</span>` : venc ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : SI ? `Capital ${mxn(a.capital)}` : `${unidad} ${Math.min(a.cubiertos + 1, a.total)} de ${a.total}`}</span></div>
     <div class="item-mid">${loanDesc(p, a)}</div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
     <div class="item-bot"><span>${SI ? `Intereses pagados ${mxn2(a.pagado)} · Abonos a capital ${mxn2(a.capPagado)}${a.interesAdeudado ? " · Interés vencido " + mxn2(a.interesAdeudado) : ""}` : p.tipo === "capfijo" ? `Pagado ${mxn2(a.pagado)} · Capital pendiente ${mxn2(a.capital)}` : `Pagado ${mxn2(a.pagado)} · Resta ${mxn2(a.restante)}`}</span></div>
@@ -2175,6 +2188,30 @@ function pagosBox(p, admin) {
   </details>`;
 }
 let RECH = "";
+/* ---------- Préstamos pausados (en demanda, recuperación, negociando…) ---------- */
+const MOTIVOS = { demanda: "En demanda", recuperacion: "En recuperación", negociando: "Negociando", capital: "Recuperando capital", otro: "Pausado" };
+const pausado = (p) => !!(p && p.pausa);
+const motivoDe = (p) => (p.pausa ? (p.pausa.motivo === "otro" && p.pausa.otro ? p.pausa.otro : MOTIVOS[p.pausa.motivo] || "Pausado") : "");
+const NOTA_INV = { demanda: "Uno de los préstamos donde está tu dinero está en proceso legal. Te avisaremos cualquier avance.", recuperacion: "Uno de los préstamos donde está tu dinero está en proceso de recuperación. Te avisaremos cualquier avance.", negociando: "Estamos negociando con un cliente que se atrasó. Te avisaremos en cuanto haya acuerdo.", capital: "Estamos recuperando el capital de uno de los préstamos donde está tu dinero. Te avisaremos cualquier avance.", otro: "" };
+function pausaBox(p) {
+  if (!isAdmin()) return "";
+  const z = p.pausa || {}, on = !!p.pausa, edit = FX === "pausa";
+  const form = `<form class="edit" data-pausaf="${p.id}" novalidate>
+    <div class="row"><label>Motivo<select name="motivo">${Object.entries(MOTIVOS).map(([k, v]) => `<option value="${k}"${(z.motivo || "demanda") === k ? " selected" : ""}>${k === "otro" ? "Otro" : v}</option>`).join("")}</select></label>
+    <label>Desde<input name="desde" type="date" value="${z.desde || today()}"></label></div>
+    <label data-otro${(z.motivo || "") === "otro" ? "" : " hidden"}>¿Cuál?<input name="otro" value="${esc(z.otro || "")}" placeholder="Ej. Cliente fuera del país"></label>
+    <label>El interés del cliente<select name="congelar"><option value="0"${z.congelar ? "" : " selected"}>Sigue corriendo (lo debe completo)</option><option value="1"${z.congelar ? " selected" : ""}>Se congela desde esa fecha</option></select></label>
+    <label>Tus inversionistas con dinero en este préstamo<select name="pinv"><option value="0"${z.pausaInv ? "" : " selected"}>Les sigo pagando normal</option><option value="1"${z.pausaInv ? " selected" : ""}>Se pausa su pago por ese dinero</option></select></label>
+    <label>Nota para tus inversionistas (la ven en su app, sin el nombre del cliente)<textarea name="ninv" rows="3">${esc(z.notaInv ?? NOTA_INV[z.motivo || "demanda"])}</textarea></label>
+    <label>Nota interna (solo tú)<textarea name="nota" rows="2" placeholder="Ej. Abogado Lic. Pérez, audiencia 15 nov">${esc(z.nota || "")}</textarea></label>
+    <p class="note">No se borra nada: los pagos y el saldo se conservan. Mientras esté pausado no sale en atrasados, avisos ni agenda de cobro.</p>
+    <div class="actions"><button class="btn primary" type="submit">${on ? "Guardar cambios" : "Pausar préstamo"}</button><button class="btn" type="button" data-fx="pausa">Cancelar</button></div></form>`;
+  if (on) return `<div class="avis pausa"><div class="head"><h3>Pausado · ${esc(motivoDe(p))}</h3><span class="muted">desde el ${fcorta(new Date(z.desde + "T12:00:00"))}</span></div>
+    <p class="muted" style="margin:0">Interés del cliente: <b>${z.congelar ? "congelado" : "sigue corriendo"}</b> · Inversionistas: <b>${z.pausaInv ? "pago pausado" : "se les sigue pagando"}</b></p>
+    ${z.nota ? `<p class="muted" style="margin:0">Nota: ${esc(z.nota)}</p>` : ""}${z.notaInv ? `<p class="note" style="margin:0">Lo que ven tus inversionistas: "${esc(z.notaInv)}"</p>` : ""}
+    <div class="actions"><button class="btn sm" type="button" data-fx="pausa">${edit ? "Cerrar" : "Editar"}</button><button class="btn sm primary" type="button" data-reanuda="${p.id}">Reactivar préstamo</button></div>${edit ? form : ""}</div>`;
+  return edit ? form : "";
+}
 // Cuenta que ve este préstamo en su app (como deudor). Si es de un inversionista o colaborador, casi siempre es un error.
 const cuentaDe = (p) => USERS.find((u) => (p.clienteUid && u.uid === p.clienteUid) || (p.clienteEmail && (u.email || "").toLowerCase() === p.clienteEmail)) || null;
 function avisoCuenta(p) {
@@ -2216,10 +2253,11 @@ function fichaHTML(p) {
   const fx = FX, dk = docKey(p);
   return `<button class="back" type="button" data-back>‹ ${PVISTA === "clientes" && CLI_SEL ? esc((gruposClientes(visibles()).find((g) => g.k === CLI_SEL) || {}).nombre || "Cliente") : adm ? "Préstamos" : "Mis clientes"}</button>
   <div class="card ficha">
-    <div class="head"><h2>${esc(p.cliente)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc > 0.5 ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
+    <div class="head"><h2>${esc(p.cliente)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : pausado(p) ? `<span class="pill warn">${esc(motivoDe(p))}</span>` : venc > 0.5 ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
     ${adm && (ownerOf(p) !== ME.uid || p.recibe) ? `<div class="item-bot">${ownerOf(p) !== ME.uid ? `<span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${p.recibe ? `<span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</div>` : ""}
     <p class="muted">${loanDesc(p, a)}</p>
     ${avisoCuenta(p)}
+    ${pausaBox(p)}
     ${a.liquidado ? `<p class="ok">Préstamo liquidado.</p>` : venc > 0.5 ? `<div class="big"><span>Debe hoy</span><b>${mxn2(venc)}</b></div>
       <p class="muted">Le falta${faltan.length > 1 ? "n" : ""} ${faltan.map((f) => mxn(f.falta) + " de " + mesLbl(f.fecha, sem)).join(" y ")}.${e.meses.find((f) => f.fecha > today()) ? " El " + fcorta(new Date(e.meses.find((f) => f.fecha > today()).fecha + "T12:00:00")) + " se suman " + mxn(e.meses.find((f) => f.fecha > today()).pago) + "." : ""}</p>`
       : a.siguiente ? `<div class="big"><span>Próximo pago${SI ? "" : " · " + unidad + " " + a.siguiente.n + " de " + a.total}</span><b>${mxn2(a.siguiente.monto)}</b></div>${a.siguiente.fecha ? `<p>Fecha: <b>${fcorta(a.siguiente.fecha)}</b></p>` : ""}` : ""}
@@ -2269,7 +2307,8 @@ function fichaHTML(p) {
       <div id="pdocs"></div>${compBox(p)}</details>` : ""}
     ${adm ? `<details class="sec"${p.nota ? " open" : ""}><summary>Notas internas</summary><textarea data-nota="${p.id}" rows="2" placeholder="Ej. Paga siempre los viernes">${esc(p.nota || "")}</textarea></details>` : ""}
     ${adm ? `<div class="sec">${repartoBox(p)}</div>` : ""}
-    ${adm ? `<details class="sec"><summary>Liquidar o borrar</summary>${(() => {
+    ${adm ? `<details class="sec"${FX === "pausa" && !p.pausa ? " open" : ""}><summary>Pausar, liquidar o borrar</summary>
+      ${p.pausa ? "" : `<p class="muted">Pausar: para préstamos en demanda, recuperación o negociación. No salen en tus cobros y puedes avisar a tus inversionistas.</p><div class="actions"><button class="btn sm" type="button" data-fx="pausa">${FX === "pausa" ? "Cerrar" : "Pausar préstamo"}</button></div>`}${(() => {
       if (a.liquidado) return "";
       const L = liquidacion(p), intV = r2c(L.interes - (L.intDias || 0) - (p.tipo === "interes" && L.dias ? 0 : 0));
       return `<div class="tbl cuadre"><table>
@@ -2290,6 +2329,18 @@ function fichaBind(p) {
   P.querySelector("[data-back]").onclick = () => { OPEN = ""; FX = ""; EDIT = ""; PEDIT = ""; RECH = ""; vPrestamos(); };
   P.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { FX = FX === b.dataset.fx ? "" : b.dataset.fx; EDIT = ""; vPrestamos(); }));
   P.querySelector("[data-asc]").onclick = () => verComoCliente(p);
+  P.querySelectorAll("form[data-pausaf]").forEach((f) => {
+    const g = (n) => f.querySelector(`[name=${n}]`), mo = g("motivo"), ni = g("ninv");
+    mo.onchange = () => { f.querySelector("[data-otro]").hidden = mo.value !== "otro"; if (!ni.dataset.touched) ni.value = NOTA_INV[mo.value] || ""; };
+    ni.oninput = () => (ni.dataset.touched = "1");
+    f.onsubmit = async (ev) => { ev.preventDefault();
+      const z = { motivo: mo.value, otro: g("otro").value.trim(), desde: g("desde").value || today(), congelar: g("congelar").value === "1", pausaInv: g("pinv").value === "1", notaInv: ni.value.trim(), nota: g("nota").value.trim(), por: ME.uid, reg: new Date().toISOString() };
+      await updateDoc(doc(db, "prestamos", p.id), { pausa: z }); FX = ""; vPrestamos(); };
+  });
+  P.querySelectorAll("[data-reanuda]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toca otra vez para reactivarlo"; return; }
+    const z = p.pausa || {}; await updateDoc(doc(db, "prestamos", p.id), { pausa: deleteField(), pausasAnteriores: arrayUnion({ ...z, hasta: today() }) }); FX = ""; vPrestamos();
+  }));
   // Al unir, el préstamo toma el nombre de esa persona (y sus otros préstamos se ligan a la misma clave).
   P.querySelectorAll("select[data-mismo]").forEach((sl) => (sl.onchange = async () => {
     if (!sl.value) return; const g = gruposClientes(PRES).find((x) => x.k === sl.value); if (!g) return;
@@ -2898,7 +2949,7 @@ const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, 
 function cuotas() {
   const out = [], hoy = today();
   visibles().forEach((p) => {
-    if (!p.inicio) return;
+    if (!p.inicio || pausado(p)) return;
     const a = avance(p); let acum = 0;
     a.corrida.filas.forEach((f) => {
       acum += f.pago;
@@ -2995,7 +3046,8 @@ function tareaRow(x) {
 /* ---------- Resumen global de la cartera (Agenda, solo administrador) ---------- */
 function resumenGlobal() {
   const r2 = (n) => Math.round(n * 100) / 100, hoy = today(), mes = hoy.slice(0, 7);
-  const act = PRES.filter((p) => !avance(p).liquidado);
+  const act = PRES.filter((p) => !avance(p).liquidado && !pausado(p)), PAU = PRES.filter((p) => pausado(p) && !avance(p).liquidado);
+  const capPau = PAU.reduce((s2, p) => s2 + (debeDe(p, avance(p)) || 0), 0);
   let cartera = 0, intMes = 0, comMes = 0, atras = 0;
   act.forEach((p) => {
     const a = avance(p), { int, cap } = interesMesPrestamo(p);
@@ -3013,7 +3065,7 @@ function resumenGlobal() {
   const nombreMes = new Date(hoy + "T12:00:00").toLocaleDateString("es-MX", { month: "long" });
   return { neto: r2(neto), html: `<div class="card"><h2>Resumen global</h2>
     <p class="lbl">Tu cartera hoy</p>
-    <div class="facts"><div><span>Capital prestado</span><b>${mxn(cartera)}</b></div><div><span>Préstamos activos</span><b>${act.length}</b></div><div><span>Clientes</span><b>${clientes}</b></div></div>
+    <div class="facts"><div><span>Capital prestado</span><b>${mxn(cartera)}</b></div><div><span>Préstamos activos</span><b>${act.length}</b></div><div><span>Clientes</span><b>${clientes}</b></div>${PAU.length ? `<div><span>Pausados (${PAU.length})</span><b class="warn-t">${mxn(capPau)}</b></div>` : ""}</div>
     <p class="lbl">Cada mes</p>
     <div class="tbl cuadre"><table>
       <tr><td>Te pagan de interés los clientes</td><td class="r">${mxn2(r2(intMes))}</td></tr>

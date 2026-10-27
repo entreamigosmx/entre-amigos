@@ -282,3 +282,5 @@ details.card.fold>summary .fs{display:none}
 .ix-pago div{display:grid;gap:2px}.ix-pago b{font-size:22px;font-variant-numeric:tabular-nums}.ix-pago span{font-size:16px;color:var(--soft)}
 .ix-wa{min-height:56px;font-size:18px}
 .invx.big{font-size:23px}.invx.big .ix-t{font-size:23px}.invx.big .ix-lbl{font-size:20px}.invx.big .ix-num{font-size:clamp(56px,16vw,76px)}.invx.big .ix-pago b{font-size:26px}.invx.big .ix-pago span{font-size:19px}.invx.big .ix-hola{font-size:36px}
+.avis.pausa{display:grid;gap:8px}.avis.pausa h3{font-size:20px}
+.ix-av{border-color:var(--warn)}
