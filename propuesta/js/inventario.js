@@ -17,7 +17,7 @@ function draw() {
   const by = { pa: (a, b) => a.precio - b.precio, pd: (a, b) => b.precio - a.precio, ad: (a, b) => b.anio - a.anio, km: (a, b) => (a.kilometraje ?? 1e9) - (b.kilometraje ?? 1e9) }[ord];
   if (by) l = l.slice().sort(by);
   else if (CAT === "Ofertas") l = l.slice().sort((a, b) => (b.precioAnterior - b.precio) / b.precioAnterior - (a.precioAnterior - a.precio) / a.precioAnterior);
-  $("count").textContent = `${l.length} ${l.length === 1 ? "vehículo" : "vehículos"}`;
+  $("count").textContent = CAT === "Ofertas" ? "Precios especiales de octubre" : `${l.length} ${l.length === 1 ? "vehículo" : "vehículos"}`; // en Ofertas no se muestra cantidad
   $("cars").innerHTML = l.length ? l.map(card).join("") : `<p class="empty">No hay vehículos con esos filtros. Prueba con otros filtros o escríbenos: si no lo tenemos, te lo buscamos.</p>`;
   const u = new URL(location); CAT ? u.searchParams.set("cat", CAT) : u.searchParams.delete("cat"); history.replaceState(null, "", u);
 }
