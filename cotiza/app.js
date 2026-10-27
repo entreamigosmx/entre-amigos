@@ -679,17 +679,90 @@ function ownerFilter(rerender) {
   setTimeout(() => { const s = $("own-f"); if (s) s.onchange = () => { OWN = s.value; rerender(); }; });
   return `<label for="own-f">Cartera de<select id="own-f"><option value="">Todos</option>${ids.map((i) => `<option value="${esc(i)}"${i === OWN ? " selected" : ""}>${esc(i === ME.uid ? "Yo" : nameOf(i))}</option>`).join("")}</select></label>`;
 }
+
+/* ---------- Préstamos por cliente: una persona con varios préstamos ---------- */
+let PVISTA = "lista", CLI_SEL = "", CLI_NOM = false;
+const normNom = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+// Cómo se junta a la misma persona: unión hecha por el dueño > su cuenta > su WhatsApp > su nombre.
+const cliKey = (p) => p.persona || (p.clienteUid ? "u:" + p.clienteUid : "") || (tel10(p.telefono || "").length === 10 ? "t:" + tel10(p.telefono) : "") || "n:" + normNom(p.cliente);
+function gruposClientes(L) {
+  const G = {};
+  L.forEach((p) => { const k = cliKey(p); (G[k] = G[k] || { k, P: [] }).P.push(p); });
+  return Object.values(G).map((g) => {
+    const r2 = (n) => Math.round(n * 100) / 100, hoy = today();
+    g.P.sort((a, b) => ((a.creado || "") < (b.creado || "") ? -1 : 1));
+    g.nombre = g.P.map((p) => p.cliente || "").sort((a, b) => b.length - a.length)[0] || "Cliente";
+    g.A = g.P.map((p) => ({ p, a: avance(p) }));
+    g.act = g.A.filter((z) => !z.a.liquidado);
+    g.capital = r2(g.act.reduce((s2, z) => s2 + ((z.p.tipo === "semanal" ? z.a.restante : z.a.capital) || 0), 0));
+    g.mes = r2(g.act.reduce((s2, z) => s2 + (z.a.siguiente ? (z.p.tipo === "interes" ? z.a.corrida.pago : (z.a.corrida.filas.find((f) => iso(fechaPago(z.p.inicio, f.n, z.p.tipo)) > hoy) || {}).pago || 0) : 0), 0));
+    g.debe = r2(g.act.reduce((s2, z) => s2 + vencido(z.p, z.a), 0));
+    g.pagado = r2(g.A.reduce((s2, z) => s2 + (z.p.pagos || []).reduce((t, x) => t + (x.monto || 0), 0), 0));
+    // Próximo pago que todavía no vence (lo atrasado ya se ve en "Debe hoy").
+    g.prox = g.act.map((z) => { const f = estadoCuenta(z.p).meses.find((x) => x.fecha > hoy && x.falta > 0.5); return f ? { f: f.fecha, m: f.falta, p: z.p } : null; }).filter(Boolean).sort((a, b) => (a.f < b.f ? -1 : 1))[0] || null;
+    return g;
+  }).sort((a, b) => (b.debe > 0.5) - (a.debe > 0.5) || a.nombre.localeCompare(b.nombre));
+}
+function vistaChips() {
+  return `<div class="chips"><button type="button" class="chip${PVISTA === "lista" ? " on" : ""}" data-pvista="lista">Préstamos</button><button type="button" class="chip${PVISTA === "clientes" ? " on" : ""}" data-pvista="clientes">Por cliente</button></div>`;
+}
+function vClientesPrest() {
+  const G = gruposClientes(visibles()), g = CLI_SEL ? G.find((x) => x.k === CLI_SEL) : null;
+  if (CLI_SEL && !g) CLI_SEL = "";
+  if (g) {
+    const pagos = g.A.flatMap((z) => (z.p.pagos || []).map((x) => ({ x, p: z.p }))).sort((a, b) => (a.x.fecha < b.x.fecha ? 1 : -1));
+    const liq = g.A.filter((z) => z.a.liquidado);
+    return vistaChips() + `<button class="back" type="button" data-clix>‹ Todos los clientes</button>
+    <div class="card"><div class="head"><h2>${esc(g.nombre)}</h2>${g.debe > 0.5 ? `<span class="pill warn">Debe ${mxn(g.debe)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
+      ${isAdmin() ? (CLI_NOM ? `<form class="edit" id="cli-nomf" novalidate><label>Nombre correcto (se cambia en sus ${g.P.length} préstamos)<input name="n" value="${esc(g.nombre)}"></label><div class="actions"><button class="btn sm primary" type="submit">Guardar</button><button class="btn sm" type="button" data-clinom>Cancelar</button></div></form>` : `<button class="link" type="button" data-clinom style="justify-self:start">Corregir nombre</button>`) : ""}
+      <div class="facts">
+        <div><span>Préstamos abiertos</span><b>${g.act.length}</b></div><div><span>Te debe de capital</span><b>${mxn(g.capital)}</b></div>
+        <div><span>Te paga al mes</span><b>${mxn2(g.mes)}</b></div><div><span>Debe hoy</span><b class="${g.debe > 0.5 ? "warn-t" : "lime"}">${mxn2(g.debe)}</b></div>
+        <div><span>Te ha pagado</span><b>${mxn2(g.pagado)}</b></div><div><span>Próximo pago</span><b>${g.prox ? mxn2(g.prox.m) + " · " + fdate(g.prox.f) : "Ninguno"}</b></div>
+      </div>
+      ${g.P.some((p) => p.telefono) ? `<div class="actions"><a class="btn sm" href="${waTo(g.P.find((p) => p.telefono).telefono, `Hola ${g.nombre.split(" ")[0]}, te saluda Entre Amigos.`)}" target="_blank" rel="noopener">WhatsApp</a></div>` : ""}
+    </div>
+    <div class="card"><h2>Sus préstamos abiertos (${g.act.length})</h2><div class="list">${g.act.length ? g.act.map((z) => loanItem(z.p)).join("") : `<p class="muted">No tiene préstamos abiertos.</p>`}</div></div>
+    ${liq.length ? `<div class="card"><details><summary>Liquidados (${liq.length})</summary><div class="list" style="margin-top:12px">${liq.map((z) => loanItem(z.p)).join("")}</div></details></div>` : ""}
+    <div class="card"><h2>Todos sus pagos</h2><div class="tbl cuadre"><table class="edo"><tr><th>Fecha</th><th>Monto</th><th>Préstamo</th></tr>${pagos.length ? pagos.slice(0, 60).map(({ x, p }) => `<tr><td>${mesC(x.fecha, true)} ${x.fecha.slice(2, 4)}</td><td>${mxn(x.monto)}</td><td>${mxn(p.monto)}${x.tipo === "capital" ? " · capital" : ""}</td></tr>`).join("") : `<tr><td colspan="3">Sin pagos registrados.</td></tr>`}</table></div></div>`;
+  }
+  const multi = G.filter((x) => x.act.length > 1).length;
+  return vistaChips() + `<div class="card"><div class="head"><h2>Clientes</h2><span class="muted">${G.filter((x) => x.act.length).length} con préstamo abierto${multi ? ` · ${multi} con varios` : ""}</span></div>
+    <input id="cli-buscar" type="search" placeholder="Buscar cliente por nombre" autocomplete="off" value="${esc(FILT_P)}">
+    <div class="list">${G.filter((x) => x.act.length).map((x) => `<div class="item tapi" data-cli="${esc(normNom(x.nombre))}" data-clisel="${esc(x.k)}" role="button" tabindex="0">
+      <div class="item-top"><b>${esc(x.nombre)}${x.act.length > 1 ? ` <span class="pill">${x.act.length} préstamos</span>` : ""}</b>${x.debe > 0.5 ? `<span class="pill warn">Debe ${mxn(x.debe)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
+      <div class="item-mid">Capital ${mxn(x.capital)} · Te paga ${mxn(x.mes)} al mes</div>
+      ${x.prox ? `<div class="item-bot"><span>Próximo: ${mxn2(x.prox.m)} el ${fdate(x.prox.f)}</span></div>` : ""}</div>`).join("") || `<p class="muted">Sin préstamos abiertos.</p>`}</div></div>`;
+}
+function bindClientesPrest() {
+  const P = $("panel");
+  P.querySelectorAll("[data-pvista]").forEach((b) => (b.onclick = () => { PVISTA = b.dataset.pvista; CLI_SEL = ""; vPrestamos(); window.scrollTo(0, 0); }));
+  P.querySelectorAll("[data-clisel]").forEach((b) => (b.onclick = () => { CLI_SEL = b.dataset.clisel; vPrestamos(); window.scrollTo(0, 0); }));
+  P.querySelectorAll("[data-clix]").forEach((b) => (b.onclick = () => { CLI_SEL = ""; CLI_NOM = false; vPrestamos(); }));
+  P.querySelectorAll("[data-clinom]").forEach((b) => (b.onclick = () => { CLI_NOM = !CLI_NOM; vPrestamos(); }));
+  const nf = $("cli-nomf");
+  if (nf) nf.onsubmit = async (ev) => {
+    ev.preventDefault(); const n = nf.querySelector("[name=n]").value.trim().replace(/\s+/g, " "); if (!n) return;
+    const g = gruposClientes(visibles()).find((x) => x.k === CLI_SEL); if (!g) return;
+    // Todos sus préstamos quedan con el mismo nombre y unidos por la misma clave, para que no se vuelvan a separar.
+    await Promise.all(g.P.map((p) => updateDoc(doc(db, "prestamos", p.id), { cliente: n, persona: g.k })));
+    CLI_NOM = false;
+  };
+  const bus = $("cli-buscar"); if (bus) bus.addEventListener("input", () => { FILT_P = bus.value; const q = normNom(FILT_P); P.querySelectorAll("[data-clisel]").forEach((el) => (el.hidden = q && !el.dataset.cli.includes(q))); });
+  if (bus && FILT_P) bus.dispatchEvent(new Event("input"));
+}
 function vPrestamos() {
   const PF = OPEN ? PRES.find((x) => x.id === OPEN) : null;
   if (OPEN && !PF) OPEN = "";
   if (PF) { $("panel").innerHTML = fichaHTML(PF); bindLoan(); fichaBind(PF); return; }
+  if (PVISTA === "clientes") { $("panel").innerHTML = vClientesPrest(); bindLoan(); bindClientesPrest(); return; }
   const clientes = USERS.filter((u) => u.rol === "cliente");
   const d = DRAFT || {};
   const VP = visibles();
   const act = VP.filter((p) => !avance(p).liquidado), liq = VP.filter((p) => avance(p).liquidado);
   const cartera = act.reduce((s, p) => s + debeDe(p, avance(p)), 0);
   const equipo = USERS.filter((u) => u.rol === "equipo");
-  $("panel").innerHTML = `
+  $("panel").innerHTML = vistaChips() + `
   <div class="card"><details id="ex-d"${EXOPEN ? " open" : ""}><summary>Agregar cliente con préstamo que ya tiene</summary>
     <form id="fe" novalidate style="margin-top:12px">
       <p class="note" style="margin:0 0 10px">Para clientes de antes: registras lo que te debe hoy y cómo te paga. Al guardar te aparece el mensaje para invitarlo por WhatsApp a ver su préstamo en línea.</p>
@@ -786,6 +859,7 @@ function bindLoan() {
     if (file) { try { const { data, mime } = await fileToData(file); await addDoc(collection(db, "comprobantes"), { pid: f.dataset.pay, reg: pg.reg, fecha: fe, monto: m, data, mime, por: ME.uid }); } catch (er) {} }
   }));
   editHandlers();
+  bindClientesPrest();
   const bus = $("p-buscar"); if (bus) bus.addEventListener("input", () => { FILT_P = bus.value; const q = FILT_P.trim().toLowerCase(); $("panel").querySelectorAll("[data-cli]").forEach((el) => (el.hidden = q && !el.dataset.cli.includes(q))); });
   if (FILT_P && bus) bus.dispatchEvent(new Event("input"));
   $("panel").querySelectorAll("[data-liq]").forEach((b) => (b.onclick = async () => {
@@ -2028,7 +2102,7 @@ function fichaHTML(p) {
     : a.siguiente ? `Hola ${p.cliente}, te recordamos tu ${SI ? "pago de interés" : "pago " + a.siguiente.n + " de " + a.total} por ${mxn2(a.siguiente.monto)}${a.siguiente.fecha ? ", con fecha " + fcorta(a.siguiente.fecha) : ""}.\n\nEntre Amigos` : "";
   const pct = SI ? Math.min(100, Math.round((a.capPagado / p.monto) * 100)) : Math.min(100, Math.round(((a.pagado + (a.credito || 0)) / a.corrida.total) * 100));
   const fx = FX, dk = docKey(p);
-  return `<button class="back" type="button" data-back>‹ ${adm ? "Préstamos" : "Mis clientes"}</button>
+  return `<button class="back" type="button" data-back>‹ ${PVISTA === "clientes" && CLI_SEL ? esc((gruposClientes(visibles()).find((g) => g.k === CLI_SEL) || {}).nombre || "Cliente") : adm ? "Préstamos" : "Mis clientes"}</button>
   <div class="card ficha">
     <div class="head"><h2>${esc(p.cliente)}</h2>${a.liquidado ? `<span class="pill ok">Liquidado</span>` : venc > 0.5 ? `<span class="pill warn">Vencido ${mxn(venc)}</span>` : `<span class="pill ok">Al corriente</span>`}</div>
     ${adm && (ownerOf(p) !== ME.uid || p.recibe) ? `<div class="item-bot">${ownerOf(p) !== ME.uid ? `<span class="pill">Cartera: ${esc(nameOf(ownerOf(p)))}</span>` : ""}${p.recibe ? `<span class="pill warn">Recibe: ${esc(nameOf(p.recibe))}</span>` : ""}</div>` : ""}
@@ -2075,6 +2149,7 @@ function fichaHTML(p) {
     <details class="sec"><summary>Datos del cliente</summary>
       <p class="muted">${tieneCuenta ? `Lo ve en su app la cuenta de <b>${esc(cuentaDe(p)?.nombre || cuentaDe(p)?.email || "")}</b>.` : "Todavía no crea su cuenta."}${p.telefono ? " WhatsApp: " + esc(p.telefono) + "." : ""}</p>
       <label>Correo (con este correo verá su préstamo)<input data-mail="${p.id}" type="email" value="${esc(p.clienteEmail || "")}" placeholder="cliente@correo.com"></label>
+      ${adm ? (() => { const G = gruposClientes(PRES).filter((g) => g.k !== cliKey(p)); return G.length ? `<label>¿Es la misma persona que otro cliente? (para verlos juntos)<select data-mismo="${p.id}"><option value="">No, es otra persona</option>${G.map((g) => `<option value="${esc(g.k)}"${p.persona === g.k ? " selected" : ""}>${esc(g.nombre)} · ${g.P.length} préstamo${g.P.length > 1 ? "s" : ""}</option>`).join("")}</select></label>${p.persona ? `<button class="link" type="button" data-separa="${p.id}">Separar de ese cliente</button>` : ""}` : ""; })() : ""}
       ${adm ? `<label>Cuenta del cliente<select data-link="${p.id}"><option value="">Sin cuenta</option>${clientes.map((u) => `<option value="${u.uid}"${u.uid === p.clienteUid ? " selected" : ""}>${esc(u.nombre)} · ${esc(u.email)}</option>`).join("")}</select></label>` : ""}
     </details>
     ${adm ? `<details class="sec" data-docsec${DOCS_OPEN === dk ? " open" : ""}><summary>Documentos y comprobantes</summary>
@@ -2103,6 +2178,12 @@ function fichaBind(p) {
   P.querySelector("[data-back]").onclick = () => { OPEN = ""; FX = ""; EDIT = ""; PEDIT = ""; RECH = ""; vPrestamos(); };
   P.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { FX = FX === b.dataset.fx ? "" : b.dataset.fx; EDIT = ""; vPrestamos(); }));
   P.querySelector("[data-asc]").onclick = () => verComoCliente(p);
+  // Al unir, el préstamo toma el nombre de esa persona (y sus otros préstamos se ligan a la misma clave).
+  P.querySelectorAll("select[data-mismo]").forEach((sl) => (sl.onchange = async () => {
+    if (!sl.value) return; const g = gruposClientes(PRES).find((x) => x.k === sl.value); if (!g) return;
+    await Promise.all([p, ...g.P].map((q) => updateDoc(doc(db, "prestamos", q.id), { persona: sl.value, cliente: g.nombre })));
+  }));
+  P.querySelectorAll("[data-separa]").forEach((b) => (b.onclick = () => updateDoc(doc(db, "prestamos", p.id), { persona: deleteField() })));
   bindPrestamoInv(p);
   const fc = P.querySelector("form[data-corte]");
   if (fc) fc.onsubmit = async (e) => {
