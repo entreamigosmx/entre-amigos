@@ -9,6 +9,8 @@ export async function autos() {
   const r = await fetch(BASE + "data/autos.json", { cache: "no-cache" });
   if (!r.ok) throw new Error("inventario");
   cache = (await r.json()).filter((a) => a.disponible && (BASE === "../" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+  // Vista previa: un video pendiente de aprobar (videoBorrador) solo se ve en propuesta/.
+  if (BASE === "../") cache.forEach((a) => { if (a.videoBorrador) { a.video = a.videoBorrador; a.videoPoster = a.videoPosterBorrador || a.videoPoster; } });
   return cache;
 }
 export function src(path, size) {

@@ -1,4 +1,4 @@
-import { autos, card, src, fotos, mxn, km, esc, BASE, WA_ICON, ficha } from "./comun.js?v=p2";
+import { autos, card, src, fotos, mxn, km, esc, BASE, WA_ICON, ficha } from "./comun.js?v=p3";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;

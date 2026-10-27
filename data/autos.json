@@ -131,7 +131,9 @@
   ],
   "portada": true,
   "nombre": "Porsche Cayenne",
-  "version": "Coupé"
+  "version": "Coupé",
+  "videoBorrador": "fotos/porsche-cayenne-coupe-2020/video.mp4",
+  "videoPosterBorrador": "fotos/porsche-cayenne-coupe-2020/video.jpg"
  },
  {
   "title": "Chevrolet Suburban RST 2023",
