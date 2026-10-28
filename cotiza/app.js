@@ -1407,7 +1407,8 @@ function invPageHTML(d, nom, vista) {
   ${INV.length ? `<div class="card ix"><p class="ix-lbl">${INV.length > 1 ? "Tus inversiones" : "Tu inversión"}</p>${INV.map((v) => `<div class="ix-row">
       <p class="ix-t">Nos prestaste <b>${mxn(v.original)}</b> el ${fechaMedia(v.desde)}.</p>
       ${v.original > v.monto + 0.5 ? `<p class="ix-t">Ya te regresamos <b>${mxn(v.original - v.monto)}</b>. Seguimos teniendo <b>${mxn(v.monto)}</b>.</p>` : ""}
-      <p class="ix-t">Te pagamos <b>${mxn(v.mensual)}</b> el día <b>${v.dia}</b> de cada mes.</p></div>`).join("")}</div>` : ""}
+      <p class="ix-t">Te pagamos <b>${mxn(v.mensual)}</b> el día <b>${v.dia}</b> de cada mes.</p>
+      ${(v.clientes || []).length ? `<p class="ix-t">Se le prestó a: ${v.clientes.map((z) => `<b>${esc(z.nombre)}</b>${v.clientes.length > 1 ? " (" + mxn(z.monto) + ")" : ""}`).join(", ")}.</p>` : ""}</div>`).join("")}</div>` : ""}
   <div class="card ix"><p class="ix-lbl">Lo que te hemos pagado</p><p class="ix-num">${mxn(d.recibido)}</p>
     ${ver.length ? `<div class="ix-pagos">${ver.map((x) => `<div class="ix-pago"><div><b>${mxn(x.monto)}</b><span>${fechaMedia(x.fecha)}${MET[x.metodo] ? " · " + MET[x.metodo] : ""}</span></div>${x.recibo ? `<button class="btn sm" type="button" data-rcb="${x.id}">Ver comprobante</button>` : ""}</div>`).join("")}</div>` : `<p class="ix-t">Aquí verás cada pago que te hagamos.</p>`}
     ${P.length > 5 ? `<button class="btn" type="button" id="inv-all">${PORT_ALL ? "Ver menos" : "Ver todos tus pagos"}</button>` : ""}</div>
@@ -2026,10 +2027,10 @@ function cfgForm(e) {
   return `<form class="edit" data-cfgf="${esc(e.k)}" novalidate><h3>Su app y plazos</h3>
     <label>Apodo para ubicarlo (solo lo ves tú)<input name="apodo" value="${esc(c.apodo || "")}" placeholder="Ej. Pily, Tía Pilar"></label>
     <div class="row"><label>Días hábiles que tengo para pagarle<input name="dias" inputmode="numeric" value="${diasDe(e.k)}"></label>
-    <label>Qué ve en su app<select name="ver"><option value="total"${c.ver !== "detalle" ? " selected" : ""}>Solo su inversión en Entre Amigos</option><option value="detalle"${c.ver === "detalle" ? " selected" : ""}>También en qué tipo de préstamos está (sin nombres)</option></select></label></div>
+    <label>Qué ve en su app<select name="ver"><option value="total"${!["detalle", "nombres"].includes(c.ver) ? " selected" : ""}>Solo su inversión en Entre Amigos</option><option value="detalle"${c.ver === "detalle" ? " selected" : ""}>También en qué tipo de préstamos está (sin nombres)</option><option value="nombres"${c.ver === "nombres" ? " selected" : ""}>También a qué cliente se le prestó (con nombre)</option></select></label></div>
     ${e.x.uid ? "" : `<label>Su cuenta en la app<select name="uid"><option value="">Todavía no tiene cuenta</option>${USERS.filter((x) => x.rol !== "admin").map((x) => `<option value="${x.uid}"${x.uid === c.uid ? " selected" : ""}>${esc(x.nombre)} · ${esc(x.email)}</option>`).join("")}</select></label>`}
     <div class="row"><label>WhatsApp<input name="tel" inputmode="tel" value="${esc(c.tel || u.telefono || "")}"></label><label>Correo<input name="mail" type="email" value="${esc(c.mail || u.email || "")}"></label></div>
-    <p class="note">Nunca ve nombres de clientes. En "Solo su inversión" ve: cuánto invirtió, cuánto ha ganado, cuánto ha recibido, cuánto le falta y cuándo es su próximo pago, con sus comprobantes.</p>
+    <p class="note">Solo ve nombres de clientes si eliges "A qué cliente se le prestó"; nunca ve tus tasas. En "Solo su inversión" ve: cuánto invirtió, cuánto ha ganado, cuánto ha recibido, cuánto le falta y cuándo es su próximo pago, con sus comprobantes.</p>
     <div class="actions"><button class="btn primary" type="submit">Guardar</button><button class="btn" type="button" data-cancel>Cancelar</button></div></form>`;
 }
 // Aviso al inversionista después de pagarle.
@@ -2064,12 +2065,13 @@ function portafolioDe(e) {
     const CI = CONTRATOS().filter((m) => persKey(m) === e.k && vigenteDe(m) > 0.5);
     const MGx = margenes();
     const avisos = CI.flatMap((m) => (MGx[m.id]?.det || []).filter((d) => d.p.pausa).map((d) => ({ motivo: motivoDe(d.p), nota: d.p.pausa.notaInv || "", desde: d.p.pausa.desde, monto: d.monto, pausaPago: !!d.p.pausa.pausaInv })));
-    const inversiones = CI.map((m) => { const px = proxInv(m); return { monto: vigenteDe(m), original: m.monto, tasa: m.tasa, mensual: mensualDe(m), dia: diaDe(m), desde: m.fecha, prox: px ? { fecha: px.fecha, monto: px.monto } : null }; });
+    const conNom = c.ver === "nombres"; // solo si el administrador lo autoriza para esta persona
+    const inversiones = CI.map((m) => { const px = proxInv(m); return { monto: vigenteDe(m), original: m.monto, tasa: m.tasa, mensual: mensualDe(m), dia: diaDe(m), desde: m.fecha, prox: px ? { fecha: px.fecha, monto: px.monto } : null, ...(conNom ? { clientes: (MGx[m.id]?.det || []).map((d) => ({ nombre: d.p.cliente || "", monto: d.monto })) } : {}) }; });
     const mensual = r2(CI.reduce((s, m) => s + mensualDe(m), 0) + e.prestamos.reduce((s, q) => { const f = desgloseFilas(q.p).find((x) => x.fecha >= today()); return s + (f ? parteDe({ p: q.p, interes: f.interes, capital: 0 }, q.x).int : 0); }, 0));
     const d = { nombre: e.nombre, inversiones, avisos, capital: e.capPuesto || e.capPrestado, ganado, recibido: r2(e.pagado), pendiente: r2(e.pend.reduce((s, o) => s + o.falta, 0)), mensual, proximo: prox,
       pagos: movsDe(e).filter((m) => m.col === "entregas" && m.m.dir !== "de").slice(0, 36).map(({ m }) => ({ id: m.id, monto: m.monto, fecha: m.fecha, metodo: m.metodo || "", recibo: !!m.recibo })),
       aportes: INVS.filter((m) => persKey(m) === e.k && !INV_OFF.includes(m.estado || "")).map((m) => ({ tipo: m.tipo, monto: m.monto, fecha: m.fecha })),
-      detalle: c.ver === "detalle" ? e.prestamos.map((q) => ({ tipo: q.p.tipo === "semanal" ? "Préstamo semanal" : "Préstamo con garantía" + (q.p.garantia && GARANTIAS[q.p.garantia] && !["sin", "ff"].includes(q.p.garantia) ? " (" + GARANTIAS[q.p.garantia].toLowerCase() + ")" : ""), monto: q.x.aporte || debeDe(q.p, q.a) || q.p.monto, tasa: q.x.base === "puntos" ? q.x.valor : null })) : [] };
+      detalle: c.ver === "detalle" || conNom ? e.prestamos.map((q) => ({ ...(conNom ? { cliente: q.p.cliente || "" } : {}), tipo: q.p.tipo === "semanal" ? "Préstamo semanal" : "Préstamo con garantía" + (q.p.garantia && GARANTIAS[q.p.garantia] && !["sin", "ff"].includes(q.p.garantia) ? " (" + GARANTIAS[q.p.garantia].toLowerCase() + ")" : ""), monto: q.x.aporte || debeDe(q.p, q.a) || q.p.monto, tasa: q.x.base === "puntos" ? q.x.valor : null })) : [] };
     return d;
   }
 }
