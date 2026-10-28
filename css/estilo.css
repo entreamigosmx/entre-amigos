@@ -463,3 +463,21 @@ details.como summary{cursor:pointer;font-weight:700;color:var(--lime)}
 .chip[data-of] b{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:99px;background:var(--lime);color:var(--lime-ink);font-size:13px;margin-left:4px;padding:0 6px}
 .chip[data-of][aria-pressed="true"] b{background:var(--lime-ink);color:var(--lime)}
 .car .ahorro{display:block;font:700 15px var(--body);color:var(--lime);margin-top:4px}
+
+/* Nosotros: nuestra forma de trabajar */
+#forma .forma{max-width:68ch;display:grid;gap:14px}
+#forma .forma p{margin:0;color:var(--soft);font-size:17px;line-height:1.6}
+#forma .forma p.lead{color:var(--ink);font-size:20px;line-height:1.5}
+#forma .quote{margin:26px 0}
+@media(min-width:900px){.why.why4{grid-template-columns:repeat(4,1fr)}}
+/* Nosotros muestra toda la información también en celular */
+@media (max-width:760px){
+  body.nos .why{grid-template-columns:1fr;gap:18px}
+  body.nos .why div{padding-top:12px;gap:6px}
+  body.nos .why h3{font-size:22px}
+  body.nos .why p{display:block;font-size:15px;line-height:1.5}
+  body.nos .need span{display:block}
+  body.nos .svc p{display:block;font-size:14px;line-height:1.45}
+  #forma .forma p{font-size:16px}
+  #forma .forma p.lead{font-size:18px}
+}
