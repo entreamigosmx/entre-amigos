@@ -749,8 +749,8 @@
   "marca": "Suzuki",
   "modelo": "Jimny automático",
   "anio": 2021,
-  "precio": 320000,
-  "precioEspecial": false,
+  "precio": 300000,
+  "precioEspecial": true,
   "categoria": "SUV",
   "kilometraje": 71000,
   "disponible": true,
@@ -783,7 +783,8 @@
   "transmision": "Automática",
   "portada": false,
   "nombre": "Suzuki Jimny",
-  "version": "Automático"
+  "version": "Automático",
+  "precioAnterior": 320000
  },
  {
   "title": "Mercedes-Benz C200 Exclusive 2018",
