@@ -672,8 +672,8 @@
   "marca": "Peugeot",
   "modelo": "2008 Allure Pack",
   "anio": 2024,
-  "precio": 369000,
-  "precioEspecial": false,
+  "precio": 355000,
+  "precioEspecial": true,
   "categoria": "SUV",
   "kilometraje": 15000,
   "disponible": true,
@@ -705,7 +705,8 @@
   "transmision": "Automática de 6 velocidades",
   "portada": false,
   "nombre": "Peugeot 2008",
-  "version": "Allure Pack"
+  "version": "Allure Pack",
+  "precioAnterior": 369000
  },
  {
   "title": "Can-Am Spyder RT 2018",
