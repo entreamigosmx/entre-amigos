@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Servicios | Entre Amigos</title>
+<meta name="description" content="Detallado, cerámicos, PPF, polarizado, taller y diagnóstico compra-venta en Guadalajara. Compra tu auto con nosotros y sigue cuidándolo aquí.">
+<meta name="theme-color" content="#0a0b0a">
+<meta property="og:title" content="Servicios | Entre Amigos">
+<meta property="og:description" content="Detallado, cerámicos, PPF, polarizado, taller y diagnóstico compra-venta en Guadalajara.">
+<meta property="og:image" content="https://ventaentreamigos.com/assets/img/og.jpg">
+<meta property="og:url" content="https://ventaentreamigos.com/servicios.html">
+<link rel="canonical" href="https://ventaentreamigos.com/servicios.html">
+<link rel="icon" href="assets/img/logo-mark.png">
+<link rel="apple-touch-icon" href="assets/img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/estilo.css?v=p15">
+<link rel="stylesheet" href="css/portada.css?v=p10">
+<style>
+.sv-hero{position:relative;overflow:hidden;background:#000;border-bottom:1px solid var(--line);min-height:min(72svh,640px);display:grid;align-items:end}
+.sv-hero video,.sv-hero .shade{position:absolute;inset:0;width:100%;height:100%}
+.sv-hero video{object-fit:cover;opacity:.6}
+.sv-hero .shade{background:linear-gradient(180deg,rgba(10,11,10,.1) 0%,rgba(10,11,10,.5) 55%,var(--bg) 100%)}
+.sv-hero .in{position:relative;padding-block:clamp(40px,8vw,88px);display:grid;gap:14px}
+.sv-hero h1{margin:0;font-size:clamp(48px,9vw,92px);line-height:.92;text-transform:uppercase}
+.sv-hero h1 span{color:var(--lime)}
+.sv-hero .lead{margin:0;font-size:20px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 16px;scrollbar-width:none;border-bottom:1px solid var(--line);position:sticky;top:59px;z-index:5;background:rgba(10,11,10,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:15px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.chips a:hover{border-color:var(--lime);color:var(--lime)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
+.steps div{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:6px}
+.steps svg,.ic{width:28px;height:28px;fill:none;stroke:var(--lime);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.steps b{font-size:17px}.steps span{font-size:15px;color:var(--muted);line-height:1.35}
+.pk{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.pkc{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:8px;align-content:start}
+.pkc.top{border-color:var(--lime)}
+.pkc .lvl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.pkc h3{margin:0;font-family:var(--display);font-size:30px;font-weight:800;font-style:italic;text-transform:uppercase;line-height:1}
+.pkc h3 i{color:var(--lime);font-style:italic}
+.pkc p{margin:0;color:var(--soft);font-size:16px}
+.pkc .badge{justify-self:start;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--lime);color:var(--lime-ink);border-radius:6px;padding:3px 9px}
+.pkc details{border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.pkc summary{cursor:pointer;list-style:none;color:var(--lime);font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;min-height:32px}
+.pkc summary::-webkit-details-marker{display:none}
+.pkc summary::after{content:"+";font-size:18px;line-height:1}
+.pkc details[open] summary::after{content:"–"}
+.pkc ul{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:15px;color:var(--soft)}
+.pkc li{display:grid;grid-template-columns:16px 1fr;gap:8px}
+.pkc li::before{content:"";width:12px;height:7px;margin-top:6px;border-left:2px solid var(--lime);border-bottom:2px solid var(--lime);transform:rotate(-45deg)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--soft)}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:clamp(20px,4vw,32px);display:grid;gap:16px}
+.case .n{font-family:var(--display);font-weight:800;font-size:clamp(60px,12vw,96px);line-height:.85;color:var(--lime)}
+.case .n small{display:block;font-family:var(--body);font-size:16px;font-weight:600;color:var(--soft);margin-top:8px}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;counter-reset:f}
+.flow div{position:relative;border-top:3px solid var(--lime);padding-top:10px;font-size:14px;font-weight:600;line-height:1.25}
+.flow div::before{counter-increment:f;content:counter(f);display:block;font-family:var(--display);font-size:22px;color:var(--lime);line-height:1;margin-bottom:4px}
+@media (max-width:420px){.flow div{font-size:13px}}
+.case details summary{cursor:pointer;color:var(--lime);font-weight:600;list-style:none}
+.case details summary::-webkit-details-marker{display:none}
+.case details p{color:var(--soft);font-size:15px;margin:10px 0 0}
+.cta-band{background:var(--lime);color:var(--lime-ink);border-radius:var(--r);padding:clamp(24px,4vw,40px);display:grid;gap:12px;justify-items:start}
+.cta-band h2{margin:0;font-size:clamp(34px,6vw,54px);line-height:.95;text-transform:uppercase}
+.cta-band p{margin:0;font-size:17px}
+.cta-band .btn{background:var(--lime-ink);color:var(--ink);border-color:var(--lime-ink)}
+.mini{font-size:15px;color:var(--muted);margin:14px 0 0}
+section.blk.short{padding-block:clamp(40px,6vw,72px)}
+</style>
+</head>
+<body class="home2 nos">
+
+<header class="top g"><div class="in">
+  <a class="brand" href="./" aria-label="Entre Amigos, inicio"><img src="assets/img/logo-mark.png" width="63" height="40" alt=""><span class="wm"><b>Entre <i>Amigos</i></b><span>Más que clientes, amigos</span></span></a>
+  <nav class="nav" aria-label="Principal"><a href="inventario.html">Inventario</a><a href="servicios.html" aria-current="page">Servicios</a><a href="vender.html">Vende tu auto</a><a href="creditos.html">Créditos</a><a href="nosotros.html">Nosotros</a></nav>
+  <div class="tact"><a class="btn primary" href="https://wa.me/523333063319?text=Hola%2C%20quiero%20cotizar%20un%20servicio%20para%20mi%20auto" target="_blank" rel="noopener">WhatsApp</a></div>
+</div></header>
+
+<main>
+<section class="sv-hero">
+  <video src="assets/video/portada.mp4" poster="assets/img/portada-video.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
+  <div class="shade"></div>
+  <div class="in g">
+    <span class="eyebrow">Servicios</span>
+    <h1>Tu auto,<br><span>como el primer día.</span></h1>
+    <p class="lead">Compra, protección y cuidado en un solo lugar.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://wa.me/523333063319?text=Hola%2C%20quiero%20cotizar%20un%20servicio%20para%20mi%20auto" target="_blank" rel="noopener">Cotizar por WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<nav class="chips" aria-label="Servicios">
+  <a href="#detallado">Detallado</a><a href="#proteccion">Cerámico</a><a href="#proteccion">PPF</a><a href="#proteccion">Polarizado</a><a href="#diagnostico">Diagnóstico</a><a href="#taller">Taller</a>
+</nav>
+
+<section class="blk g short"><div class="in">
+  <div class="head"><h2>Antes, durante y después de comprar</h2></div>
+  <div class="steps">
+    <div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><b>Revisamos</b><span>El auto que quieres, aunque no sea nuestro</span></div>
+    <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14M6 17l1.5-5h9L18 17M8 12l1.5-4h5L16 12"/><circle cx="8" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/></svg><b>Compras</b><span>Autos seleccionados y financiamiento</span></div>
+    <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg><b>Proteges</b><span>Cerámico, PPF y polarizado</span></div>
+    <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg><b>Lo cuidas</b><span>Detallado y taller aquí mismo</span></div>
+  </div>
+</div></section>
+
+<section class="blk g alt short" id="detallado"><div class="in">
+  <div class="head"><span class="eyebrow">Detallado</span><h2>Elige el nivel</h2></div>
+  <div class="pk">
+    <div class="pkc"><span class="lvl">Básico</span><h3>Pit <i>Stop</i></h3><p>Lavado rápido para mantenerlo limpio.</p>
+      <details><summary>Qué incluye</summary><ul><li>Lavado general con espuma</li><li>Aspirado interior</li><li>Cera líquida</li></ul></details></div>
+    <div class="pkc"><span class="lvl">Mantenimiento</span><h3>Daily <i>Driver</i></h3><p>Para el auto de todos los días.</p>
+      <details><summary>Qué incluye</summary><ul><li>Lavado general con espuma</li><li>Aspirado interior</li><li>Cera premium a mano</li></ul></details></div>
+    <div class="pkc"><span class="lvl">Paquete 1</span><h3>Classic <i>Experience</i></h3><p>Exterior a detalle con pulido en 1 paso.</p>
+      <details><summary>Qué incluye</summary><ul><li>Lavado a mano con cañón de espuma</li><li>Lavado y desengrasado de rines</li><li>Lavado de tolvas a presión</li><li>Limpieza de marcos de puertas</li><li>Limpieza y descontaminado de parrilla</li><li>Hidratación general y brillo en llantas</li><li>Aspirado</li><li>Encerado y pulido en 1 paso</li></ul></details></div>
+    <div class="pkc top"><span class="badge">El más completo</span><span class="lvl">Paquete 2</span><h3>Grand <i>Touring</i></h3><p>Interior y exterior a fondo, pulido en 2 pasos.</p>
+      <details><summary>Qué incluye</summary><ul><li>Todo lo del Paquete 1, con pulido en 2 pasos</li><li>Interiores: alfombras, vestiduras, cielo, puertas, rejillas, tablero y cajuela</li><li>Tratamiento de piel</li><li>Lavado de motor y limpieza de escapes</li></ul></details></div>
+  </div>
+</div></section>
+
+<section class="blk g short" id="proteccion"><div class="in">
+  <div class="head"><span class="eyebrow">Protección</span><h2>Que se conserve como nuevo</h2></div>
+  <div class="pk">
+    <div class="pkc top"><span class="lvl">Cerámico · 1 año</span><h3>Top <i>Gear</i></h3><p>Brillo espejo y una capa que repele agua y suciedad. Incluye detallado completo.</p>
+      <div class="tags"><span>Auto o SUV pequeña</span><span>Vehículo grande</span><span>Cristales</span></div>
+      <details><summary>Qué incluye</summary><ul><li>Detallado paquete completo antes de aplicarlo</li><li>Protección contra rayos UV y oxidación</li><li>Repele agua y contaminantes</li><li>Más fácil de lavar</li></ul></details></div>
+    <div class="pkc"><span class="lvl">Película · 4 años</span><h3>PPF</h3><p>Protege la pintura de piedras y rayones.</p>
+      <div class="tags"><span>Full front</span><span>Auto completo</span><span>Retiro de PPF viejo</span></div>
+      <details><summary>Qué incluye</summary><ul><li>Full front: cofre, fascia, salpicaderas y espejos</li><li>Full PPF: el auto completo</li><li>Para hatchback, sedán, coupé, SUV y pickup doble cabina</li></ul></details></div>
+    <div class="pkc"><span class="lvl">Calor y privacidad</span><h3>Polarizado</h3><p>Menos calor adentro, más privacidad.</p>
+      <div class="tags"><span>Carbón</span><span>Cerámico</span></div>
+      <details><summary>Qué incluye</summary><ul><li>Delantero: piloto, copiloto y parabrisas</li><li>Completo, con parabrisas transparente y filtro UV</li><li>Cerámico: rechaza más calor</li></ul></details></div>
+  </div>
+</div></section>
+
+<section class="blk g alt short" id="caso"><div class="in">
+  <div class="case">
+    <span class="eyebrow">Caso real · Mercedes-AMG E63 S 2023</span>
+    <div class="n">$100,000<small>es casi lo que se ahorró nuestro cliente al comprarlo.</small></div>
+    <div class="flow"><div>Diagnóstico</div><div>Negociación</div><div>Taller y cerámico</div><div>Entrega</div></div>
+    <details><summary>Ver todo lo que le hicimos</summary>
+      <p>Lo revisamos antes de que lo comprara y, con nuestro reporte, el vendedor bajó el precio. Ya suyo, le pusimos 4 llantas nuevas, servicio completo (bujías, aceite y filtros), reparamos la fascia delantera, quitamos el PPF de 3 años, descontaminamos la pintura y aplicamos cerámico completo. Lo entregamos como nuevo.</p>
+    </details>
+  </div>
+</div></section>
+
+<section class="blk g short" id="diagnostico"><div class="in">
+  <div class="head"><span class="eyebrow">Diagnóstico compra-venta</span><h2>Tráelo antes de pagar</h2><p class="lead">Revisamos el auto que quieres comprar, aunque no sea nuestro, y te damos un reporte para negociar mejor.</p></div>
+  <div class="tags"><span>Papeles</span><span>Carrocería y pintura</span><span>Motor</span><span>Transmisión y frenos</span><span>Llantas</span><span>Interior y electrónica</span><span>Prueba de manejo</span></div>
+  <div class="btns" style="margin-top:18px"><a class="btn ghost" href="https://wa.me/523333063319?text=Hola%2C%20quiero%20agendar%20un%20diagn%C3%B3stico%20compra-venta" target="_blank" rel="noopener">Agendar diagnóstico</a></div>
+</div></section>
+
+<section class="blk g alt short" id="taller"><div class="in">
+  <div class="head"><span class="eyebrow">Taller y más</span><h2>Lo que necesite, sin dar vueltas</h2></div>
+  <div class="tags"><span>Servicio y afinación</span><span>Frenos</span><span>Llantas</span><span>Hojalatería y pintura</span><span>Wraps</span><span>Accesorios</span><span>Gestoría</span><span>Seguros</span></div>
+</div></section>
+
+<section class="blk g short"><div class="in">
+  <div class="cta-band">
+    <h2>Mándanos una foto de tu auto</h2>
+    <p>Te respondemos con tu cotización por WhatsApp.</p>
+    <a class="btn" href="https://wa.me/523333063319?text=Hola%2C%20quiero%20cotizar%20un%20servicio%20para%20mi%20auto" target="_blank" rel="noopener">Cotizar por WhatsApp</a>
+  </div>
+</div></section>
+</main>
+
+<footer class="g foot2" id="contacto"><div class="in">
+  <div class="fcols">
+    <div><b>Entre Amigos</b><p>Más que clientes, amigos.</p><p><a href="tel:+523333063319">33 3306 3319</a></p><p>Av. Aztecas 1021, Col. Monraz, Guadalajara</p></div>
+    <div><b><a href="servicios.html">Servicios</a></b><p>Detallado · Cerámicos · PPF · Polarizado · Diagnóstico compra-venta · Taller · Gestoría · Seguros</p></div>
+    <div><b>Más</b><p><a href="inventario.html">Inventario</a><br><a href="nosotros.html">Nosotros</a><br><a href="nosotros.html#clientes">Nuestros clientes</a><br><a href="prestamos.html">Préstamos con garantía</a></p></div>
+  </div>
+</div></footer>
+<a class="fixwa" href="https://wa.me/523333063319" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" id="fixwa"></a>
+<script type="module">import { WA_ICON } from "./js/comun.js?v=p4"; document.getElementById("fixwa").innerHTML = WA_ICON;</script>
+</body>
+</html>
