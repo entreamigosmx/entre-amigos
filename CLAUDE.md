@@ -3,7 +3,7 @@
 Página estática (GitHub Pages) del negocio Entre Amigos, Guadalajara. El dueño trabaja solo desde iPhone/iPad; Claude administra todo.
 
 ## Estructura
-- `index.html` portada "Showroom" (css/portada.css + js/portada.js): carrusel a pantalla completa con video y autos `portada:true`, explora por tipo (íconos), recién llegados, confianza, opinión, mini simulador de crédito + vende tu auto, equipo, visítanos. Eslogan: "Autos seleccionados. Trato entre amigos." `nosotros.html`: por qué, qué necesitas, servicios, equipo. Redes: Instagram @entreamigosmx, Facebook (share/1KADt3UUoX), TikTok @ventaentreamigosmx.
+- `index.html` portada "Showroom" (css/portada.css + js/portada.js): carrusel a pantalla completa con video y autos `portada:true`, explora por tipo (íconos), recién llegados, confianza, opinión, mini simulador de crédito + vende tu auto, equipo, visítanos. Eslogan: "Autos seleccionados. Trato entre amigos." `nosotros.html`: por qué, qué necesitas, servicios, equipo. `servicios.html`: detallado (Pit Stop, Daily Driver, Classic Experience = paquete 1, Grand Touring = paquete 2), protección (cerámico Top Gear, PPF, polarizado), caso E63 S, diagnóstico compra-venta; sin precios, detalles en `<details>` plegables. Menú de celular: `js/menu.js` (botón junto a WhatsApp en todas las páginas). Redes: Instagram @entreamigosmx, Facebook (share/1KADt3UUoX), TikTok @ventaentreamigosmx.
 - `inventario.html` inventario con filtros; `auto.html?a=<slug>` ficha de cada auto (Me interesa, Cotizar financiamiento, Compartir); `creditos.html?a=<slug>` simulador de crédito (`/creditos/` redirige); `prestamos.html` préstamos con garantía (sin opción semanal pública; sección #empresas para convenios); `convenio.html?c=<codigo>` (noindex, privada) solicitud del empleado de una empresa con convenio: 14 semanas, $100 por cada $1,000 a la semana, montos 5/10/20 mil, se guarda en `solicitudes` (origen convenio, empresa) con fotos en `solicitudes/{id}/docs`; `?c=demo` muestra un ejemplo sin guardar; `vender.html` + `js/vender.js` Vende tu auto (10 fotos obligatorias + factura, se guarda en Firestore `ventas` y avisa por ntfy).
 - `data/credito.json` parámetros del simulador: tasaAnual (null = no se muestra mensualidad hasta que el dueño dé la tasa real; nunca inventar), enganche sugerido 35%, plazos.
 - `propuesta/` vista previa (noindex) para que el dueño revise cambios ANTES de publicarlos; copia del sitio con rutas `../`. Regla: todo cambio visible primero va ahí. Para publicar lo aprobado: `python3 tools/publicar.py` (copia a la raíz, quita barra y noindex, ajusta rutas).
@@ -19,5 +19,5 @@ Página estática (GitHub Pages) del negocio Entre Amigos, Guadalajara. El dueñ
 ## Reglas del dueño
 - Sin emojis; tono profesional. Colores: negro + verde limón (#b6e21f).
 - Difuminar placas en cada foto antes de publicar.
-- Marcar "apartado" cuando lo pida; quitar (disponible:false) cuando se venda.
+- Marcar "apartado" cuando lo pida; quitar (disponible:false) cuando se venda. Después de agregar, vender o quitar un auto: `python3 tools/sitemap.py`.
 - Enganche publicado: desde 35%; con buen historial crediticio puede ser menor (lo decide el dueño).
