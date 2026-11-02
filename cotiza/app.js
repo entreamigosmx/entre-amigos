@@ -2987,11 +2987,11 @@ function colabLink(c) {
   const msg = `Hola ${u.nombre}, ${c.atrasada ? "tu cliente " + c.p.cliente + " tiene atrasado su pago (" + cuotaLbl(c.p, c.n, c.total) + ") por " + mxn2(c.debe) + " desde el " + fcorta(new Date(c.fecha + "T12:00:00")) + "." : "recuerda que tu cliente " + c.p.cliente + " tiene pago (" + cuotaLbl(c.p, c.n, c.total) + ") por " + mxn2(c.debe) + " el " + fcorta(new Date(c.fecha + "T12:00:00")) + "."} ¿Me ayudas a darle seguimiento?`;
   return `<a class="btn sm" href="${waTo(u.telefono, msg)}" target="_blank" rel="noopener">Avisar a ${esc(u.nombre)}</a>`;
 }
-function cuotaRow(c, showDate) {
+function cuotaRow(c, showDate, enGrupo) {
   const key = c.p.id + ":" + c.n;
   const st = c.pagada ? `<span class="pill ok">Pagó</span>` : c.atrasada ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
   return `<div class="item owned" style="--own:${ownerColor(ownerOf(c.p))}">
-    <div class="item-top"><b>${esc(c.p.cliente)}</b><span>${st}</span></div>
+    <div class="item-top"><b>${enGrupo && c.p.monto ? "Préstamo de " + mxn(c.p.monto) : esc(c.p.cliente)}</b><span>${st}</span></div>
     <div class="item-mid">${cuotaLbl(c.p, c.n, c.total)} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
     ${c.pagada ? "" : `<div class="item-bot">
       <button class="btn sm primary" type="button" data-pago="${key}">Sí pagó</button>
@@ -3045,6 +3045,45 @@ function tareaRow(x) {
   return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}${x.t === "inv" ? `<button class="btn sm" type="button" data-goinv>Ir a Inversionistas</button>` : ""}${x.t === "colocar" ? `<button class="btn sm" type="button" data-goinvp="${esc(x.z.k)}">Ver su inversión</button>` : ""}</div>`;
 }
 
+
+// Agrupar por persona: varios préstamos de un mismo cliente se muestran juntos y se recuerda el total.
+function porCliente(L, pOf) {
+  const G = []; const by = {};
+  L.forEach((x) => { const p = pOf(x); if (!p) { G.push({ k: null, items: [x] }); return; } const k = cliKey(p); if (!by[k]) { by[k] = { k, nombre: p.cliente, tel: p.telefono, items: [] }; G.push(by[k]); } by[k].items.push(x); if (!by[k].tel && p.telefono) by[k].tel = p.telefono; });
+  return G;
+}
+function recTotalMsg(nombre, cs) {
+  const tot = cs.reduce((s2, c) => s2 + (c.debe || 0), 0), atr = cs.some((c) => c.atrasada);
+  const lin = cs.map((c) => `• ${c.p.monto ? "Préstamo de " + mxn(c.p.monto) + ", " : ""}${cuotaLbl(c.p, c.n, c.total).toLowerCase()}: ${mxn2(c.debe)} (${c.atrasada ? "venció el " : "fecha "}${fcorta(new Date(c.fecha + "T12:00:00"))})`).join("\n");
+  return `Hola ${nombre}, ${atr ? "te recordamos que tienes pagos pendientes" : "te recordamos tus próximos pagos"} con Entre Amigos:\n\n${lin}\n\nTotal: ${mxn2(tot)}.${atr ? " Por favor ponte al corriente o avísanos si necesitas ayuda." : ""}\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
+}
+function cuotasAgrupadas(list, showDate) {
+  return porCliente(list, (c) => c.p).map((g) => {
+    if (g.items.length === 1) return cuotaRow(g.items[0], showDate);
+    const pend = g.items.filter((c) => !c.pagada), tot = pend.reduce((s2, c) => s2 + c.debe, 0), np = new Set(g.items.map((c) => c.p.id)).size;
+    const st = !pend.length ? `<span class="pill ok">Pagó todo</span>` : pend.some((c) => c.atrasada) ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
+    return `<details class="item owned grp" style="--own:${ownerColor(ownerOf(g.items[0].p))}"><summary>
+      <div class="item-top"><b>${esc(g.nombre)}</b><span>${st}</span></div>
+      <div class="item-mid">${g.items.length} pagos en ${np} ${np === 1 ? "préstamo" : "préstamos"}${pend.length ? " · Debe en total <b>" + mxn2(tot) + "</b>" : ""} <span class="grp-ver">Ver cada uno</span></div></summary>
+      ${pend.length && g.tel ? `<div class="item-bot"><a class="btn sm primary" href="${waTo(g.tel, recTotalMsg(g.nombre, pend))}" target="_blank" rel="noopener">Recordatorio del total</a></div>` : ""}
+      <div class="list grp-in">${g.items.map((c) => cuotaRow(c, showDate, true)).join("")}</div></details>`;
+  }).join("");
+}
+function tareasAgrupadas(T) {
+  const pOf = (x) => (x.c ? x.c.p : x.r ? x.r.p : null);
+  return porCliente(T, (x) => (["cobrar", "msg", "seg", "pago", "entro"].includes(x.t) ? pOf(x) : null)).map((g) => {
+    if (g.items.length === 1 || !g.k) return g.items.map(tareaRow).join("");
+    const cs = [...new Map(g.items.filter((x) => x.c && !x.c.pagada).map((x) => [x.c.p.id + ":" + x.c.n, x.c])).values()];
+    const tot = cs.reduce((s2, c) => s2 + c.debe, 0), late = g.items.some((x) => x.cls === "late");
+    const res = [], cnt = (t) => g.items.filter((x) => x.t === t).length;
+    if (cnt("seg")) res.push(cnt("seg") + " atrasado" + (cnt("seg") > 1 ? "s" : ""));
+    if (cnt("cobrar")) res.push(cnt("cobrar") + " por cobrar hoy");
+    if (cnt("msg")) res.push(cnt("msg") + " paga" + (cnt("msg") > 1 ? "n" : "") + " mañana");
+    if (cnt("pago") + cnt("entro")) res.push("ya pagó " + (cnt("pago") + cnt("entro")));
+    return `<details class="task grp ${late ? "late" : cs.length ? "due" : "paid"}"><summary><span><b>${esc(g.nombre)}</b> · ${res.join(", ")}${tot ? " · total " + mxn(tot) : ""} <span class="grp-ver">Ver ${g.items.length}</span></span>${cs.length && g.tel ? `<a class="btn sm" href="${waTo(g.tel, recTotalMsg(g.nombre, cs))}" target="_blank" rel="noopener">WhatsApp del total</a>` : ""}</summary>
+      <div class="tasks grp-in">${g.items.map(tareaRow).join("")}</div></details>`;
+  }).join("");
+}
 /* ---------- Resumen global de la cartera (Agenda, solo administrador) ---------- */
 function resumenGlobal() {
   const r2 = (n) => Math.round(n * 100) / 100, hoy = today(), mes = hoy.slice(0, 7);
@@ -3182,7 +3221,7 @@ function vAgenda() {
     const T = tareasDia(k, all, rcv).filter((x) => x.t === "cobrar" || x.t === "pago" || x.t === "entro");
     (INVD[k] || []).forEach((z) => T.push({ t: "invd", cls: z.est, txt: "Pagar " + (apodoDe(z.e.k) || nom1(z.e.nombre)), z }));
     if (k === hoy) { const ns = tareasDia(k, all, rcv).filter((x) => x.t === "sol" || x.t === "segcot" || x.t === "venta" || x.t === "inv").length; if (ns) T.unshift({ t: "solchip", cls: "msg", n: ns }); }
-    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${T.slice(0, 3).map((x) => `<em class="${x.cls}">${esc(x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : x.t === "invd" ? "→ " + (apodoDe(x.z.e.k) || nom1(x.z.e.nombre)) : nom1(x.c.p.cliente))}</em>`).join("")}${T.length > 3 ? `<em class="more">+${T.length - 3} más</em>` : ""}${isAdmin() && VIS[k] && VIS[k].personas ? `<em class="vis" title="Personas que entraron a la página">${VIS[k].personas}</em>` : ""}</button>`;
+    cells += `<button type="button" class="day ${cls}${rcv[k] ? " rcv" : ""}${k === hoy ? " today" : ""}${k === AG_DAY ? " sel" : ""}" data-day="${k}"><span class="dn">${d}</span>${(() => { const U = []; T.forEach((x) => { const lab = x.t === "solchip" ? x.n + (x.n === 1 ? " pendiente" : " pendientes") : x.t === "entro" ? nom1(x.r.p.cliente) : x.t === "invd" ? "→ " + (apodoDe(x.z.e.k) || nom1(x.z.e.nombre)) : nom1(x.c.p.cliente); const o = U.find((u) => u.lab === lab); if (o) { if (x.cls === "late") o.cls = "late"; } else U.push({ lab, cls: x.cls }); }); return U.slice(0, 3).map((u) => `<em class="${u.cls}">${esc(u.lab)}</em>`).join("") + (U.length > 3 ? `<em class="more">+${U.length - 3} más</em>` : ""); })()}${isAdmin() && VIS[k] && VIS[k].personas ? `<em class="vis" title="Personas que entraron a la página">${VIS[k].personas}</em>` : ""}</button>`;
   }
   const sel = AG_DAY ? all.filter((c) => c.fecha === AG_DAY) : [];
   const nSol = isAdmin() ? SOLS.filter((x) => x.estado === "nueva").length : 0, visHoy = isAdmin() ? (VIS[hoy] || {}).personas || 0 : 0;
@@ -3212,19 +3251,19 @@ function vAgenda() {
     ${legend()}
     <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
-  ${(() => { const T = tareasDia(hoy, all, rcv); return T.length ? `<div class="card"><h2>Tareas de hoy</h2><div class="tasks">${T.map(tareaRow).join("")}</div></div>` : ""; })()}
-  ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${atr.map((c) => cuotaRow(c, true)).join("")}</div></div>` : ""}
-  <div class="card"><h2>Pagos de hoy</h2><div class="list">${deHoy.length ? deHoy.map((c) => cuotaRow(c, false)).join("") : `<p class="muted">No hay pagos programados para hoy.</p>`}</div></div>
-  <div class="card"><h2>Próximos 7 días</h2><div class="list">${prox.length ? prox.map((c) => cuotaRow(c, true)).join("") : `<p class="muted">Sin pagos en los próximos 7 días.</p>`}</div></div>
+  ${(() => { const T = tareasDia(hoy, all, rcv); return T.length ? `<div class="card"><h2>Tareas de hoy</h2><div class="tasks">${tareasAgrupadas(T)}</div></div>` : ""; })()}
+  ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${cuotasAgrupadas(atr, true)}</div></div>` : ""}
+  <div class="card"><h2>Pagos de hoy</h2><div class="list">${deHoy.length ? cuotasAgrupadas(deHoy, false) : `<p class="muted">No hay pagos programados para hoy.</p>`}</div></div>
+  <div class="card"><h2>Próximos 7 días</h2><div class="list">${prox.length ? cuotasAgrupadas(prox, true) : `<p class="muted">Sin pagos en los próximos 7 días.</p>`}</div></div>
   ${visitasCard()}
   <div class="card">
     <div class="head"><h2>Calendario</h2><div class="actions"><button class="btn sm" type="button" id="m-prev" aria-label="Mes anterior">‹</button><b style="align-self:center;min-width:120px;text-align:center">${first.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</b><button class="btn sm" type="button" id="m-next" aria-label="Mes siguiente">›</button></div></div>
     <div class="cal"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>${cells}</div>
     <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día${isAdmin() ? " · → Pago a inversionista" : ""}${isAdmin() ? ` <small class="vis">12</small> Personas que entraron a la página` : ""}</p>
     ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3>
-      ${(() => { const T = tareasDia(AG_DAY, all, rcv); return T.length ? `<p class="lbl">Tareas del día</p><div class="tasks">${T.map(tareaRow).join("")}</div>` : ""; })()}
+      ${(() => { const T = tareasDia(AG_DAY, all, rcv); return T.length ? `<p class="lbl">Tareas del día</p><div class="tasks">${tareasAgrupadas(T)}</div>` : ""; })()}
       ${(INVD[AG_DAY] || []).length ? `<p class="lbl">Pagos a inversionistas</p><div class="list">${INVD[AG_DAY].map((z) => `<div class="item"><div class="item-top"><b>${esc(z.e.ver || z.e.nombre)} · ${mxn2(z.o.monto)}</b>${z.est === "paid" ? `<span class="pill ok">Pagado</span>` : z.est === "late" ? `<span class="pill warn">Pendiente, ya pasó</span>` : `<span class="pill">Por pagar</span>`}</div><div class="item-mid">${esc(z.o.concepto)}${z.falta > 0.5 && z.falta < z.o.monto - 0.5 ? " · falta " + mxn2(z.falta) : ""}</div>${z.est !== "paid" ? `<div class="actions"><button class="btn sm primary" type="button" data-goinv>Registrar pago</button></div>` : ""}</div>`).join("")}</div>` : ""}
-      ${sel.length ? `<p class="lbl">Pagos que tocaban ese día</p><div class="list">${sel.map((c) => cuotaRow(c, false)).join("")}</div>` : ""}
+      ${sel.length ? `<p class="lbl">Pagos que tocaban ese día</p><div class="list">${cuotasAgrupadas(sel, false)}</div>` : ""}
       ${(rcv[AG_DAY] || []).length ? `<p class="lbl">Pagos recibidos ese día</p><div class="list">${rcv[AG_DAY].map(pagoRow).join("")}</div>` : ""}
       ${!sel.length && !(rcv[AG_DAY] || []).length ? `<p class="muted">Sin movimientos ese día.</p>` : ""}
       ${isAdmin() ? `<p class="lbl">Visitas a la página</p>${visDia(AG_DAY)}` : ""}` : `<p class="muted">Toca un día para ver qué pagos tocaban y cuáles se recibieron.</p>`}

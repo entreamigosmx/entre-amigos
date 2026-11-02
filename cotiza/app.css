@@ -296,3 +296,16 @@ details.card.fold>summary .fs{display:none}
 .usd-d.up{color:var(--lime)}.usd-d.down{color:var(--warn)}
 .usd-sp{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.usd-sp span{color:var(--muted);font-size:13px}
 .usd .note{margin:0;font-size:13px;color:var(--muted)}
+
+/* Agrupar por persona */
+details.grp>summary{list-style:none;cursor:pointer;font:400 15px/1.45 var(--body);text-transform:none;letter-spacing:normal;color:var(--ink);padding:0;background:none;border:0;display:grid;gap:4px}
+details.grp>summary b{font-weight:700}
+details.grp>summary::-webkit-details-marker{display:none}
+.grp-ver{font-size:13px;color:var(--lime);font-weight:600;white-space:nowrap}
+.grp-ver::after{content:" +"}
+details.grp[open] .grp-ver::after{content:" –"}
+details.task.grp{display:block}
+details.task.grp>summary{display:flex;align-items:center;justify-content:space-between;gap:8px}
+details.task.grp>summary .btn{flex:none}
+.grp-in{margin-top:8px;padding-left:10px;border-left:2px solid var(--line)}
+details.item.grp .grp-in .item{padding-top:10px}
