@@ -3243,7 +3243,7 @@ function vAgenda() {
     { n: prox.length, big: prox.length, txt: "Pagos en los próximos 7 días", ir: "prox" },
     { n: visHoy, big: visHoy, txt: visHoy === 1 ? "Persona entró hoy a tu página" : "Personas entraron hoy a tu página", ir: "vis" },
   ]);
-  const tHoy = tareasDia(hoy, all, rcv).length;
+  const tHoy = (() => { const T = tareasDia(hoy, all, rcv); return porCliente(T, (x) => (["cobrar", "msg", "seg", "pago", "entro"].includes(x.t) ? (x.c ? x.c.p : x.r ? x.r.p : null) : null)).reduce((n, g) => n + (g.k ? 1 : g.items.length), 0); })();
   let GLOB = { neto: 0, html: "" }; if (isAdmin()) { try { GLOB = resumenGlobal(); } catch (er) {} }
   const res = { glob: isAdmin() ? sgn2(GLOB.neto) : "", sol: String(nSol), hoy: fcorta(new Date()).replace(/ \d{4}$/, ""), tareas: String(tHoy), atr: mxn(sum(atr, "debe")), phoy: mxn(sum(porHoy, "debe")), prox: String(prox.length), vis: isAdmin() ? String(visHoy) : "", cal: first.toLocaleDateString("es-MX", { month: "short" }).replace(".", ""), rec: mxn(sum(delMes, "monto")) };
   $("panel").innerHTML = avisos + (isAdmin() ? usdCard() : "") + (isAdmin() ? GLOB.html : "") + (isAdmin() ? solicitudesCard(3) : "") + `
