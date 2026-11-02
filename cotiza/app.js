@@ -2992,12 +2992,12 @@ function cuotaRow(c, showDate, enGrupo) {
   const st = c.pagada ? `<span class="pill ok">Pagó</span>` : c.atrasada ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
   return `<div class="item owned" style="--own:${ownerColor(ownerOf(c.p))}">
     <div class="item-top"><b>${enGrupo && c.p.monto ? "Préstamo de " + mxn(c.p.monto) : esc(c.p.cliente)}</b><span>${st}</span></div>
-    <div class="item-mid">${cuotaLbl(c.p, c.n, c.total)} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
+    <div class="item-mid">${cuotaLbl(c.p, c.n, c.total)} · ${mxn2(c.pagada ? c.monto : c.debe)}${showDate ? " · " + fcorta(new Date(c.fecha + "T12:00:00")) : ""}${c.atrasada ? " · <b class=\"warn-t\">" + diasAtr(c) + (diasAtr(c) === 1 ? " día" : " días") + " de atraso</b>" : ""}${enGrupo ? "" : " " + recPill([c.p])}${c.noPago ? " · Marcado sin pago el " + fcorta(new Date(c.noPago + "T12:00:00")) : ""}</div>
     ${c.pagada ? "" : `<div class="item-bot">
       <button class="btn sm primary" type="button" data-pago="${key}">Sí pagó</button>
       <button class="btn sm" type="button" data-otro="${key}">Pagó otra cantidad</button>
       <button class="btn sm" type="button" data-nopago="${key}">No pagó</button>
-      ${c.p.telefono ? `<a class="btn sm" href="${waTo(c.p.telefono, recMsg(c))}" target="_blank" rel="noopener">Recordatorio</a>` : `<span class="muted">Sin WhatsApp registrado</span>`}
+      ${c.p.telefono ? `<a class="btn sm" data-rec="${c.p.id}" href="${waTo(c.p.telefono, recMsg(c))}" target="_blank" rel="noopener">Recordatorio</a>` : `<span class="muted">Sin WhatsApp registrado</span>`}
       ${isAdmin() && ownerOf(c.p) !== ME.uid ? colabLink(c) : ""}
     </div>
     <form data-otrof="${key}" class="row" hidden novalidate style="margin-top:6px"><label>Monto recibido<input name="m" inputmode="decimal" value="${c.debe}"></label><button class="btn sm primary" type="submit">Registrar</button></form>`}
@@ -3042,12 +3042,22 @@ function tareasDia(k, all, rcv) {
 function tareaRow(x) {
   const wa = x.c && x.c.p.telefono ? waTo(x.c.p.telefono, x.t === "msg" ? `Hola ${x.c.p.cliente}, te recordamos que mañana ${fcorta(new Date(x.c.fecha + "T12:00:00"))} toca tu pago ${x.c.p.tipo === "interes" ? "de interés" : x.c.n + " de " + x.c.total} por ${mxn2(x.c.debe)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos` : recMsg(x.c)) : "";
   const wa2 = x.t === "segcot" && x.c2.telefono ? waTo(x.c2.telefono, `Hola ${x.c2.cliente || ""}, ¿pudiste revisar la cotización de tu préstamo por ${mxn(x.c2.monto)}? Si tienes dudas o quieres ajustar el monto o el plazo, con gusto te ayudo.\n\nPara confirmarla entra aquí:\n${PORTAL()}?c=${x.c2.id}\n\nEntre Amigos`) : "";
-  return `<div class="task ${x.cls}"><span>${esc(x.txt)}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}${x.t === "inv" ? `<button class="btn sm" type="button" data-goinv>Ir a Inversionistas</button>` : ""}${x.t === "colocar" ? `<button class="btn sm" type="button" data-goinvp="${esc(x.z.k)}">Ver su inversión</button>` : ""}</div>`;
+  return `<div class="task ${x.cls}"><span>${esc(x.txt)}${x.c ? " " + recPill([x.c.p]) : ""}</span>${x.t !== "pago" && x.t !== "entro" && wa ? `<a class="btn sm" data-rec="${x.c ? x.c.p.id : ""}" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${wa2 ? `<a class="btn sm" href="${wa2}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${x.t === "sol" ? `<button class="btn sm" type="button" data-solcot="${x.x.id}">Revisar y cotizar</button>` : ""}${x.t === "venta" ? `<button class="btn sm" type="button" data-goventa="${x.v.id}">Ver fotos</button>` : ""}${x.t === "inv" ? `<button class="btn sm" type="button" data-goinv>Ir a Inversionistas</button>` : ""}${x.t === "colocar" ? `<button class="btn sm" type="button" data-goinvp="${esc(x.z.k)}">Ver su inversión</button>` : ""}</div>`;
 }
 
 
 // Agrupar por persona: varios préstamos de un mismo cliente se muestran juntos y se recuerda el total.
 const nPer = (cs) => new Set(cs.map((c) => cliKey(c.p))).size;
+const diasAtr = (c) => Math.max(0, Math.round((new Date(today() + "T12:00:00") - new Date(c.fecha + "T12:00:00")) / 864e5));
+// Recordatorio enviado: se guarda la hora en cada préstamo (ultRec) al tocar el WhatsApp.
+const recHoy = (ps) => { const t = ps.map((p) => p.ultRec || "").filter((x) => x && iso(new Date(x)) === today()).sort().pop(); return t ? new Date(t).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" }) : ""; };
+const recPill = (ps) => { const h = recHoy(ps); return h ? `<span class="pill rec">Recordado hoy ${h}</span>` : ""; };
+function bindRecordados(root) {
+  root.querySelectorAll("[data-rec]").forEach((a) => a.addEventListener("click", () => {
+    const at = new Date().toISOString();
+    [...new Set(a.dataset.rec.split(","))].filter(Boolean).forEach((id) => updateDoc(doc(db, "prestamos", id), { ultRec: at }).catch(() => {}));
+  }));
+}
 function porCliente(L, pOf) {
   const G = []; const by = {};
   L.forEach((x) => { const p = pOf(x); if (!p) { G.push({ k: null, items: [x] }); return; } const k = cliKey(p); if (!by[k]) { by[k] = { k, nombre: p.cliente, tel: p.telefono, items: [] }; G.push(by[k]); } by[k].items.push(x); if (!by[k].tel && p.telefono) by[k].tel = p.telefono; });
@@ -3059,16 +3069,50 @@ function recTotalMsg(nombre, cs) {
   return `Hola ${nombre}, ${atr ? "te recordamos que tienes pagos pendientes" : "te recordamos tus próximos pagos"} con Entre Amigos:\n\n${lin}\n\nTotal: ${mxn2(tot)}.${atr ? " Por favor ponte al corriente o avísanos si necesitas ayuda." : ""}\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos`;
 }
 function cuotasAgrupadas(list, showDate) {
-  return porCliente(list, (c) => c.p).map((g) => {
+  const G = porCliente(list, (c) => c.p), urg = (g) => [Math.max(0, ...g.items.filter((c) => c.atrasada).map(diasAtr)), g.items.reduce((s2, c) => s2 + (c.pagada ? 0 : c.debe), 0)];
+  if (list.some((c) => c.atrasada)) G.sort((a, b) => { const A = urg(a), B = urg(b); return B[0] - A[0] || B[1] - A[1]; });
+  return G.map((g) => {
     if (g.items.length === 1) return cuotaRow(g.items[0], showDate);
     const pend = g.items.filter((c) => !c.pagada), tot = pend.reduce((s2, c) => s2 + c.debe, 0), np = new Set(g.items.map((c) => c.p.id)).size;
     const st = !pend.length ? `<span class="pill ok">Pagó todo</span>` : pend.some((c) => c.atrasada) ? `<span class="pill warn">Atrasado</span>` : `<span class="pill">Pendiente</span>`;
     return `<details class="item owned grp" style="--own:${ownerColor(ownerOf(g.items[0].p))}"><summary>
       <div class="item-top"><b>${esc(g.nombre)}</b><span>${st}</span></div>
-      <div class="item-mid">${g.items.length} pagos en ${np} ${np === 1 ? "préstamo" : "préstamos"}${pend.length ? " · Debe en total <b>" + mxn2(tot) + "</b>" : ""} <span class="grp-ver">Ver cada uno</span></div></summary>
-      ${pend.length && g.tel ? `<div class="item-bot"><a class="btn sm primary" href="${waTo(g.tel, recTotalMsg(g.nombre, pend))}" target="_blank" rel="noopener">Recordatorio del total</a></div>` : ""}
+      <div class="item-mid">${g.items.length} pagos en ${np} ${np === 1 ? "préstamo" : "préstamos"}${pend.length ? " · Debe en total <b>" + mxn2(tot) + "</b>" : ""}${pend.some((c) => c.atrasada) ? " · <b class=\"warn-t\">" + Math.max(...pend.filter((c) => c.atrasada).map(diasAtr)) + " días de atraso</b>" : ""} ${recPill([...new Set(g.items.map((c) => c.p))])} <span class="grp-ver">Ver cada uno</span></div></summary>
+      ${pend.length && g.tel ? `<div class="item-bot"><a class="btn sm primary" data-rec="${[...new Set(pend.map((c) => c.p.id))].join(",")}" href="${waTo(g.tel, recTotalMsg(g.nombre, pend))}" target="_blank" rel="noopener">Recordatorio del total</a></div>` : ""}
       <div class="list grp-in">${g.items.map((c) => cuotaRow(c, showDate, true)).join("")}</div></details>`;
   }).join("");
+}
+function mananaCard(all) {
+  const man = iso(new Date(new Date(today() + "T12:00:00").getTime() + 864e5));
+  const G = porCliente(all.filter((c) => c.fecha === man && !c.pagada), (c) => c.p).filter((g) => g.tel);
+  if (!G.length) return "";
+  MANANA = G.map((g) => ({ nombre: g.nombre, ids: [...new Set(g.items.map((c) => c.p.id))], url: waTo(g.tel, g.items.length === 1 ? `Hola ${g.items[0].p.cliente}, te recordamos que mañana ${fcorta(new Date(man + "T12:00:00"))} toca tu pago ${g.items[0].p.tipo === "interes" ? "de interés" : g.items[0].n + " de " + g.items[0].total} por ${mxn2(g.items[0].debe)}.\n\nCuando pagues, mándanos tu comprobante por este medio.\n\nEntre Amigos` : recTotalMsg(g.nombre, g.items)) }));
+  const hechos = MANANA.filter((m) => recHoy(PRES.filter((p) => m.ids.includes(p.id)))).length;
+  const sig = MANANA.find((m) => !recHoy(PRES.filter((p) => m.ids.includes(p.id))));
+  return `<div class="card manana"><div class="head"><h2>Recordatorios de mañana</h2><span class="muted">${hechos} de ${MANANA.length} enviados</span></div>
+    <p class="muted">${MANANA.length === 1 ? "Una persona paga" : MANANA.length + " personas pagan"} mañana: ${MANANA.map((m) => esc(nom1(m.nombre))).join(", ")}. Toca el botón y se abre el WhatsApp de cada una, ya con su total; al regresar, toca otra vez para la siguiente.</p>
+    ${sig ? `<a class="btn primary" id="man-sig" data-rec="${sig.ids.join(",")}" href="${sig.url}" target="_blank" rel="noopener">Mandar a ${esc(nom1(sig.nombre))} (${MANANA.indexOf(sig) + 1} de ${MANANA.length})</a>` : `<p class="ok">Listo, ya les recordaste a todos.</p>`}</div>`;
+}
+let MANANA = [];
+// Cobros al calendario: archivo .ics con un evento por persona y por día de cobro (próximos 4 meses).
+function cobrosICS() {
+  const hoy = today(), fin = iso(new Date(Date.now() + 122 * 864e5));
+  const C = cuotas().filter((c) => !c.pagada && c.fecha <= fin && (c.fecha >= hoy || c.atrasada));
+  const by = {}; C.forEach((c) => { const f = c.atrasada ? hoy : c.fecha, k = cliKey(c.p) + "|" + f; (by[k] = by[k] || { f, k, items: [] }).items.push(c); });
+  const e = (t) => String(t).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const ev = Object.values(by).map((g) => {
+    const p = g.items[0].p, tot = g.items.reduce((s2, c) => s2 + c.debe, 0), atr = g.items.some((c) => c.atrasada), d = g.f.replace(/-/g, "");
+    const det = g.items.map((c) => `${p.monto && g.items.length > 1 ? "Préstamo de " + mxn(c.p.monto) + ": " : ""}${cuotaLbl(c.p, c.n, c.total)} ${mxn2(c.debe)}${c.atrasada ? " (atrasado desde " + fcorta(new Date(c.fecha + "T12:00:00")) + ")" : ""}`).join("\n");
+    return ["BEGIN:VEVENT", "UID:cobro-" + g.k.replace(/[^a-zA-Z0-9]/g, "") + "-" + d + "@ventaentreamigos.com", "DTSTAMP:" + stamp,
+      "DTSTART;TZID=America/Mexico_City:" + d + "T100000", "DTEND;TZID=America/Mexico_City:" + d + "T101500",
+      "SUMMARY:" + e((atr ? "Cobrar atrasado a " : "Cobrar a ") + p.cliente + " " + mxn(tot) + (g.items.length > 1 ? " (" + g.items.length + " pagos)" : "")),
+      "DESCRIPTION:" + e(det + "\n\nRegístralo en ventaentreamigos.com/cotiza"),
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Cobro", "TRIGGER:-PT30M", "END:VALARM", "END:VEVENT"].join("\r\n");
+  });
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Entre Amigos//Cobros//ES", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Cobros Entre Amigos", ...ev, "END:VCALENDAR"].join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" })); a.download = "cobros-entre-amigos.ics"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  return ev.length;
 }
 function tareasAgrupadas(T) {
   const pOf = (x) => (x.c ? x.c.p : x.r ? x.r.p : null);
@@ -3081,7 +3125,7 @@ function tareasAgrupadas(T) {
     if (cnt("cobrar")) res.push(cnt("cobrar") + " por cobrar hoy");
     if (cnt("msg")) res.push(cnt("msg") + " paga" + (cnt("msg") > 1 ? "n" : "") + " mañana");
     if (cnt("pago") + cnt("entro")) res.push("ya pagó " + (cnt("pago") + cnt("entro")));
-    return `<details class="task grp ${late ? "late" : cs.length ? "due" : "paid"}"><summary><span><b>${esc(g.nombre)}</b> · ${res.join(", ")}${tot ? " · total " + mxn(tot) : ""} <span class="grp-ver">Ver ${g.items.length}</span></span>${cs.length && g.tel ? `<a class="btn sm" href="${waTo(g.tel, recTotalMsg(g.nombre, cs))}" target="_blank" rel="noopener">WhatsApp del total</a>` : ""}</summary>
+    return `<details class="task grp ${late ? "late" : cs.length ? "due" : "paid"}"><summary><span><b>${esc(g.nombre)}</b> · ${res.join(", ")}${tot ? " · total " + mxn(tot) : ""} ${recPill([...new Set(g.items.filter((x) => x.c).map((x) => x.c.p))])} <span class="grp-ver">Ver ${g.items.length}</span></span>${cs.length && g.tel ? `<a class="btn sm" data-rec="${[...new Set(cs.map((c) => c.p.id))].join(",")}" href="${waTo(g.tel, recTotalMsg(g.nombre, cs))}" target="_blank" rel="noopener">WhatsApp del total</a>` : ""}</summary>
       <div class="tasks grp-in">${g.items.map(tareaRow).join("")}</div></details>`;
   }).join("");
 }
@@ -3175,7 +3219,17 @@ async function usdLoad() {
       } catch (e) { USD_HIST = []; }
     }
   } finally { USD_BUSY = false; }
-  const box = $("usd-box"); if (box) box.outerHTML = usdCard();
+  const box = $("usd-box"); if (box) { box.outerHTML = usdCard(); bindUsd(); }
+}
+function usdMios() {
+  let M = null; try { M = JSON.parse(localStorage.getItem("usd_mios") || "null"); } catch (e) {}
+  if (!M || !M.cant) return `<details class="usd-m"><summary>Anotar mis dólares</summary><form id="usd-f" class="row" novalidate><label>Cuántos dólares tienes<input name="c" inputmode="decimal" placeholder="Ej. 5,000"></label><label>Precio al que los compraste (opcional)<input name="p" inputmode="decimal" placeholder="Ej. 17.80"></label><button class="btn sm primary" type="submit">Guardar</button></form><p class="note">Se guarda solo en este aparato.</p></details>`;
+  const vale = M.cant * USD.v, gan = M.precio ? (USD.v - M.precio) * M.cant : null;
+  return `<div class="usd-mios"><span>Tus ${M.cant.toLocaleString("es-MX")} dólares valen hoy <b>${mxn(vale)}</b>${gan !== null ? ` · <b class="${gan >= 0 ? "lime" : "warn-t"}">${gan >= 0 ? "+" : "−"}${mxn(Math.abs(gan))}</b> contra ${usdFmt(M.precio)}` : ""}</span><button class="link" type="button" id="usd-x">Cambiar</button></div>`;
+}
+function bindUsd() {
+  const f = $("usd-f"); if (f) f.addEventListener("submit", (e) => { e.preventDefault(); const c = num(f.querySelector("[name=c]").value), p = num(f.querySelector("[name=p]").value); if (!c) return; try { localStorage.setItem("usd_mios", JSON.stringify({ cant: c, precio: p || 0 })); } catch (er) {} const b = $("usd-box"); if (b) { b.outerHTML = usdCard(); bindUsd(); } });
+  const x = $("usd-x"); if (x) x.onclick = () => { try { localStorage.removeItem("usd_mios"); } catch (er) {} const b = $("usd-box"); if (b) { b.outerHTML = usdCard(); bindUsd(); } };
 }
 function usdCard() {
   if (!USD) return `<div class="card usd" id="usd-box"><div class="usd-top"><span class="usd-k">Dólar hoy</span></div><p class="muted">${USD_BUSY || !USD_AT ? "Consultando el precio del dólar…" : "No se pudo consultar el dólar. Revisa tu internet."}</p></div>`;
@@ -3190,7 +3244,7 @@ function usdCard() {
   }
   return `<div class="card usd" id="usd-box"><div class="usd-top"><span class="usd-k">Dólar hoy</span><span class="muted">${hora} · ${USD.src}</span></div>
     <div class="usd-row"><b class="usd-v">${usdFmt(USD.v)}</b><span class="usd-u">pesos por dólar</span>${dif !== null && Math.abs(dif) >= 0.005 ? `<span class="usd-d ${dif > 0 ? "up" : "down"}">${dif > 0 ? "▲ +" : "▼ "}${dif.toFixed(2)} vs. ayer</span>` : ""}</div>
-    ${spark}<p class="note">Es el precio de mercado, como el que sale en Google. En casa de cambio o banco te compran el dólar unos 40 a 80 centavos abajo.</p></div>`;
+    ${spark}${usdMios()}<p class="note">Es el precio de mercado, como el que sale en Google. En casa de cambio o banco te compran el dólar unos 40 a 80 centavos abajo.</p></div>`;
 }
 function vAgenda() {
   const all = cuotas(), hoy = today();
@@ -3252,6 +3306,7 @@ function vAgenda() {
     ${legend()}
     <div class="stats"><span class="stat"><b>${nPer(atr)}</b> ${nPer(atr) === 1 ? "cliente atrasado" : "clientes atrasados"} · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${nPer(deHoy.filter((c) => !c.pagada))}</b> por cobrar hoy</span><span class="stat"><b>${nPer(deHoy.filter((c) => c.pagada))}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
+  ${mananaCard(all)}
   ${(() => { const T = tareasDia(hoy, all, rcv); return T.length ? `<div class="card"><h2>Tareas de hoy</h2><div class="tasks">${tareasAgrupadas(T)}</div></div>` : ""; })()}
   ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${cuotasAgrupadas(atr, true)}</div></div>` : ""}
   <div class="card"><h2>Pagos de hoy</h2><div class="list">${deHoy.length ? cuotasAgrupadas(deHoy, false) : `<p class="muted">No hay pagos programados para hoy.</p>`}</div></div>
@@ -3260,6 +3315,7 @@ function vAgenda() {
   <div class="card">
     <div class="head"><h2>Calendario</h2><div class="actions"><button class="btn sm" type="button" id="m-prev" aria-label="Mes anterior">‹</button><b style="align-self:center;min-width:120px;text-align:center">${first.toLocaleDateString("es-MX", { month: "long", year: "numeric" })}</b><button class="btn sm" type="button" id="m-next" aria-label="Mes siguiente">›</button></div></div>
     <div class="cal"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>${cells}</div>
+    ${isAdmin() ? `<div class="actions"><button class="btn sm" type="button" id="cal-ics">Pasar cobros a mi calendario</button></div><p class="note" id="cal-ics-msg" hidden></p>` : ""}
     <p class="note"><span class="dot due"></span> Por cobrar <span class="dot late"></span> Atrasado <span class="dot paid"></span> Todo pagado <span class="dot rcv"></span> Entró dinero ese día${isAdmin() ? " · → Pago a inversionista" : ""}${isAdmin() ? ` <small class="vis">12</small> Personas que entraron a la página` : ""}</p>
     ${AG_DAY ? `<h3>${fcorta(new Date(AG_DAY + "T12:00:00"))}</h3>
       ${(() => { const T = tareasDia(AG_DAY, all, rcv); return T.length ? `<p class="lbl">Tareas del día</p><div class="tasks">${tareasAgrupadas(T)}</div>` : ""; })()}
@@ -3273,7 +3329,10 @@ function vAgenda() {
     <div class="stats"><span class="stat">Total <b>${mxn2(sum(delMes, "monto"))}</b></span><span class="stat">Capital <b>${mxn2(sum(delMes, "capital"))}</b></span><span class="stat">Interés <b>${mxn2(sum(delMes, "interes"))}</b></span><span class="stat"><b>${delMes.filter((r) => r.tarde > 0).length}</b> pagaron tarde</span></div>
     <div class="list">${delMes.length ? delMes.map(pagoRow).join("") : `<p class="muted">Sin pagos registrados este mes.</p>`}</div></div>`;
   plegarPanel(res);
-  if (isAdmin()) usdLoad();
+  if (isAdmin()) { usdLoad(); bindUsd(); }
+  bindRecordados($("panel"));
+  if ($("man-sig")) $("man-sig").addEventListener("click", () => setTimeout(vAgenda, 1500));
+  if ($("cal-ics")) $("cal-ics").onclick = () => { const n = cobrosICS(); const m = $("cal-ics-msg"); m.hidden = false; m.textContent = n ? `Se descargó un archivo con ${n} cobros de los próximos 4 meses. En el iPhone ábrelo y toca "Agregar todo" eligiendo el calendario del negocio; en la Mac impórtalo en Google Calendar (Configuración > Importar). Si lo vuelves a importar después, se actualizan los mismos cobros.` : "No hay cobros pendientes en los próximos 4 meses."; };
   $("panel").querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => {
     const k = b.dataset.ir; if (k.startsWith("tab:")) return go(k.slice(4));
     const d = $("f-" + k); if (!d) return; d.open = true; FOLD[k] = true; saveFold(); d.scrollIntoView({ behavior: "smooth", block: "start" });
