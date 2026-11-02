@@ -966,7 +966,9 @@
   "transmision": "Manual",
   "portada": false,
   "nombre": "RAM ProMaster",
-  "version": ""
+  "version": "",
+  "videoBorrador": "fotos/ram-promaster-2024/video.mp4",
+  "videoPosterBorrador": "fotos/ram-promaster-2024/video.jpg"
  },
  {
   "title": "Ford Transit Courier 2022",
