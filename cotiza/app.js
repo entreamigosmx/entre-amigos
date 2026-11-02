@@ -3047,6 +3047,7 @@ function tareaRow(x) {
 
 
 // Agrupar por persona: varios préstamos de un mismo cliente se muestran juntos y se recuerda el total.
+const nPer = (cs) => new Set(cs.map((c) => cliKey(c.p))).size;
 function porCliente(L, pOf) {
   const G = []; const by = {};
   L.forEach((x) => { const p = pOf(x); if (!p) { G.push({ k: null, items: [x] }); return; } const k = cliKey(p); if (!by[k]) { by[k] = { k, nombre: p.cliente, tel: p.telefono, items: [] }; G.push(by[k]); } by[k].items.push(x); if (!by[k].tel && p.telefono) by[k].tel = p.telefono; });
@@ -3232,12 +3233,12 @@ function vAgenda() {
   const porHoy = deHoy.filter((c) => !c.pagada);
   const avisos = avisosCard([
     { n: nSol, big: nSol, txt: nSol === 1 ? "Solicitud de préstamo por revisar" : "Solicitudes de préstamo por revisar", ir: "sol", cls: "warn" },
-    { n: atr.length, big: mxn(sum(atr, "debe")), txt: `${atr.length} ${atr.length === 1 ? "cliente atrasado" : "clientes atrasados"}`, ir: "atr", cls: "warn" },
+    { n: atr.length, big: mxn(sum(atr, "debe")), txt: `${nPer(atr)} ${nPer(atr) === 1 ? "cliente atrasado" : "clientes atrasados"}`, ir: "atr", cls: "warn" },
     { n: nAvis, big: nAvis, txt: nAvis === 1 ? "Cliente avisa que pagó" : "Clientes avisan que pagaron", ir: "tab:prestamos", cls: "warn" },
     { n: invHoy.length, big: mxn(invHoy.reduce((s2, z) => s2 + z.o.falta, 0)), txt: "Pagar a " + [...new Set(invHoy.map((z) => esc(apodoDe(z.e.k) || nom1(z.e.nombre))))].join(", "), ir: "tab:cuentas", cls: invHoy.some((z) => z.o.fecha < hoy) ? "warn" : "" },
     { n: SINCOL.length, big: mxn(SINCOL.reduce((s2, z) => s2 + z.monto, 0)), txt: "Sin colocar: buscar cliente para " + SINCOL.map((z) => esc(nom1(z.nombre))).join(", "), ir: "glob", cls: "warn" },
     { n: invSol, big: invSol, txt: invSol === 1 ? "Inversionista te avisa que prestó" : "Inversionistas te avisan que prestaron", ir: "tab:cuentas" },
-    { n: porHoy.length, big: mxn(sum(porHoy, "debe")), txt: `${porHoy.length} por cobrar hoy`, ir: "phoy" },
+    { n: porHoy.length, big: mxn(sum(porHoy, "debe")), txt: `${nPer(porHoy)} ${nPer(porHoy) === 1 ? "cliente" : "clientes"} por cobrar hoy`, ir: "phoy" },
     { n: nVen, big: nVen, txt: nVen === 1 ? "Auto ofrecido por revisar" : "Autos ofrecidos por revisar", ir: "tab:autos" },
     { n: prox.length, big: prox.length, txt: "Pagos en los próximos 7 días", ir: "prox" },
     { n: visHoy, big: visHoy, txt: visHoy === 1 ? "Persona entró hoy a tu página" : "Personas entraron hoy a tu página", ir: "vis" },
@@ -3249,7 +3250,7 @@ function vAgenda() {
   <div class="card">
     <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
     ${legend()}
-    <div class="stats"><span class="stat"><b>${atr.length}</b> atrasados · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${deHoy.filter((c) => !c.pagada).length}</b> por cobrar hoy</span><span class="stat"><b>${deHoy.filter((c) => c.pagada).length}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
+    <div class="stats"><span class="stat"><b>${nPer(atr)}</b> ${nPer(atr) === 1 ? "cliente atrasado" : "clientes atrasados"} · <b>${mxn(sum(atr, "debe"))}</b></span><span class="stat"><b>${nPer(deHoy.filter((c) => !c.pagada))}</b> por cobrar hoy</span><span class="stat"><b>${nPer(deHoy.filter((c) => c.pagada))}</b> ya pagaron hoy</span><span class="stat"><b>${prox.length}</b> en los próximos 7 días</span></div>
   </div>
   ${(() => { const T = tareasDia(hoy, all, rcv); return T.length ? `<div class="card"><h2>Tareas de hoy</h2><div class="tasks">${tareasAgrupadas(T)}</div></div>` : ""; })()}
   ${atr.length ? `<div class="card"><h2>Atrasados</h2><div class="list">${cuotasAgrupadas(atr, true)}</div></div>` : ""}
