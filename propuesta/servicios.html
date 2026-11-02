@@ -54,6 +54,9 @@
 .pkc li::before{content:"";width:12px;height:7px;margin-top:6px;border-left:2px solid var(--lime);border-bottom:2px solid var(--lime);transform:rotate(-45deg)}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tags span{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--soft)}
+.case-wrap{display:grid;gap:var(--gap);grid-template-columns:minmax(0,340px) minmax(0,1fr);align-items:center}
+@media (max-width:760px){.case-wrap{grid-template-columns:1fr}.case-vid{max-width:340px;margin-inline:auto}}
+.case-vid{width:100%;aspect-ratio:9/16;border-radius:var(--r);border:1px solid var(--line);background:#000;object-fit:cover}
 .case{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:clamp(20px,4vw,32px);display:grid;gap:16px}
 .case .n{font-family:var(--display);font-weight:800;font-size:clamp(60px,12vw,96px);line-height:.85;color:var(--lime)}
 .case .n small{display:block;font-family:var(--body);font-size:16px;font-weight:600;color:var(--soft);margin-top:8px}
@@ -139,6 +142,8 @@ section.blk.short{padding-block:clamp(40px,6vw,72px)}
 </div></section>
 
 <section class="blk g alt short" id="caso"><div class="in">
+  <div class="case-wrap">
+  <video class="case-vid" src="../assets/video/caso-e63.mp4" poster="../assets/img/caso-e63.jpg" controls playsinline preload="none" aria-label="Video del caso Mercedes-AMG E63 S"></video>
   <div class="case">
     <span class="eyebrow">Caso real · Mercedes-AMG E63 S 2023</span>
     <div class="n">$100,000<small>es casi lo que se ahorró nuestro cliente al comprarlo.</small></div>
@@ -146,6 +151,7 @@ section.blk.short{padding-block:clamp(40px,6vw,72px)}
     <details><summary>Ver todo lo que le hicimos</summary>
       <p>Lo revisamos antes de que lo comprara y, con nuestro reporte, el vendedor bajó el precio. Ya suyo, le pusimos 4 llantas nuevas, servicio completo (bujías, aceite y filtros), reparamos la fascia delantera, quitamos el PPF de 3 años, descontaminamos la pintura y aplicamos cerámico completo. Lo entregamos como nuevo.</p>
     </details>
+  </div>
   </div>
 </div></section>
 
