@@ -3113,6 +3113,45 @@ function avisosCard(A) {
   const L = A.filter((a) => a.n);
   return `<div class="card avisos"><h3>Avisos</h3>${L.length ? `<div class="avl">${L.map((a) => `<button type="button" class="aviso ${a.cls || ""}" data-ir="${a.ir}"><b>${a.big}</b><span>${a.txt}</span></button>`).join("")}</div>` : `<p class="muted">Todo al día. No hay nada pendiente por revisar.</p>`}</div>`;
 }
+
+// Dólar hoy (solo admin): precio del dólar en pesos al momento de abrir la Agenda (como lo muestra Google).
+// Fuente en vivo: Coinbase (tipo de cambio de mercado); respaldo: open.er-api. Tendencia de 30 días: Frankfurter (BCE, cierre diario).
+let USD = null, USD_AT = 0, USD_HIST = null, USD_BUSY = false;
+const usdFmt = (v) => "$" + v.toFixed(2);
+async function usdLoad() {
+  if (USD_BUSY || (USD && Date.now() - USD_AT < 10 * 60e3)) return;
+  USD_BUSY = true;
+  const get = async (u) => { const r = await fetch(u, { cache: "no-store" }); if (!r.ok) throw new Error(r.status); return r.json(); };
+  try {
+    let v = null, src = "";
+    try { const j = await get("https://api.coinbase.com/v2/exchange-rates?currency=USD"); v = Number(j.data.rates.MXN); src = "mercado en vivo"; } catch (e) {}
+    if (!(v > 0)) { try { const j = await get("https://open.er-api.com/v6/latest/USD"); v = Number(j.rates.MXN); src = "cierre del día"; } catch (e) {} }
+    if (v > 0) { USD = { v, src }; USD_AT = Date.now(); }
+    if (!USD_HIST) {
+      try {
+        const d0 = iso(new Date(Date.now() - 35 * 864e5));
+        const j = await get(`https://api.frankfurter.app/${d0}..?from=USD&to=MXN`);
+        USD_HIST = Object.entries(j.rates || {}).map(([f, r]) => ({ f, v: Number(r.MXN) })).filter((x) => x.v > 0).sort((a, b) => (a.f < b.f ? -1 : 1));
+      } catch (e) { USD_HIST = []; }
+    }
+  } finally { USD_BUSY = false; }
+  const box = $("usd-box"); if (box) box.outerHTML = usdCard();
+}
+function usdCard() {
+  if (!USD) return `<div class="card usd" id="usd-box"><div class="usd-top"><span class="usd-k">Dólar hoy</span></div><p class="muted">${USD_BUSY || !USD_AT ? "Consultando el precio del dólar…" : "No se pudo consultar el dólar. Revisa tu internet."}</p></div>`;
+  const H = USD_HIST || [], prev = H.length ? H[H.length - 1].f === today() && H.length > 1 ? H[H.length - 2] : H[H.length - 1] : null;
+  const dif = prev ? USD.v - prev.v : null;
+  const hora = new Date(USD_AT).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" });
+  let spark = "";
+  if (H.length > 4) {
+    const vals = [...H.map((x) => x.v), USD.v], mn = Math.min(...vals), mx = Math.max(...vals), w = 160, h = 40;
+    const pt = vals.map((v, i) => `${((i / (vals.length - 1)) * w).toFixed(1)},${(h - 3 - ((v - mn) / (mx - mn || 1)) * (h - 6)).toFixed(1)}`).join(" ");
+    spark = `<div class="usd-sp"><svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pt}" fill="none" stroke="var(--lime)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Último mes: ${usdFmt(mn)} a ${usdFmt(mx)}</span></div>`;
+  }
+  return `<div class="card usd" id="usd-box"><div class="usd-top"><span class="usd-k">Dólar hoy</span><span class="muted">${hora} · ${USD.src}</span></div>
+    <div class="usd-row"><b class="usd-v">${usdFmt(USD.v)}</b><span class="usd-u">pesos por dólar</span>${dif !== null && Math.abs(dif) >= 0.005 ? `<span class="usd-d ${dif > 0 ? "up" : "down"}">${dif > 0 ? "▲ +" : "▼ "}${dif.toFixed(2)} vs. ayer</span>` : ""}</div>
+    ${spark}<p class="note">Es el precio de mercado, como el que sale en Google. En casa de cambio o banco te compran el dólar unos 40 a 80 centavos abajo.</p></div>`;
+}
 function vAgenda() {
   const all = cuotas(), hoy = today();
   const en7 = iso(new Date(Date.now() + 7 * 864e5));
@@ -3167,7 +3206,7 @@ function vAgenda() {
   const tHoy = tareasDia(hoy, all, rcv).length;
   let GLOB = { neto: 0, html: "" }; if (isAdmin()) { try { GLOB = resumenGlobal(); } catch (er) {} }
   const res = { glob: isAdmin() ? sgn2(GLOB.neto) : "", sol: String(nSol), hoy: fcorta(new Date()).replace(/ \d{4}$/, ""), tareas: String(tHoy), atr: mxn(sum(atr, "debe")), phoy: mxn(sum(porHoy, "debe")), prox: String(prox.length), vis: isAdmin() ? String(visHoy) : "", cal: first.toLocaleDateString("es-MX", { month: "short" }).replace(".", ""), rec: mxn(sum(delMes, "monto")) };
-  $("panel").innerHTML = avisos + (isAdmin() ? GLOB.html : "") + (isAdmin() ? solicitudesCard(3) : "") + `
+  $("panel").innerHTML = avisos + (isAdmin() ? usdCard() : "") + (isAdmin() ? GLOB.html : "") + (isAdmin() ? solicitudesCard(3) : "") + `
   <div class="card">
     <div class="head"><h2>Hoy · ${fcorta(new Date())}</h2>${ownerFilter(vAgenda)}</div>
     ${legend()}
@@ -3194,6 +3233,7 @@ function vAgenda() {
     <div class="stats"><span class="stat">Total <b>${mxn2(sum(delMes, "monto"))}</b></span><span class="stat">Capital <b>${mxn2(sum(delMes, "capital"))}</b></span><span class="stat">Interés <b>${mxn2(sum(delMes, "interes"))}</b></span><span class="stat"><b>${delMes.filter((r) => r.tarde > 0).length}</b> pagaron tarde</span></div>
     <div class="list">${delMes.length ? delMes.map(pagoRow).join("") : `<p class="muted">Sin pagos registrados este mes.</p>`}</div></div>`;
   plegarPanel(res);
+  if (isAdmin()) usdLoad();
   $("panel").querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => {
     const k = b.dataset.ir; if (k.startsWith("tab:")) return go(k.slice(4));
     const d = $("f-" + k); if (!d) return; d.open = true; FOLD[k] = true; saveFold(); d.scrollIntoView({ behavior: "smooth", block: "start" });

@@ -284,3 +284,15 @@ details.card.fold>summary .fs{display:none}
 .invx.big{font-size:23px}.invx.big .ix-t{font-size:23px}.invx.big .ix-lbl{font-size:20px}.invx.big .ix-num{font-size:clamp(56px,16vw,76px)}.invx.big .ix-pago b{font-size:26px}.invx.big .ix-pago span{font-size:19px}.invx.big .ix-hola{font-size:36px}
 .avis.pausa{display:grid;gap:8px}.avis.pausa h3{font-size:20px}
 .ix-av{border-color:var(--warn)}
+
+/* Dólar hoy */
+.usd{gap:8px}
+.usd-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.usd-k{font:800 22px var(--display);text-transform:uppercase}
+.usd-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.usd-v{font:800 46px var(--display);color:var(--lime);line-height:1;font-variant-numeric:tabular-nums}
+.usd-u{color:var(--soft);font-size:15px}
+.usd-d{font-size:14px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line)}
+.usd-d.up{color:var(--lime)}.usd-d.down{color:var(--warn)}
+.usd-sp{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.usd-sp span{color:var(--muted);font-size:13px}
+.usd .note{margin:0;font-size:13px;color:var(--muted)}
