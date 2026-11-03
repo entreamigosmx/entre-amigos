@@ -2395,7 +2395,7 @@ function fichaBind(p) {
 // Muestra exactamente lo que ve el cliente en su app.
 function verComoCliente(p) {
   const ov = document.createElement("div"); ov.className = "viewer asc";
-  ov.innerHTML = `<div class="vbar"><b>Así lo ve ${esc(((cuentaDe(p)?.nombre) || p.cliente || "el cliente").split(" ")[0])}${cuentaDe(p) ? "" : " (cuando cree su cuenta)"}</b><button class="btn sm primary" type="button">Cerrar</button></div><div class="vbody"><div class="wrap">${clienteLoanCard(p)}</div></div>`;
+  ov.innerHTML = `<div class="vbar"><b>Así lo ve ${esc(((cuentaDe(p)?.nombre) || p.cliente || "el cliente").split(" ")[0])}${cuentaDe(p) ? "" : " (cuando cree su cuenta)"}</b><button class="btn sm primary" type="button">Cerrar</button></div><div class="vbody"><div class="wrap">${(() => { const g = gruposClientes(PRES).find((x) => x.P.some((q) => q.id === p.id)), L = g ? g.P : [p]; return totalClienteCard(L) + L.map((q) => clienteLoanCard(q)).join(""); })()}</div></div>`;
   ov.querySelectorAll("a,button:not(.vbar button),input,select,textarea").forEach((x) => { x.setAttribute("tabindex", "-1"); x.style.pointerEvents = "none"; });
   ov.querySelectorAll("form").forEach((f) => (f.onsubmit = (e) => e.preventDefault()));
   ov.querySelector(".vbar button").onclick = () => ov.remove();
@@ -2493,6 +2493,36 @@ function solicitudForm() {
   };
 }
 let VERI_T = null;
+// Cuando el cliente tiene 2 o más préstamos activos: un solo resumen con lo que debe mandar en total (para una sola transferencia).
+function totalClienteCard(L) {
+  const hoy = today(), r2t = (n) => Math.round(n * 100) / 100;
+  const act = (L || []).map((p) => ({ p, a: avance(p) })).filter((z) => !z.a.liquidado);
+  if (act.length < 2) return "";
+  const filas = act.map(({ p, a }) => {
+    const v = pausado(p) ? 0 : vencido(p, a);
+    const sig = estadoCuenta(p).meses.find((f) => f.fecha > hoy && f.falta > 0.5);
+    return { p, a, v, sig, liq: liquidacion(p).total || 0 };
+  });
+  const venc = r2t(filas.reduce((s, f) => s + (f.v > 0.5 ? f.v : 0), 0));
+  const prox = r2t(filas.reduce((s, f) => s + (f.sig ? f.sig.falta : 0), 0));
+  const liq = r2t(filas.reduce((s, f) => s + f.liq, 0));
+  const cap = r2t(filas.reduce((s, f) => s + ((f.p.tipo === "semanal" ? f.a.restante : f.a.capital) || 0), 0));
+  const fechas = filas.map((f) => f.sig && f.sig.fecha).filter(Boolean).sort();
+  const nom = (p) => `Préstamo de ${mxn(p.monto)}`;
+  const big = venc > 0.5
+    ? `<div class="big"><span>Debes hoy entre tus ${act.length} préstamos</span><b>${mxn2(venc)}</b></div><p class="muted">Puedes mandarlo en una sola transferencia. Así se reparte:</p>`
+    : `<div class="big"><span>Tu próximo pago de tus ${act.length} préstamos</span><b>${mxn2(prox)}</b></div>${fechas.length ? `<p>Antes del <b>${fcorta(new Date(fechas[0] + "T12:00:00"))}</b>. Puedes mandarlo en una sola transferencia. Así se reparte:</p>` : ""}`;
+  const tabla = `<div class="tbl"><table><tr><th>Préstamo</th><th>${venc > 0.5 ? "Debes hoy" : "Próximo pago"}</th><th>Fecha</th></tr>${filas.map((f) => `<tr><td>${nom(f.p)}</td><td>${mxn2(venc > 0.5 ? f.v : (f.sig ? f.sig.falta : 0))}</td><td>${venc > 0.5 ? (f.v > 0.5 ? "Vencido" : "Al corriente") : (f.sig ? fcorta(new Date(f.sig.fecha + "T12:00:00")) : "")}</td></tr>`).join("")}<tr><td><b>Total</b></td><td><b>${mxn2(venc > 0.5 ? venc : prox)}</b></td><td></td></tr></table></div>`;
+  const monto = venc > 0.5 ? venc : prox;
+  const msg = `Hola, soy ${(USER && USER.nombre) || ""}. Voy a mandar ${mxn2(monto)} en una sola transferencia para mis ${act.length} préstamos.`;
+  return `<div class="card" id="total-box">
+    <div class="head"><h2>Tu adeudo total</h2><span class="pill">${act.length} préstamos</span></div>
+    ${big}${tabla}
+    <div class="facts"><div><span>Para liquidar todo hoy</span><b>${mxn2(liq)}</b></div><div><span>Capital pendiente</span><b>${mxn2(cap)}</b></div><div><span>Préstamos activos</span><b>${act.length}</b></div></div>
+    <p class="note" style="margin:0">Abajo está el detalle de cada préstamo. Si mandas una sola transferencia, avísanos por WhatsApp para aplicarla a cada uno.</p>
+    <a class="btn primary" href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Avisar por WhatsApp</a>
+  </div>`;
+}
 function clienteLoanCard(p) {
     const a = avance(p), unidad = p.tipo === "semanal" ? "Semana" : "Mes", sem = p.tipo === "semanal";
     // Si va atrasado, lo primero que ve es cuánto debe hoy y de qué meses (no una fecha que ya pasó).
@@ -2584,7 +2614,7 @@ function vMis() {
   const telBox = USER.telefono ? "" : `<form class="card" id="my-tel" novalidate><h3>Agrega tu WhatsApp</h3><p class="muted">Para avisarte cuando tu préstamo esté listo o cuando revisemos tus documentos.</p><div class="row"><label for="my-tel-i">WhatsApp<input id="my-tel-i" type="tel" inputmode="tel" placeholder="33 1234 5678"></label><button class="btn primary" type="submit">Guardar</button></div></form>`;
   const conv = USER.solicita === "empresa" ? `<div class="card inv" id="conv-box">${USER.convenioOk ? `<p class="muted">Cargando…</p>` : `<p class="hi">Convenio para empresas</p><p class="big-t">Recibimos tu solicitud. La revisamos y te avisamos por WhatsApp; en cuanto la aprobemos, aquí verás toda la información.</p>`}</div>` : "";
   if (USER.solicita === "empresa" && USER.convenioOk) setTimeout(async () => { try { const s2 = await getDoc(doc(db, "config", "convenioInfo")); const box = $("conv-box"); if (box && s2.exists()) box.innerHTML = s2.data().html + `<a class="btn primary" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (USER.nombre || "") + ". Ya vi la información del convenio para mi empresa.")}" target="_blank" rel="noopener">Escribir a Entre Amigos</a>`; } catch (e) {} });
-  $("panel").innerHTML = ver + conv + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? PRES.map((p) => clienteLoanCard(p)).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard();
+  $("panel").innerHTML = ver + conv + telBox + `<div id="cot-box" style="display:grid;gap:16px"></div>` + (PRES.length ? totalClienteCard(PRES) + PRES.map((p) => clienteLoanCard(p)).join("") : `<div class="card"><h2>Mis préstamos</h2><p class="muted">Aquí verás tu préstamo, tus pagos y cuánto te resta en cuanto Entre Amigos lo registre. Si te llegó una invitación por WhatsApp, ábrela desde ese enlace.</p></div>`) + `<div id="docs-box"></div>` + solicitudCard();
   setTimeout(solicitudForm);
 
 }
