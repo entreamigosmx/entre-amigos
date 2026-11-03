@@ -1157,5 +1157,49 @@
   "video": "fotos/changan-hunter-4x4-2025/video.mp4",
   "videoPoster": "fotos/changan-hunter-4x4-2025/video.jpg",
   "portada": true
+ },
+ {
+  "title": "Jeep Grand Cherokee Limited Blindada 2019",
+  "slug": "jeep-grand-cherokee-limited-blindada-2019",
+  "marca": "Jeep",
+  "modelo": "Grand Cherokee Limited",
+  "anio": 2019,
+  "precio": null,
+  "precioEspecial": false,
+  "categoria": "SUV blindada",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ],
+  "kilometraje": 76409,
+  "disponible": true,
+  "destacado": false,
+  "orden": 2,
+  "foto": "fotos/jeep-grand-cherokee-limited-blindada-2019/01.jpg",
+  "galeria": [
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/01.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/02.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/03.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/04.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/05.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/06.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/07.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/08.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/09.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/10.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/11.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/12.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/13.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/14.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/15.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/16.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/17.jpg",
+   "fotos/jeep-grand-cherokee-limited-blindada-2019/18.jpg"
+  ],
+  "descripcion": "<p>Seguridad sin renunciar al confort: Grand Cherokee Limited 4x4 con blindaje certificado nivel III-A, ideal para moverte con tranquilidad en ciudad y carretera.</p><h4>Blindaje</h4><ul><li>Nivel III-A certificado por la AMBA (Asociación Mexicana de Blindadores de Automotores)</li><li>Blindado por Blindajes Alemanes (WBA), con placa de certificación</li><li>Cristales blindados</li></ul><h4>Versión y tracción</h4><ul><li>Versión Limited</li><li>Tracción 4x4</li><li>Transmisión automática</li></ul><h4>Interior</h4><ul><li>Asientos de piel color negro</li><li>Pantalla táctil con radio, clima, apps y teléfono</li><li>Encendido por botón</li><li>Volante con controles</li></ul><h4>Exterior</h4><ul><li>Color blanco</li><li>Rines de 20 pulgadas con llantas Pirelli Scorpion 265/50 R20</li><li>Sensores de estacionamiento traseros</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "nombre": "Jeep Grand Cherokee",
+  "version": "Limited 4x4 Blindada nivel III-A",
+  "borrador": true
  }
 ]
