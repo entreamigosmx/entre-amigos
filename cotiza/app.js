@@ -28,7 +28,7 @@ const ADMINS = ["jesusreynosoalfaro@gmail.com"];
 const WA = "523333063319";
 // Aviso al celular del administrador (app gratuita ntfy, tema privado). Sin datos personales.
 const AVISO = "https://ntfy.sh/entreamigos-avisos-7q4k9x2m";
-const avisar = (titulo, msg) => fetch(AVISO, { method: "POST", body: msg, headers: { Title: titulo, Click: "https://ventaentreamigos.com/cotiza/", Tags: "bell" } }).catch(() => {});
+const avisar = (titulo, msg, click) => fetch(AVISO, { method: "POST", body: msg, headers: { Title: titulo, Click: click || "https://ventaentreamigos.com/cotiza/", Tags: "bell" } }).catch(() => {});
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -217,9 +217,11 @@ function startApp() {
   if (isTeam()) unsubs.push(onSnapshot(doc(db, "config", "tasas"), (s) => { CFG = s.data() || {}; if (TAB === "cotizar" && !touched) applyCfg(); if (TAB === "tasas") draw(); }, () => {}));
   const qc = isAdmin() ? collection(db, "cotizaciones") : isTeam() ? query(collection(db, "cotizaciones"), where("por", "==", ME.uid)) : null;
   if (qc) unsubs.push(onSnapshot(qc, (s) => { COTS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha < b.fecha ? 1 : -1)); if (TAB === "cotizaciones") draw(); drawTabs(); }, () => {}));
-  const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1)); if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); if (!isAdmin()) drawTabs(); };
+  const setPres = () => { const m = {}; Object.values(PSRC).forEach((l) => l.forEach((x) => (m[x.id] = x))); PRES = Object.values(m).sort((a, b) => (a.creado < b.creado ? 1 : -1));
+    if (OPENQ && isAdmin() && PRES.some((x) => x.id === OPENQ)) { OPEN = OPENQ; OPENQ = ""; FX = ""; history.replaceState(null, "", location.pathname); TAB = "prestamos"; drawTabs(); }
+    if (TAB === "prestamos" || TAB === "mis" || TAB === "agenda") draw(); if (!isAdmin()) drawTabs(); };
   const listenP = (key, q) => unsubs.push(onSnapshot(q, (s) => { PSRC[key] = s.docs.map((d) => ({ id: d.id, ...d.data() })); setPres(); }, () => {}));
-  if (isAdmin()) unsubs.push(onSnapshot(query(collection(db, "comprobantes"), where("estado", "==", "por revisar")), (s) => { AVIS = {}; s.docs.forEach((d) => { const x = d.data(); AVIS[x.pid] = (AVIS[x.pid] || 0) + 1; }); if (TAB === "prestamos") draw(); }, () => {}));
+  if (isAdmin()) unsubs.push(onSnapshot(query(collection(db, "comprobantes"), where("estado", "==", "por revisar")), (s) => { AVIS = {}; AVLIST = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => ((a.creado || "") < (b.creado || "") ? 1 : -1)); AVLIST.forEach((x) => { AVIS[x.pid] = (AVIS[x.pid] || 0) + 1; }); try { if (navigator.setAppBadge) AVLIST.length ? navigator.setAppBadge(AVLIST.length) : navigator.clearAppBadge(); } catch (e) {} if (TAB === "prestamos" || TAB === "agenda") draw(); }, () => {}));
   if (isAdmin()) getDoc(doc(db, "config", "reglas")).then((x) => { RULES_CUR = x.exists() ? x.data().v || 0 : 0; drawRulesBanner(); }).catch(() => { RULES_CUR = 0; drawRulesBanner(); });
   if (isAdmin()) getDoc(doc(db, "config", "convenioInfo")).then((x) => { if (!x.exists() || x.data().v !== CONV_V) setDoc(doc(db, "config", "convenioInfo"), { v: CONV_V, html: CONV_HTML }); }).catch(() => {});
   if (isAdmin()) { listenP("all", collection(db, "prestamos")); unsubs.push(onSnapshot(collection(db, "altas"), (s) => { ALTAS = s.docs.map((d) => ({ id: d.id, ...d.data() })); if (TAB === "empresas") draw(); }, () => {})); unsubs.push(onSnapshot(collection(db, "empresas"), (s) => { EMPS = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nombre.localeCompare(b.nombre)); if (TAB === "empresas" || TAB === "prestamos") draw(); }, () => {})); }
@@ -791,9 +793,10 @@ function vPrestamos() {
   const d = DRAFT || {};
   const VP = visibles();
   const pau = VP.filter((p) => pausado(p) && !avance(p).liquidado), act = VP.filter((p) => !pausado(p) && !avance(p).liquidado), liq = VP.filter((p) => avance(p).liquidado);
+  act.sort((a, b) => (AVIS[b.id] ? 1 : 0) - (AVIS[a.id] ? 1 : 0));
   const cartera = act.reduce((s, p) => s + debeDe(p, avance(p)), 0);
   const equipo = USERS.filter((u) => u.rol === "equipo");
-  $("panel").innerHTML = vistaChips() + `
+  $("panel").innerHTML = avisosPagoCard() + vistaChips() + `
   <div class="card"><details id="ex-d"${EXOPEN ? " open" : ""}><summary>Agregar cliente con préstamo que ya tiene</summary>
     <form id="fe" novalidate style="margin-top:12px">
       <p class="note" style="margin:0 0 10px">Para clientes de antes: registras lo que te debe hoy y cómo te paga. Al guardar te aparece el mensaje para invitarlo por WhatsApp a ver su préstamo en línea.</p>
@@ -917,7 +920,9 @@ function bindLoan() {
   $("panel").querySelectorAll("select[data-link]").forEach((s) => (s.onchange = () => { const u = USERS.find((x) => x.uid === s.value); updateDoc(doc(db, "prestamos", s.dataset.link), u ? { clienteUid: s.value, clienteEmail: u.email || "" } : { clienteUid: "" }); }));
   $("panel").querySelectorAll("input[data-mail]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "prestamos", i.dataset.mail), { clienteEmail: i.value.trim().toLowerCase() })));
 }
-let FX = "", AVIS = {};
+let FX = "", AVIS = {}, AVLIST = [];
+// Abrir un préstamo desde la notificación (?p=<id>), en cuanto carguen los préstamos.
+let OPENQ = /^[A-Za-z0-9]{10,40}$/.test(new URLSearchParams(location.search).get("p") || "") ? new URLSearchParams(location.search).get("p") : "";
 let EXOPEN = false, EXMODO = "interes";
 const EX_HELP = {
   interes: "Cada mes te paga el interés sobre lo que debe. Los abonos a capital los registras cuando lleguen y el interés baja solo.",
@@ -2182,14 +2187,97 @@ function pagosBox(p, admin) {
   const pend = admin ? (COMPS[p.id] || []).filter((c) => c.estado === "por revisar") : [];
   return `${pend.length ? `<div class="sec avis"><h3>El cliente avisa que pagó</h3>${pend.map((c) => `<div class="item"><div class="item-top"><b>${mxn2(c.monto)}</b><span>${fcorta(new Date(c.fecha + "T12:00:00"))}</span></div>
       ${c.nota ? `<div class="item-mid">${esc(c.nota)}</div>` : ""}
-      <div class="item-bot">${c.data ? `<button class="btn sm" type="button" data-comp="${p.id}:${c.id}">Ver comprobante</button>` : ""}<button class="btn sm primary" type="button" data-cok="${c.id}">Confirmar, sí lo recibí</button><button class="link del" type="button" data-cno="${c.id}">No lo recibí</button></div>
+      <div class="item-bot">${c.data ? `<button class="btn sm" type="button" data-comp="${p.id}:${c.id}">Ver comprobante</button>` : ""}<button class="btn sm primary" type="button" data-cok="${c.id}">Confirmar, sí lo recibí</button>${grupoActivos(p) > 1 ? `<button class="btn sm" type="button" data-crep="${c.id}">Confirmar y repartir entre sus préstamos</button>` : ""}<button class="link del" type="button" data-cno="${c.id}">No lo recibí</button></div>
+      ${REPARTO && REPARTO.cid === c.id ? repartoHTML(REPARTO) : ""}
       ${RECH === c.id ? `<form class="edit" data-cnof="${c.id}" novalidate><label>Motivo (lo verá el cliente)<input name="m" placeholder="Ej. No aparece en mi cuenta, mándame otro comprobante"></label><div class="actions"><button class="btn sm danger" type="submit">Rechazar aviso</button></div></form>` : ""}</div>`).join("")}</div>` : ""}
   <details class="sec"${admin || PEDIT.startsWith(p.id + ":") ? " open" : ""}><summary>${admin ? "Pagos recibidos" : "Tus pagos"} (${e.pagos.length})</summary>
-    ${e.pagos.length ? `<div class="tbl"><table><tr><th>Fecha</th><th>Monto</th><th>${sem ? "Semana" : "Mes"}</th>${admin ? "<th></th>" : ""}</tr>${e.pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${admin ? mxn(x.monto) : mxn2(x.monto)}</td><td>${aq(x)}</td>${admin ? `<td class="r"><button class="link" type="button" data-payed="${p.id}:${x.i}">Editar</button><button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>` : `<p class="muted">Todavía no hay pagos registrados${p.corte ? " desde el corte" : ""}.</p>`}
+    ${e.pagos.length ? `<div class="tbl"><table><tr><th>Fecha</th><th>Monto</th><th>${sem ? "Semana" : "Mes"}</th>${admin ? "<th></th>" : ""}</tr>${e.pagos.map((x) => `<tr><td>${fcorta(new Date(x.fecha + "T12:00:00"))}</td><td>${admin ? mxn(x.monto) : mxn2(x.monto)}</td><td>${aq(x)}</td>${admin ? `<td class="r">${grupoActivos(p) > 1 ? `<button class="link" type="button" data-reppg="${p.id}:${x.i}">Repartir</button>` : ""}<button class="link" type="button" data-payed="${p.id}:${x.i}">Editar</button><button class="link del" type="button" data-rmpay="${p.id}:${x.i}">Quitar</button></td>` : ""}</tr>`).join("")}</table></div>` : `<p class="muted">Todavía no hay pagos registrados${p.corte ? " desde el corte" : ""}.</p>`}
     ${admin && PEDIT.startsWith(p.id + ":") ? payForm(p, Number(PEDIT.split(":")[1])) : ""}
+    ${admin && REPARTO && REPARTO.pid === p.id && REPARTO.i != null ? repartoHTML(REPARTO) : ""}
   </details>`;
 }
 let RECH = "";
+// Hasta arriba de Préstamos: los clientes que avisan que pagaron, para abrir cada uno directo.
+function avisosPagoCard() {
+  if (!isAdmin() || !AVLIST.length) return "";
+  return `<div class="card avis"><h2>Avisos de pago por revisar (${AVLIST.length})</h2><div class="list">${AVLIST.map((x) => { const q = PRES.find((y) => y.id === x.pid); return `<button type="button" class="item" data-open="${x.pid}" style="text-align:left;width:100%;cursor:pointer"><div class="item-top"><b>${esc((q && q.cliente) || "Cliente")} · ${mxn2(x.monto)}</b><span class="pill warn">Por revisar</span></div><div class="item-mid">${q ? "Préstamo de " + mxn(q.monto) + " · " : ""}pagó el ${fcorta(new Date(x.fecha + "T12:00:00"))}${x.nota ? " · " + esc(x.nota) : ""}</div></button>`; }).join("")}</div></div>`;
+}
+/* ---------- Repartir un pago entre los préstamos del mismo cliente ---------- */
+// Sirve para un aviso de pago (se confirma repartido) o para un pago ya registrado en el préstamo equivocado.
+let REPARTO = null;
+function grupoDe(p) { const g = gruposClientes(PRES).find((x) => x.P.some((q) => q.id === p.id)); return g ? g.P : [p]; }
+function grupoActivos(p) { try { return grupoDe(p).filter((q) => q.id === p.id || !avance(q).liquidado).length; } catch (e) { return 1; } }
+function repartoLoans(R) {
+  const src = PRES.find((x) => x.id === R.pid); if (!src) return [];
+  const r2r = (n) => Math.round(n * 100) / 100;
+  return grupoDe(src).map((q) => {
+    const b = q.id === src.id && R.i != null ? { ...q, pagos: (q.pagos || []).filter((_, k) => k !== R.i) } : q, a = avance(b);
+    return { q, b, a, liq: a.liquidado ? 0 : r2r(liquidacion(b, R.fecha).total || 0) };
+  }).filter((z) => z.q.id === src.id || !z.a.liquidado).sort((x, y) => (x.q.id === src.id ? -1 : y.q.id === src.id ? 1 : 0));
+}
+function repartoHTML(R) {
+  const L = repartoLoans(R), r2r = (n) => Math.round(n * 100) / 100, def = {};
+  let rest = R.monto;
+  L.forEach((z) => { const v = Math.max(0, Math.min(rest, z.liq)); def[z.q.id] = r2r(v); rest = r2r(rest - v); });
+  if (rest > 0.005 && L.length) def[L[0].q.id] = r2r(def[L[0].q.id] + rest);
+  const fmt = (v) => (v ? v.toLocaleString("es-MX", { maximumFractionDigits: 2 }) : "");
+  return `<form class="edit" id="rep-f" novalidate>
+    <p class="lbl" style="margin:0">Repartir ${mxn2(R.monto)} del ${fcorta(new Date(R.fecha + "T12:00:00"))} entre sus préstamos</p>
+    <p class="note" style="margin:0">Ya te lo dejé repartido para liquidar primero; cámbialo si quieres. Si lo que pones alcanza para liquidar un préstamo, queda en ceros.</p>
+    ${L.map((z) => `<div class="item"><div class="item-top"><b>Préstamo de ${mxn(z.q.monto)}</b><span>${z.liq ? "Para liquidar: " + mxn2(z.liq) : "Ya en ceros"}</span></div>
+      <div class="row"><label>Monto para este préstamo<input name="r" data-rid="${z.q.id}" data-liq="${z.liq}" inputmode="decimal" value="${fmt(def[z.q.id])}" placeholder="0"></label>${z.q.tipo === "interes" ? `<label>Si no lo liquida, se aplica a<select data-rt="${z.q.id}"><option value="interes">Interés</option><option value="capital">Capital</option></select></label>` : ""}</div>
+      <p class="note" data-rmsg="${z.q.id}" style="margin:0"></p></div>`).join("")}
+    <p class="cov" id="rep-sum"></p><p class="err" hidden></p>
+    <div class="actions"><button class="btn primary" type="submit">Guardar reparto</button><button class="btn" type="button" id="rep-x">Cancelar</button></div></form>`;
+}
+function repartoBind(P) {
+  const f = P.querySelector("#rep-f"); if (!f || !REPARTO) return;
+  const R = REPARTO, r2r = (n) => Math.round(n * 100) / 100;
+  const upd = () => {
+    let s = 0;
+    f.querySelectorAll("[data-rid]").forEach((i) => {
+      const v = num(i.value), lq = Number(i.dataset.liq), m = f.querySelector(`[data-rmsg="${i.dataset.rid}"]`); s += v;
+      m.textContent = v && lq && v >= lq - 1 ? "Con esto queda liquidado (en ceros)." : v && lq ? "Le quedarían " + mxn2(lq - v) + " para liquidar." : "";
+    });
+    const d = r2r(R.monto - s), box = f.querySelector("#rep-sum");
+    box.className = Math.abs(d) < 0.01 ? "cov ok" : "cov bad";
+    box.textContent = Math.abs(d) < 0.01 ? `Repartido completo: ${mxn2(R.monto)}` : d > 0 ? `Faltan ${mxn2(d)} por repartir (el pago fue de ${mxn2(R.monto)})` : `Te pasaste por ${mxn2(-d)} (el pago fue de ${mxn2(R.monto)})`;
+    return d;
+  };
+  f.querySelectorAll("[data-rid]").forEach((i) => i.addEventListener("input", upd)); upd();
+  f.querySelector("#rep-x").onclick = () => { REPARTO = null; vPrestamos(); };
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const er = f.querySelector(".err");
+    if (Math.abs(upd()) >= 0.01) { er.hidden = false; er.textContent = "La suma de lo repartido tiene que ser igual al pago."; return; }
+    const btn = f.querySelector("[type=submit]"); btn.disabled = true;
+    const L = repartoLoans(R), reg0 = R.reg || new Date().toISOString(); let k = 0;
+    try {
+      for (const z of L) {
+        const v = r2r(num(f.querySelector(`[data-rid="${z.q.id}"]`).value)), base = { fecha: R.fecha, regPor: ME.uid, nota: R.nota };
+        let nuevos = [];
+        if (v > 0.005) {
+          const reg = k++ ? reg0 + "r" + k : reg0;
+          if (z.liq && v >= z.liq - 1) {
+            // Alcanza para liquidar: se registra como liquidación para que quede en ceros.
+            const Lq = liquidacion(z.b, R.fecha);
+            nuevos = z.q.tipo === "interes"
+              ? [Lq.interes > 0.005 ? { ...base, reg, monto: r2r(Math.min(v, Lq.interes)) } : null, { ...base, reg: reg + "b", monto: r2r(v - Math.min(v, Lq.interes)), tipo: "capital" }].filter(Boolean)
+              : [{ ...base, reg, monto: v, liq: true, ...(Lq.intDias ? { intLiq: Lq.intDias } : {}) }];
+          } else {
+            const pg = { ...base, reg, monto: v }, t = f.querySelector(`[data-rt="${z.q.id}"]`);
+            if (t && t.value === "capital") pg.tipo = "capital";
+            nuevos = [pg];
+          }
+        }
+        if (z.q.id === R.pid && R.i != null) await updateDoc(doc(db, "prestamos", z.q.id), { pagos: (z.q.pagos || []).filter((_, j) => j !== R.i).concat(nuevos) });
+        else if (nuevos.length) await updateDoc(doc(db, "prestamos", z.q.id), { pagos: arrayUnion(...nuevos) });
+      }
+      if (R.cid) await updateDoc(doc(db, "comprobantes", R.cid), { estado: "confirmado", reg: reg0, revisado: new Date().toISOString() });
+      REPARTO = null; vPrestamos();
+    } catch (x) { btn.disabled = false; er.hidden = false; er.textContent = "No se pudo guardar. Revisa tu conexión."; }
+  };
+}
 /* ---------- Préstamos pausados (en demanda, recuperación, negociando…) ---------- */
 const MOTIVOS = { demanda: "En demanda", recuperacion: "En recuperación", negociando: "Negociando", capital: "Recuperando capital", otro: "Pausado" };
 const pausado = (p) => !!(p && p.pausa);
@@ -2328,7 +2416,7 @@ function fichaHTML(p) {
 const MIGR = {};
 function fichaBind(p) {
   const P = $("panel");
-  P.querySelector("[data-back]").onclick = () => { OPEN = ""; FX = ""; EDIT = ""; PEDIT = ""; RECH = ""; vPrestamos(); };
+  P.querySelector("[data-back]").onclick = () => { OPEN = ""; FX = ""; EDIT = ""; PEDIT = ""; RECH = ""; REPARTO = null; vPrestamos(); };
   P.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { FX = FX === b.dataset.fx ? "" : b.dataset.fx; EDIT = ""; vPrestamos(); }));
   P.querySelector("[data-asc]").onclick = () => verComoCliente(p);
   P.querySelectorAll("form[data-pausaf]").forEach((f) => {
@@ -2370,6 +2458,15 @@ function fichaBind(p) {
     await updateDoc(doc(db, "comprobantes", c.id), { estado: "confirmado", reg: pg.reg, revisado: new Date().toISOString() });
   }));
   P.querySelectorAll("[data-cno]").forEach((b) => (b.onclick = () => { RECH = RECH === b.dataset.cno ? "" : b.dataset.cno; vPrestamos(); }));
+  P.querySelectorAll("[data-crep]").forEach((b) => (b.onclick = () => {
+    const c = (COMPS[p.id] || []).find((x) => x.id === b.dataset.crep); if (!c) return;
+    REPARTO = REPARTO && REPARTO.cid === c.id ? null : { pid: p.id, cid: c.id, monto: c.monto, fecha: c.fecha, reg: c.reg, nota: "Avisado por el cliente (repartido)" }; vPrestamos();
+  }));
+  P.querySelectorAll("[data-reppg]").forEach((b) => (b.onclick = () => {
+    const [id, i] = b.dataset.reppg.split(":"), q = PRES.find((x) => x.id === id), x = q && (q.pagos || [])[Number(i)]; if (!x) return;
+    REPARTO = REPARTO && REPARTO.pid === id && REPARTO.i === Number(i) ? null : { pid: id, i: Number(i), monto: x.monto, fecha: x.fecha, reg: x.reg, nota: (x.nota ? x.nota + " · " : "") + "Repartido" }; vPrestamos();
+  }));
+  repartoBind(P);
   P.querySelectorAll("form[data-cnof]").forEach((f) => (f.onsubmit = async (e) => {
     e.preventDefault(); const m = f.querySelector("[name=m]").value.trim();
     if (!m) { f.querySelector("[name=m]").focus(); return; }
@@ -2587,6 +2684,8 @@ function bindAvisos() {
       const d = { pid: f.dataset.avf, por: ME.uid, estado: "por revisar", monto: m, fecha: fe, nota: f.querySelector("[name=n]").value.trim().slice(0, 200), data, mime, creado: new Date().toISOString() };
       const t = f.querySelector("[name=t]"); if (t && t.value === "capital") d.tipo = "capital";
       await addDoc(collection(db, "comprobantes"), d);
+      const pp = PRES.find((x) => x.id === d.pid);
+      avisar("Pago avisado", `${USER.nombre || "Un cliente"} avisa que pagó ${mxn2(m)}${pp ? " (préstamo de " + mxn(pp.monto) + ")" : ""}. Toca para revisarlo.`, "https://ventaentreamigos.com/cotiza/?p=" + d.pid);
       AVFORM = ""; vMis();
     } catch (x) { btn.disabled = false; er.className = "err"; er.textContent = x.message || "No se pudo enviar. Intenta de nuevo."; }
   }));
@@ -3318,7 +3417,8 @@ function vAgenda() {
   const avisos = avisosCard([
     { n: nSol, big: nSol, txt: nSol === 1 ? "Solicitud de préstamo por revisar" : "Solicitudes de préstamo por revisar", ir: "sol", cls: "warn" },
     { n: atr.length, big: mxn(sum(atr, "debe")), txt: `${nPer(atr)} ${nPer(atr) === 1 ? "cliente atrasado" : "clientes atrasados"}`, ir: "atr", cls: "warn" },
-    { n: nAvis, big: nAvis, txt: nAvis === 1 ? "Cliente avisa que pagó" : "Clientes avisan que pagaron", ir: "tab:prestamos", cls: "warn" },
+    ...(isAdmin() ? AVLIST.slice(0, 4).map((x) => { const q = PRES.find((y) => y.id === x.pid); return { n: 1, big: mxn2(x.monto), txt: `${esc(nom1((q && q.cliente) || "Cliente"))} avisa que pagó · toca para revisarlo`, ir: "p:" + x.pid, cls: "warn" }; }) : []),
+    { n: nAvis > 4 ? nAvis - 4 : 0, big: nAvis - 4, txt: "Avisos de pago más", ir: "tab:prestamos", cls: "warn" },
     { n: invHoy.length, big: mxn(invHoy.reduce((s2, z) => s2 + z.o.falta, 0)), txt: "Pagar a " + [...new Set(invHoy.map((z) => esc(apodoDe(z.e.k) || nom1(z.e.nombre))))].join(", "), ir: "tab:cuentas", cls: invHoy.some((z) => z.o.fecha < hoy) ? "warn" : "" },
     { n: SINCOL.length, big: mxn(SINCOL.reduce((s2, z) => s2 + z.monto, 0)), txt: "Sin colocar: buscar cliente para " + SINCOL.map((z) => esc(nom1(z.nombre))).join(", "), ir: "glob", cls: "warn" },
     { n: invSol, big: invSol, txt: invSol === 1 ? "Inversionista te avisa que prestó" : "Inversionistas te avisan que prestaron", ir: "tab:cuentas" },
@@ -3365,6 +3465,7 @@ function vAgenda() {
   if ($("cal-ics")) $("cal-ics").onclick = () => { const n = cobrosICS(); const m = $("cal-ics-msg"); m.hidden = false; m.textContent = n ? `Se descargó un archivo con ${n} cobros de los próximos 4 meses. En el iPhone ábrelo y toca "Agregar todo" eligiendo el calendario del negocio; en la Mac impórtalo en Google Calendar (Configuración > Importar). Si lo vuelves a importar después, se actualizan los mismos cobros.` : "No hay cobros pendientes en los próximos 4 meses."; };
   $("panel").querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => {
     const k = b.dataset.ir; if (k.startsWith("tab:")) return go(k.slice(4));
+    if (k.startsWith("p:")) { OPEN = k.slice(2); FX = ""; EDIT = ""; PEDIT = ""; return go("prestamos"); }
     const d = $("f-" + k); if (!d) return; d.open = true; FOLD[k] = true; saveFold(); d.scrollIntoView({ behavior: "smooth", block: "start" });
   }));
   const find = (key) => { const [id, n] = key.split(":"); return all.find((c) => c.p.id === id && c.n === Number(n)); };
