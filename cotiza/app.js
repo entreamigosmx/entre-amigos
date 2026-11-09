@@ -1400,13 +1400,22 @@ function bindSolInv() {
 let INV_BIG = (() => { try { return localStorage.getItem("inv_big") === "1"; } catch (e) { return false; } })();
 const fechaLarga = (f) => { const t = new Date(f + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).replace(",", ""); return t.charAt(0).toUpperCase() + t.slice(1); };
 const fechaMedia = (f) => new Date(f + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+// Pagos que el inversionista todavía no ha visto (se guardan en su teléfono al tocar "Enterado").
+const vistosInv = () => { try { return JSON.parse(localStorage.getItem("inv_vistos") || "null"); } catch (e) { return null; } };
+function pagosNuevosInv(P) {
+  const V = vistosInv(), hace = iso(new Date(Date.now() - 30 * 864e5));
+  return P.filter((x) => (V ? !V.includes(x.id) : x.fecha >= hace) && (x.reg || x.fecha).slice(0, 10) >= iso(new Date(Date.now() - 90 * 864e5)));
+}
 function invPageHTML(d, nom, vista) {
-  const INV = d.inversiones || [], P = d.pagos || [], ver = PORT_ALL ? P : P.slice(0, 5), MET = { transferencia: "por transferencia", efectivo: "en efectivo" };
+  const INV = d.inversiones || [], P = d.pagos || [], ver = PORT_ALL ? P : P.slice(0, 5), MET = { transferencia: "por transferencia", efectivo: "en efectivo" }, quien = d.pagador || "Jesús";
+  const NV = vista ? P.slice(0, 2) : pagosNuevosInv(P);
   return `<div class="invx${INV_BIG ? " big" : ""}">
   <div class="card ix"><p class="ix-hola">Hola, ${esc(nom)}</p>
     <button class="ix-a" type="button" data-ixbig>${INV_BIG ? "Letra normal" : "Letra más grande"}</button></div>
   <div class="card ix"><p class="ix-lbl">Tu dinero en Entre Amigos</p><p class="ix-num">${mxn(d.capital)}</p>
     ${d.mensual ? `<p class="ix-t">Te pagamos <b>${mxn(d.mensual)}</b> cada mes.</p>` : ""}</div>
+  ${NV.length ? `<div class="card ix ix-next"><p class="ix-lbl">${NV.length > 1 ? "Pagos nuevos" : "Pago nuevo"}</p>${NV.map((x) => `<div class="ix-row"><p class="ix-t"><b>${esc(quien)} te pagó ${mxn(x.monto)}</b> el ${fechaLarga(x.fecha).replace(/^\w/, (c) => c.toLowerCase())}${MET[x.metodo] ? " " + MET[x.metodo] : ""}.</p>${x.recibo ? `<button class="btn sm" type="button" data-rcb="${x.id}">Ver comprobante</button>` : ""}</div>`).join("")}
+    <button class="btn primary" type="button" data-ixok>Enterado</button></div>` : ""}
   ${(d.avisos || []).length ? `<div class="card ix ix-av"><p class="ix-lbl">Aviso sobre tu inversión</p>${d.avisos.map((v) => `<div class="ix-row"><p class="ix-t"><b>${esc(v.motivo)}</b> · ${mxn(v.monto)} de tu dinero</p>${v.nota ? `<p class="ix-t">${esc(v.nota)}</p>` : ""}${v.pausaPago ? `<p class="ix-t">El pago de esa parte está en pausa desde el ${fechaMedia(v.desde)}.</p>` : ""}</div>`).join("")}</div>` : ""}
   ${d.proximo ? `<div class="card ix ix-next"><p class="ix-lbl">Tu próximo pago</p><p class="ix-num lime">${mxn(d.proximo.monto)}</p><p class="ix-t">${d.proximo.fecha < today() && d.proximo.limite ? "Te lo pagamos a más tardar el " + fechaLarga(d.proximo.limite).replace(/^\w/, (c) => c.toLowerCase()) + "." : fechaLarga(d.proximo.fecha)}</p></div>` : ""}
   ${INV.length ? `<div class="card ix"><p class="ix-lbl">${INV.length > 1 ? "Tus inversiones" : "Tu inversión"}</p>${INV.map((v) => `<div class="ix-row">
@@ -1415,13 +1424,14 @@ function invPageHTML(d, nom, vista) {
       <p class="ix-t">Te pagamos <b>${mxn(v.mensual)}</b> el día <b>${v.dia}</b> de cada mes.</p>
       ${(v.clientes || []).length ? `<p class="ix-t">Se le prestó a: ${v.clientes.map((z) => `<b>${esc(z.nombre)}</b>${v.clientes.length > 1 ? " (" + mxn(z.monto) + ")" : ""}`).join(", ")}.</p>` : ""}</div>`).join("")}</div>` : ""}
   <div class="card ix"><p class="ix-lbl">Lo que te hemos pagado</p><p class="ix-num">${mxn(d.recibido)}</p>
-    ${ver.length ? `<div class="ix-pagos">${ver.map((x) => `<div class="ix-pago"><div><b>${mxn(x.monto)}</b><span>${fechaMedia(x.fecha)}${MET[x.metodo] ? " · " + MET[x.metodo] : ""}</span></div>${x.recibo ? `<button class="btn sm" type="button" data-rcb="${x.id}">Ver comprobante</button>` : ""}</div>`).join("")}</div>` : `<p class="ix-t">Aquí verás cada pago que te hagamos.</p>`}
+    ${ver.length ? `<div class="ix-pagos">${ver.map((x) => `<div class="ix-pago"><div><b>${mxn(x.monto)}</b><span>${esc(quien)} te pagó el ${fechaMedia(x.fecha)}${MET[x.metodo] ? " · " + MET[x.metodo] : ""}</span></div>${x.recibo ? `<button class="btn sm" type="button" data-rcb="${x.id}">Ver comprobante</button>` : ""}</div>`).join("")}</div>` : `<p class="ix-t">Aquí verás cada pago que te hagamos.</p>`}
     ${P.length > 5 ? `<button class="btn" type="button" id="inv-all">${PORT_ALL ? "Ver menos" : "Ver todos tus pagos"}</button>` : ""}</div>
   <div class="card ix"><p class="ix-t">¿Tienes alguna duda?</p><a class="btn primary ix-wa" href="https://wa.me/${WA}?text=${encodeURIComponent("Hola, soy " + (d.nombre || nom) + ". Tengo una duda sobre mi inversión.")}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
     ${d.actualizado ? `<p class="note">Actualizado el ${fechaMedia(d.actualizado.slice(0, 10))}.</p>` : ""}</div>
   </div>`;
 }
 function bindInvPage(box) {
+  box.querySelectorAll("[data-ixok]").forEach((b) => (b.onclick = () => { const P = (PORT && PORT.pagos) || []; try { localStorage.setItem("inv_vistos", JSON.stringify([...new Set([...(vistosInv() || []), ...P.map((x) => x.id)])].slice(-200))); } catch (e) {} b.closest(".card").remove(); }));
   box.querySelectorAll("[data-ixbig]").forEach((b) => (b.onclick = () => { INV_BIG = !INV_BIG; try { localStorage.setItem("inv_big", INV_BIG ? "1" : "0"); } catch (e) {} box.querySelector(".invx")?.classList.toggle("big", INV_BIG); b.textContent = INV_BIG ? "Letra normal" : "Letra más grande"; }));
   const all = box.querySelector("#inv-all"); if (all) all.onclick = () => { PORT_ALL = !PORT_ALL; if (TAB === "inv") vInv(); };
   box.querySelectorAll("[data-rcb]").forEach((b) => (b.onclick = async () => { b.disabled = true; try { const s2 = await getDoc(doc(db, "recibos", b.dataset.rcb)); if (s2.exists()) verDoc(s2.data(), "Comprobante de pago"); } catch (er) {} b.disabled = false; }));
@@ -1671,7 +1681,9 @@ function deudaPorPersona(EP, hasta) {
     return { e, L, tot, n: L.length, vencida: L.some((o) => o.vencida), atrasada: L.some((o) => o.fecha < today()), limite: L.map((o) => o.limite).sort()[0] };
   }).filter(Boolean).sort((a, b) => (a.limite < b.limite ? -1 : 1));
 }
-const conceptoInv = (o) => (o.p ? "Comisión del préstamo de " + o.p.cliente + (o.concepto === "Capital que pagó el cliente" ? " (capital)" : "") : o.concepto + (o.inv ? " de " + mxn(o.inv.monto) + " al " + o.inv.tasa + "%" : ""));
+// A quién se le prestó el dinero de esa inversión (solo lo ves tú).
+const clientesDeInv = (m) => { const L = (m.pids || []).map((id) => PRES.find((p) => p.id === id)).filter(Boolean).map((p) => p.cliente); return L.length ? "prestado a " + L.join(", ") : "sin prestar"; };
+const conceptoInv = (o) => (o.p ? "Comisión del préstamo de " + o.p.cliente + (o.concepto === "Capital que pagó el cliente" ? " (capital)" : "") : o.concepto + (o.inv ? " de " + mxn(o.inv.monto) + " al " + o.inv.tasa + "%, " + clientesDeInv(o.inv) : ""));
 // Casillas para elegir qué pagos cubres. Se marcan en orden: lo que pagas se aplica de lo más antiguo a lo más nuevo.
 function pagosChks(e) {
   if (!e.pend.length) return "";
@@ -2131,7 +2143,7 @@ function portafolioDe(e) {
     const inversiones = CI.map((m) => { const px = proxInv(m); return { monto: vigenteDe(m), original: m.monto, tasa: m.tasa, mensual: mensualDe(m), dia: diaDe(m), desde: m.fecha, prox: px ? { fecha: px.fecha, monto: px.monto } : null, ...(conNom ? { clientes: (MGx[m.id]?.det || []).map((d) => ({ nombre: d.p.cliente || "", monto: d.monto })) } : {}) }; });
     const mensual = r2(CI.reduce((s, m) => s + mensualDe(m), 0) + e.prestamos.reduce((s, q) => { const f = desgloseFilas(q.p).find((x) => x.fecha >= today()); return s + (f ? parteDe({ p: q.p, interes: f.interes, capital: 0 }, q.x).int : 0); }, 0));
     const d = { nombre: e.nombre, inversiones, avisos, capital: e.capPuesto || e.capPrestado, ganado, recibido: r2(e.pagado), pendiente: r2(e.pend.reduce((s, o) => s + o.falta, 0)), mensual, proximo: prox,
-      pagos: movsDe(e).filter((m) => m.col === "entregas" && m.m.dir !== "de").slice(0, 36).map(({ m }) => ({ id: m.id, monto: m.monto, fecha: m.fecha, metodo: m.metodo || "", recibo: !!m.recibo })),
+      pagos: movsDe(e).filter((m) => m.col === "entregas" && m.m.dir !== "de").slice(0, 36).map(({ m }) => ({ id: m.id, monto: m.monto, fecha: m.fecha, metodo: m.metodo || "", recibo: !!m.recibo, reg: m.reg || "" })), pagador: nom1(USER?.nombre || "") || "Jesús",
       aportes: INVS.filter((m) => persKey(m) === e.k && !INV_OFF.includes(m.estado || "")).map((m) => ({ tipo: m.tipo, monto: m.monto, fecha: m.fecha })),
       detalle: c.ver === "detalle" || conNom ? e.prestamos.map((q) => ({ ...(conNom ? { cliente: q.p.cliente || "" } : {}), tipo: q.p.tipo === "semanal" ? "Préstamo semanal" : "Préstamo con garantía" + (q.p.garantia && GARANTIAS[q.p.garantia] && !["sin", "ff"].includes(q.p.garantia) ? " (" + GARANTIAS[q.p.garantia].toLowerCase() + ")" : ""), monto: q.x.aporte || debeDe(q.p, q.a) || q.p.monto, tasa: q.x.base === "puntos" ? q.x.valor : null })) : [] };
     return d;
