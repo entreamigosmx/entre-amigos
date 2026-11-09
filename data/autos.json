@@ -1202,5 +1202,45 @@
   "version": "Limited 4x4 V8 Blindada nivel III-A",
   "video": "fotos/jeep-grand-cherokee-limited-blindada-2019/video.mp4",
   "videoPoster": "fotos/jeep-grand-cherokee-limited-blindada-2019/video.jpg"
+ },
+ {
+  "title": "Kia Rio Hatchback EX 2021",
+  "slug": "kia-rio-hatchback-ex-2021",
+  "marca": "Kia",
+  "modelo": "Rio Hatchback EX",
+  "anio": 2021,
+  "precio": 260000,
+  "precioEspecial": false,
+  "categoria": "Hatchback",
+  "categorias": [
+   "Sedanes"
+  ],
+  "kilometraje": 23594,
+  "disponible": true,
+  "destacado": false,
+  "orden": 13.8,
+  "foto": "fotos/kia-rio-hatchback-ex-2021/01.jpg",
+  "galeria": [
+   "fotos/kia-rio-hatchback-ex-2021/01.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/02.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/03.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/04.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/05.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/06.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/07.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/08.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/09.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/10.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/11.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/12.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/13.jpg",
+   "fotos/kia-rio-hatchback-ex-2021/14.jpg"
+  ],
+  "nombre": "Kia Rio",
+  "version": "Hatchback EX automático",
+  "video": "fotos/kia-rio-hatchback-ex-2021/video.mp4",
+  "videoPoster": "fotos/kia-rio-hatchback-ex-2021/video.jpg",
+  "borrador": true,
+  "descripcion": "<p>Compacto, económico y fácil de manejar en la ciudad. Kia Rio Hatchback EX automático de un solo dueño, con factura original, servicios de agencia y solo 23,594 km.</p><h4>Motor y manejo</h4><ul><li>Motor 1.6L de 4 cilindros, 121 hp</li><li>Transmisión automática de 6 velocidades</li><li>Tracción delantera</li></ul><h4>Interior y tecnología</h4><ul><li>Pantalla táctil de 8 pulgadas con Apple CarPlay y Android Auto</li><li>Volante con controles de audio y teléfono</li><li>Asientos de tela en color negro</li><li>Aire acondicionado</li><li>Asientos traseros abatibles y cajuela amplia</li></ul><h4>Exterior</h4><ul><li>Color blanco</li><li>Rines de aluminio</li><li>Luces diurnas LED</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Factura original</li><li>Servicios de agencia</li><li>23,594 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
  }
 ]
