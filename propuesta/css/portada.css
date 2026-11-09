@@ -38,13 +38,13 @@
 }
 
 /* Explora por tipo */
-.types{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.types{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px}
 .type{display:grid;justify-items:center;align-content:center;gap:4px;padding:18px 8px 16px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);text-decoration:none;text-align:center;transition:border-color .2s,background .2s,transform .2s}
 .type:hover{border-color:var(--lime);background:var(--panel-2);transform:translateY(-2px)}
 .type svg{width:100%;max-width:96px;height:auto;fill:none;stroke:var(--lime);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:6px}
 .type b{font-size:16px;line-height:1.2}
 .type small{font-size:13px;color:var(--muted)}
-@media (max-width:980px){.types{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:980px){.types{grid-auto-flow:row;grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media (max-width:760px){
   .types{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:-16px;padding:0 16px 4px;gap:10px;scrollbar-width:none}
   .types::-webkit-scrollbar{display:none}
