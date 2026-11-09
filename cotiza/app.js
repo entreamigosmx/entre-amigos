@@ -1570,7 +1570,11 @@ function estadoPersonas() {
     // Qué pagos ya quedaron cubiertos (lo pagado se aplica a lo más antiguo).
     // Primero se aplica lo que pagaste a un pago específico ("Ya le pagué" en ese pago); lo demás, a lo más antiguo.
     const T = {}; let suelto = 0;
-    ENT.filter((m) => m.dir !== "de" && persKey(m) === e.k).forEach((m) => { if (m.oid) T[m.oid] = (T[m.oid] || 0) + (m.monto || 0); else suelto += m.monto || 0; });
+    const OB = {}; e.obl.forEach((o) => (OB[o.id] = o));
+    ENT.filter((m) => m.dir !== "de" && persKey(m) === e.k).forEach((m) => {
+      if (m.oid) T[m.oid] = (T[m.oid] || 0) + (m.monto || 0);
+      else if ((m.oids || []).length) { let r = m.monto || 0; m.oids.forEach((id) => { const q = Math.min(r, OB[id] ? OB[id].monto : 0); if (q > 0) { T[id] = (T[id] || 0) + q; r -= q; } }); suelto += Math.max(0, r); }
+      else suelto += m.monto || 0; });
     e.obl.forEach((o) => { const c = Math.min(T[o.id] || 0, o.monto); o.cubierto = r2(c); if (T[o.id]) T[o.id] -= c; });
     let disp = suelto + Object.values(T).reduce((s2, v) => s2 + Math.max(0, v), 0) + Math.max(0, e.meDebe - e.recibido);
     e.obl.forEach((o) => { const c = Math.min(disp, o.monto - o.cubierto); o.cubierto = r2(o.cubierto + c); o.falta = r2(o.monto - o.cubierto); disp -= c; o.vencida = o.falta > 0.5 && o.limite < hoy; });
@@ -1684,18 +1688,21 @@ function deudaPorPersona(EP, hasta) {
 // A quién se le prestó el dinero de esa inversión (solo lo ves tú).
 const clientesDeInv = (m) => { const L = (m.pids || []).map((id) => PRES.find((p) => p.id === id)).filter(Boolean).map((p) => p.cliente); return L.length ? "prestado a " + L.join(", ") : "sin prestar"; };
 const conceptoInv = (o) => (o.p ? "Comisión del préstamo de " + o.p.cliente + (o.concepto === "Capital que pagó el cliente" ? " (capital)" : "") : o.concepto + (o.inv ? " de " + mxn(o.inv.monto) + " al " + o.inv.tasa + "%, " + clientesDeInv(o.inv) : ""));
+// Nombre del cliente de cada pago (solo admin): el del préstamo, o a quién se le prestó esa inversión.
+const clienteDe = (o) => (o.p ? o.p.cliente : o.inv ? (o.inv.pids || []).map((id) => PRES.find((p) => p.id === id)).filter(Boolean).map((p) => p.cliente).join(", ") : "");
+const conceptoCorto = (o) => (o.p ? (o.concepto === "Capital que pagó el cliente" ? "Capital que pagó el cliente" : "Comisión del préstamo") : o.concepto + (o.inv ? " de " + mxn(o.inv.monto) + " al " + o.inv.tasa + "%" : ""));
 // Casillas para elegir qué pagos cubres. Se marcan en orden: lo que pagas se aplica de lo más antiguo a lo más nuevo.
 function pagosChks(e) {
   if (!e.pend.length) return "";
-  return `<p class="lbl">¿Qué le estás pagando?</p><div class="chks pchk">${e.pend.map((o, i) => `<label class="chk"><input type="checkbox" data-pq="${o.falta}" data-pi="${i}" checked> <span><b>${mxn2(o.falta)}</b> · ${esc(conceptoInv(o))} · ${o.fecha < today() ? "tocaba" : "toca"} el ${fdate(o.fecha)}${o.vencida ? ' <span class="pill warn">Fuera de plazo</span>' : ""}</span></label>`).join("")}</div>
-    <p class="note" style="margin:0">Se pagan en orden, del más antiguo al más nuevo. Si le pagas una parte, cambia el monto.</p>`;
+  return `<p class="lbl">Marca los pagos que le hiciste</p><div class="chks pchk">${e.pend.map((o, i) => `<label class="chk"><input type="checkbox" data-pq="${o.falta}" data-pi="${i}" data-po="${esc(o.id)}"> <span><b>${mxn2(o.falta)}</b> · <b class="pcli">${clienteDe(o) ? esc(clienteDe(o)) : "Sin prestar"}</b> · ${esc(conceptoCorto(o))} · ${o.fecha < today() ? "tocaba" : "toca"} el ${fdate(o.fecha)}${o.vencida ? ' <span class="pill warn">Fuera de plazo</span>' : ""}</span></label>`).join("")}</div>
+    <p class="note" style="margin:0">Solo se marcan como pagados los que palomees. El monto se suma solo.</p>`;
 }
 // Lo que le debes a una persona, cada pago con su botón "Ya le pagué".
 function grupoPagHTML(g, formPago) {
   const hoy = today(); const e = g.e, fo = INV_FORM === "pagx:" + e.k; return `<div class="item" id="ivp-${esc(e.k)}"><div class="item-top"><b>${esc(e.ver || e.nombre)}</b><span>${g.n > 1 ? "Total " : ""}<b>${mxn2(g.tot)}</b></span></div>
-      <div class="pagl">${g.L.map((o) => `<div class="pagr${o.vencida ? " late" : ""}"><div><b>${mxn2(o.falta)}</b><span>${esc(conceptoInv(o))}</span><span>${o.fecha < hoy ? "Tocaba" : "Toca"} el ${fdate(o.fecha)}${o.vencida ? " · fuera de plazo" : o.limite !== o.fecha ? " · a más tardar el " + fdate(o.limite) : ""}${o.cubierto > 0.005 ? " · ya le diste " + mxn2(o.cubierto) : ""}</span></div>${INV_FORM === "uno:" + o.id ? "" : `<button class="btn sm primary" type="button" data-uno="${esc(o.id)}">Ya le pagué</button>`}</div>${INV_FORM === "uno:" + o.id ? formUnPago(e, o) : ""}`).join("")}</div>
+      <div class="pagl">${g.L.map((o) => `<div class="pagr${o.vencida ? " late" : ""}"><div><b>${mxn2(o.falta)}</b><span class="pcli">${clienteDe(o) ? "Cliente: " + esc(clienteDe(o)) : "Todavía no lo prestas"}</span><span>${esc(conceptoCorto(o))}</span><span>${o.fecha < hoy ? "Tocaba" : "Toca"} el ${fdate(o.fecha)}${o.vencida ? " · fuera de plazo" : o.limite !== o.fecha ? " · a más tardar el " + fdate(o.limite) : ""}${o.cubierto > 0.005 ? " · ya le diste " + mxn2(o.cubierto) : ""}</span></div>${INV_FORM === "uno:" + o.id ? "" : `<button class="btn sm primary" type="button" data-uno="${esc(o.id)}">Ya le pagué</button>`}</div>${INV_FORM === "uno:" + o.id ? formUnPago(e, o) : ""}`).join("")}</div>
       ${g.n > 1 && !fo ? `<div class="actions"><button class="link" type="button" data-pagx="${esc(e.k)}">Le pagué varios juntos</button></div>` : ""}
-      ${fo ? formPago(e, g.tot, "a") : ""}</div>`; 
+      ${fo ? formPago(e, 0, "a") : ""}</div>`; 
 }
 // "Ya le pagué" de un solo pago: monto de ese pago y la fecha (hoy, ayer, antier u otra).
 function formUnPago(e, o) {
@@ -1716,7 +1723,6 @@ function bindPagosChks(root) {
   root.querySelectorAll("form[data-pagf]").forEach((f) => {
     const C = [...f.querySelectorAll("[data-pq]")], m = f.querySelector("[name=m]"); if (!C.length || !m) return;
     C.forEach((c) => (c.onchange = () => {
-      const i = +c.dataset.pi; C.forEach((z) => { const j = +z.dataset.pi; if (c.checked && j < i) z.checked = true; if (!c.checked && j > i) z.checked = false; });
       m.value = Math.round(C.filter((z) => z.checked).reduce((s2, z) => s2 + Number(z.dataset.pq), 0) * 100) / 100 || "";
     }));
   });
@@ -1921,8 +1927,8 @@ function personaInvView(e, formPago) {
   ${(() => { const A = portafolioDe(e).avisos || []; return A.length ? `<div class="card avis"><h2>Avisos que ve en su app</h2>${A.map((v) => `<div class="item"><div class="item-top"><b>${esc(v.motivo)}</b><span>${mxn(v.monto)}</span></div>${v.nota ? `<div class="item-mid">"${esc(v.nota)}"</div>` : ""}<div class="item-mid">${v.pausaPago ? "Su pago de esa parte está en pausa" : "Se le sigue pagando normal"}</div></div>`).join("")}<p class="note">Se cambian desde la ficha del préstamo pausado.</p></div>` : ""; })()}
   ${inversionesCard(e.k)}
   <div class="card"><h2>Sus pagos</h2>
-    <p class="note" style="margin:0">Lo que le toca cada mes y si ya se lo pagaste. Lo que le pagas se aplica a lo más antiguo.</p>
-    <div class="tbl cuadre"><table class="edo"><tr><th>Fecha</th><th>Monto</th><th>Falta</th><th></th></tr>${filas.length ? filas.map((o) => { const t = st(o); return `<tr><td>${mesC(o.fecha, true)} ${o.fecha.slice(2, 4)}</td><td>${mxn(o.monto)}</td><td>${o.futuro ? "" : mxn(o.falta ?? o.monto)}</td><td><span class="pill ${t[1]}">${t[0]}</span></td></tr>`; }).join("") : `<tr><td colspan="4">Todavía no le toca ningún pago.</td></tr>`}</table></div>
+    <p class="note" style="margin:0">Lo que le toca cada mes, de qué cliente es y si ya se lo pagaste.</p>
+    <div class="tbl cuadre"><table class="edo"><tr><th>Fecha</th><th>Monto</th><th>Falta</th><th></th></tr>${filas.length ? filas.map((o) => { const t = st(o); return `<tr><td>${mesC(o.fecha, true)} ${o.fecha.slice(2, 4)}<br><small class="pcli">${esc(clienteDe(o) || "Sin prestar")}</small></td><td>${mxn(o.monto)}</td><td>${o.futuro ? "" : mxn(o.falta ?? o.monto)}</td><td><span class="pill ${t[1]}">${t[0]}</span></td></tr>`; }).join("") : `<tr><td colspan="4">Todavía no le toca ningún pago.</td></tr>`}</table></div>
   </div>
   ${e.prestamos.length ? `<div class="card"><h2>Comisiones en préstamos</h2><div class="list">${e.prestamos.map((q) => `<div class="item"><div class="item-top"><b>${esc(q.p.cliente)}</b><span>${esc(repTxt(q.p, q.x))}</span></div></div>`).join("")}</div></div>` : ""}
   <div class="card"><h2>Historial</h2><p class="note" style="margin:0">Todo lo que te prestó, lo que le regresaste y lo que le has pagado, del más reciente al más antiguo.</p>
@@ -2059,7 +2065,7 @@ function vCuentas() {
     ev.preventDefault(); const e = key(f.dataset.pagf), g = (n) => f.querySelector(`[name=${n}]`).value, mo = num(g("m")); if (!e || !mo) return;
     INV_FORM = "";
     const file = f.querySelector("[name=c]")?.files?.[0], fe = g("f") || today(), dir = f.dataset.dir;
-    const ref = await addDoc(collection(db, "entregas"), { ...who(e), dir, monto: mo, fecha: fe, metodo: g("metodo"), ref: g("ref").trim(), nota: g("n").trim(), reg: new Date().toISOString(), recibo: !!file, ...(f.dataset.oid ? { oid: f.dataset.oid } : {}) });
+    const ref = await addDoc(collection(db, "entregas"), { ...who(e), dir, monto: mo, fecha: fe, metodo: g("metodo"), ref: g("ref").trim(), nota: g("n").trim(), reg: new Date().toISOString(), recibo: !!file, ...(f.dataset.oid ? { oid: f.dataset.oid } : {}), ...(f.querySelectorAll("[data-po]:checked").length ? { oids: [...f.querySelectorAll("[data-po]:checked")].map((z) => z.dataset.po) } : {}) });
     const uidI = uidDe(e);
     if (file) { try { const { data, mime } = await fileToData(file); await setDoc(doc(db, "recibos", ref.id), { uid: uidI, data, mime, fecha: fe, monto: mo }); } catch (er) {} }
     if (dir === "a") avisoInv(e, mo, fe, g("metodo"), !!file);
