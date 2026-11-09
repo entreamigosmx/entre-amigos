@@ -20,7 +20,7 @@ export function src(path, size) {
   return BASE + (size === "t" ? path.slice(0, i) + "/t" + path.slice(i) : path);
 }
 export const fotos = (a) => (a.galeria && a.galeria.length ? a.galeria : a.foto ? [a.foto] : []);
-export const mxn = (n) => (n ? "$" + Number(n).toLocaleString("es-MX") : "Precio a consultar");
+export const mxn = (n) => "$" + Number(n).toLocaleString("es-MX");
 export const km = (n) => Number(n).toLocaleString("es-MX") + " km";
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const wa = (text) => `https://wa.me/${WA}?text=${encodeURIComponent(text)}`;

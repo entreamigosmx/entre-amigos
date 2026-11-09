@@ -2,7 +2,7 @@ import { autos, card, esc, WA_ICON } from "./comun.js?v=p4";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const $ = (id) => document.getElementById(id);
-const ORDEN = ["Ofertas", "SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Lujo", "Eléctricos", "Motos"];
+const ORDEN = ["Ofertas", "SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Hatchbacks", "Lujo", "Eléctricos", "Motos"];
 const LBL = { Motos: "Motocicletas y trimotos" };
 // "Ofertas" se llena sola: todo auto con precio especial y precio anterior mayor al actual.
 const oferta = (a) => !!(a.precioEspecial && a.precioAnterior && a.precioAnterior > a.precio);
