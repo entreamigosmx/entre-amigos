@@ -317,3 +317,7 @@ details.item.grp .grp-in .item{padding-top:10px}
 .usd-m summary{font:600 14px var(--body);text-transform:none;letter-spacing:0;color:var(--lime)}
 .usd-m form{margin-top:8px;display:grid;gap:8px}
 .usd-mios{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
+.pagl{display:grid;gap:6px;margin-top:6px}
+.pagr{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--line,#2a2c27);border-radius:10px}
+.pagr>div{display:grid;gap:1px;min-width:0}.pagr>div span{font-size:14px;color:var(--soft)}
+.pagr.late{border-color:#a8572e}.pagr .btn{flex:none}
