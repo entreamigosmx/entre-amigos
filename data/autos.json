@@ -1241,5 +1241,33 @@
   "video": "fotos/kia-rio-hatchback-ex-2021/video.mp4",
   "videoPoster": "fotos/kia-rio-hatchback-ex-2021/video.jpg",
   "descripcion": "<p>Compacto, económico y fácil de manejar en la ciudad. Kia Rio Hatchback EX automático de un solo dueño, con factura original, servicios de agencia y solo 23,594 km.</p><h4>Motor y manejo</h4><ul><li>Motor 1.6L de 4 cilindros, 121 hp</li><li>Transmisión automática de 6 velocidades</li><li>Tracción delantera</li></ul><h4>Interior y tecnología</h4><ul><li>Pantalla táctil de 8 pulgadas con Apple CarPlay y Android Auto</li><li>Volante con controles de audio y teléfono</li><li>Asientos de tela en color negro</li><li>Aire acondicionado</li><li>Asientos traseros abatibles y cajuela amplia</li></ul><h4>Exterior</h4><ul><li>Color blanco</li><li>Rines de aluminio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Factura original</li><li>Servicios de agencia</li><li>23,594 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>"
+ },
+ {
+  "title": "Tesla Model Y Performance 2026",
+  "slug": "tesla-model-y-performance-2026",
+  "marca": "Tesla",
+  "modelo": "Model Y Performance",
+  "anio": 2026,
+  "precio": null,
+  "precioEspecial": false,
+  "categoria": "SUV eléctrica",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Eléctricos",
+   "Lujo"
+  ],
+  "kilometraje": 14500,
+  "disponible": true,
+  "destacado": false,
+  "orden": 1.2,
+  "foto": "fotos/tesla-model-y-performance-2026/01.jpg",
+  "galeria": [
+   "fotos/tesla-model-y-performance-2026/01.jpg"
+  ],
+  "nombre": "Tesla Model Y",
+  "version": "Performance AWD",
+  "descripcion": "<p>Prácticamente nueva y con la versión más rápida de la gama. Tesla Model Y Performance 2026 de un solo dueño, con factura original y solo 14,500 km.</p><h4>Desempeño</h4><ul><li>Doble motor con tracción integral (AWD)</li><li>De 0 a 100 km/h en 3.5 segundos</li><li>Autonomía de hasta 492 km (estimado EPA)</li><li>Suspensión adaptativa</li><li>Rines de 21 pulgadas</li></ul><h4>Interior y tecnología</h4><ul><li>Pantalla táctil central de 16 pulgadas</li><li>Pantalla trasera de 8 pulgadas para los pasajeros</li><li>Cupo para 5 adultos y hasta 2,138 litros de carga</li><li>Actualizaciones de software por internet</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Factura original</li><li>14,500 km</li><li>Batería y motor con garantía de fábrica de 8 años o 192,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "borrador": true
  }
 ]
