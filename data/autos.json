@@ -796,7 +796,7 @@
   "precio": 290000,
   "precioEspecial": false,
   "categoria": "Sedán",
-  "disponible": true,
+  "disponible": false,
   "destacado": false,
   "orden": 16.3,
   "foto": "fotos/mercedes-benz-c200-exclusive-2018/01.jpg",
