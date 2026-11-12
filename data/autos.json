@@ -1006,7 +1006,9 @@
   "transmision": "Manual de 6 velocidades",
   "portada": false,
   "nombre": "Ford Transit",
-  "version": "Courier"
+  "version": "Courier",
+  "videoBorrador": "fotos/ford-transit-2022/video.mp4",
+  "videoPosterBorrador": "fotos/ford-transit-2022/video.jpg"
  },
  {
   "title": "Can-Am Ryker 2023",
