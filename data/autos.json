@@ -999,7 +999,7 @@
   ],
   "foto": "fotos/ford-transit-2022/01.jpg",
   "kilometraje": 24000,
-  "descripcion": "<p>Van de carga compacta, ágil y económica, ideal para repartos en ciudad. De un solo dueño, con factura original y en excelente estado.</p><h4>Para trabajar</h4><ul><li>Área de carga con piso protegido y paneles de madera</li><li>Puertas traseras de doble hoja</li><li>Puerta lateral corrediza</li><li>Rejilla divisoria entre cabina y carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Radio con Bluetooth y entrada auxiliar</li><li>Transmisión manual de 6 velocidades</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>24,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "descripcion": "<p>Van de carga compacta, ágil y económica, ideal para repartos en ciudad. De un solo dueño, con factura original y en excelente estado.</p><h4>Para trabajar</h4><ul><li>Área de carga con piso protegido y paneles de madera</li><li>Puertas traseras de doble hoja</li><li>Puerta lateral corrediza</li><li>Rejilla divisoria entre cabina y carga</li></ul><h4>Cabina</h4><ul><li>Dos asientos en tela</li><li>Aire acondicionado</li><li>Radio con Bluetooth y entrada auxiliar</li></ul><h4>Motor</h4><ul><li>Motor 1.0 L EcoBoost turbo de 3 cilindros</li><li>98 hp</li><li>Transmisión manual de 6 velocidades</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>24,000 km</li><li>Factura original</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "categorias": [
    "Trabajo"
   ],
@@ -1007,8 +1007,8 @@
   "portada": false,
   "nombre": "Ford Transit",
   "version": "Courier",
-  "videoBorrador": "fotos/ford-transit-2022/video.mp4",
-  "videoPosterBorrador": "fotos/ford-transit-2022/video.jpg"
+  "video": "fotos/ford-transit-2022/video.mp4",
+  "videoPoster": "fotos/ford-transit-2022/video.jpg"
  },
  {
   "title": "Can-Am Ryker 2023",
