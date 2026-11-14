@@ -754,7 +754,7 @@
   "precioEspecial": true,
   "categoria": "SUV",
   "kilometraje": 71000,
-  "disponible": true,
+  "disponible": false,
   "destacado": false,
   "orden": 16,
   "foto": "fotos/suzuki-jimny-automatico-2021/01.jpg",
