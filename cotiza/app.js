@@ -205,7 +205,7 @@ onAuthStateChanged(auth, async (u) => {
 /* ---------------- App ---------------- */
 let TAB = "";
 const TABS = () => isAdmin()
-  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["empresas", "Empresas"], ["autos", "Autos ofrecidos"], ["cuentas", "Inversionistas"], ["personas", "Personas"], ["tasas", "Ajustes"]]
+  ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Cotizaciones"], ["prestamos", "Préstamos"], ["empresas", "Empresas"], ["autos", "Autos"], ["cuentas", "Inversionistas"], ["personas", "Personas"], ["tasas", "Ajustes"]]
   : USER?.rol === "empresa" ? [["emp", "Mi empresa"]]
   : (USER?.inversionista ? [["inv", "Mi inversión"]] : []).concat(isTeam() ? [["agenda", "Agenda"], ["cotizar", "Cotizar"], ["cotizaciones", "Mis cotizaciones"], ["prestamos", "Mis clientes"]]
   : (USER?.inversionista && !PRES.length ? [] : [["mis", "Mis préstamos"]]));
@@ -1140,6 +1140,101 @@ function repartoHandlers(twice) {
   });
 }
 
+/* ---------- Autos publicados en la página: nombre, precio y descuento ----------
+   Los cambios se guardan en autosweb/{slug} y la página (js/comun.js) los aplica encima de data/autos.json.
+   base* = cómo estaba el JSON al hacer el cambio: si después alguien cambia el JSON, manda el JSON.
+   Bajar el precio tacha el que se veía (o conserva el tachado más alto) y el auto sale en Ofertas. */
+let AVISTA = "pub", AEDIT = "", AMSG = "", AUTOSWEB = {}, AUTOS_RAW = null, AWEB_UN = null;
+const anteriorDe = (a) => (a.precioEspecial && a.precioAnterior > a.precio ? a.precioAnterior : 0);
+function mezclaAutos() {
+  if (!AUTOS_RAW) return;
+  AUTOS = AUTOS_RAW.map((r) => {
+    const a = { ...r }, o = AUTOSWEB[a.slug];
+    if (o && o.precio && o.baseNombre === (r.nombre || r.title) && (o.baseVersion || "") === (r.version || "") && o.basePrecio === (r.precio || 0) && (o.baseAnterior || 0) === anteriorDe(r)) {
+      a.editado = o;
+      if (o.nombre && (o.nombre !== o.baseNombre || (o.version || "") !== (o.baseVersion || ""))) { a.nombre = o.nombre; a.version = o.version || ""; a.title = [o.nombre, o.version, a.anio].filter(Boolean).join(" "); }
+      a.precio = o.precio;
+      if (o.precioAnterior > o.precio) { a.precioAnterior = o.precioAnterior; a.precioEspecial = true; } else { a.precioEspecial = false; delete a.precioAnterior; }
+    }
+    return a;
+  });
+}
+function escuchaAutosWeb() {
+  if (AWEB_UN) return;
+  AWEB_UN = onSnapshot(collection(db, "autosweb"), (s) => { AUTOSWEB = {}; s.docs.forEach((d) => (AUTOSWEB[d.id] = d.data())); mezclaAutos(); if (TAB === "autos" && AVISTA === "pub") vPublicados(); }, () => { AWEB_UN = null; });
+}
+const fotoChica = (a) => { const f = (a.galeria && a.galeria[0]) || a.foto || ""; if (!f) return ""; if (/^https?:/.test(f)) return f; const i = f.lastIndexOf("/"); return "../" + f.slice(0, i) + "/t" + f.slice(i); };
+async function vPublicados() {
+  escuchaAutosWeb();
+  if (!AUTOS_RAW) { $("panel").innerHTML = autosSeg() + `<div class="card"><p class="muted">Cargando autos…</p></div>`; bindAutosSeg(); await loadAutos(); if (TAB !== "autos" || AVISTA !== "pub") return; }
+  if (AEDIT && document.activeElement && document.activeElement.closest && document.activeElement.closest("#ae-form")) return; // no borrar lo que está escribiendo
+  const L = (AUTOS || []).filter((a) => !a.borrador), nOf = L.filter((a) => anteriorDe(a)).length;
+  $("panel").innerHTML = autosSeg() + `<div class="card"><div class="head"><h2>Autos publicados</h2><span class="muted">${L.length} en la página · ${nOf} en Ofertas</span></div>
+    <p class="muted">Cambia el nombre o el precio. Si bajas el precio, en la página se tacha el anterior y el auto sale en Ofertas. Los cambios se ven en la página en menos de un minuto.</p>
+    ${AMSG ? `<p class="ok">${esc(AMSG)}</p>` : ""}
+    <div class="list">${L.map((a) => {
+      const ant = anteriorDe(a), ed = AEDIT === a.slug, img = fotoChica(a);
+      const datos = [a.anio, a.kilometraje ? Number(a.kilometraje).toLocaleString("es-MX") + " km" : "Km a consultar", a.categoria, a.transmision].filter(Boolean).map(esc).join(" · ");
+      return `<div class="item apub" id="ap-${a.slug}">
+        <div class="apub-row">${img ? `<img src="${esc(img)}" alt="" loading="lazy" width="112" height="84">` : `<span class="apub-none">Sin foto</span>`}
+          <div class="apub-info"><b>${esc(a.nombre || a.title)}</b>${a.version ? `<span>${esc(a.version)}</span>` : ""}<span class="muted">${datos}</span>
+            <span class="apub-pr"><b>${mxn(a.precio)}</b>${ant ? `<s>${mxn(ant)}</s>` : ""}</span>
+            <span class="apub-tags">${ant ? `<span class="pill">Ofertas · ahorras ${mxn(ant - a.precio)}</span>` : ""}${a.apartado ? `<span class="pill warn">Apartado</span>` : ""}${a.editado ? `<span class="pill">Cambiado ${esc(fhora(a.editado.fecha))}</span>` : ""}</span></div></div>
+        ${ed ? `<form id="ae-form" class="apub-form" novalidate data-slug="${esc(a.slug)}">
+            <label>Nombre<input id="ae-nom" value="${esc(a.nombre || a.title)}" maxlength="60"></label>
+            <label>Versión (va abajo del nombre)<input id="ae-ver" value="${esc(a.version || "")}" maxlength="60" placeholder="Opcional"></label>
+            <label>Precio<input id="ae-pre" inputmode="numeric" value="${Number(a.precio).toLocaleString("es-MX")}"></label>
+            <label>O ponle un descuento de<input id="ae-desc" inputmode="numeric" placeholder="$ 0"></label>
+            <p class="muted" id="ae-prev"></p><p class="err" id="ae-err" hidden></p>
+            <div class="actions"><button class="btn primary sm" type="submit">Guardar</button>${ant ? `<button class="btn sm" type="button" id="ae-quitar">Quitar descuento</button>` : ""}${a.editado ? `<button class="btn sm" type="button" id="ae-orig">Regresar a como estaba</button>` : ""}<button class="link" type="button" id="ae-x">Cancelar</button></div>
+          </form>`
+        : `<div class="actions"><button class="btn sm primary" type="button" data-aed="${esc(a.slug)}">Editar</button><a class="btn sm" href="../auto.html?a=${encodeURIComponent(a.slug)}" target="_blank" rel="noopener">Ver en la página</a></div>`}
+      </div>`;
+    }).join("") || `<p class="muted">No hay autos publicados.</p>`}</div></div>`;
+  bindAutosSeg();
+  $("panel").querySelectorAll("[data-aed]").forEach((b) => (b.onclick = () => { AEDIT = b.dataset.aed; AMSG = ""; vPublicados(); const f = $("ae-form"); f && f.scrollIntoView({ block: "center" }); }));
+  const f = $("ae-form"); if (!f) return;
+  const a = L.find((x) => x.slug === f.dataset.slug), raw = AUTOS_RAW.find((x) => x.slug === a.slug), ant0 = anteriorDe(a);
+  // Precio tachado que tendría con el precio nuevo.
+  const tachado = (p) => (p < a.precio ? Math.max(ant0, a.precio) : ant0 && p < ant0 ? ant0 : 0);
+  const prev = () => {
+    const p = num($("ae-pre").value), t = p ? tachado(p) : 0;
+    $("ae-prev").innerHTML = !p ? "" : t ? `Así se verá: <b>${mxn(p)}</b> <s>${mxn(t)}</s>, en Ofertas (ahorras ${mxn(t - p)}).` : `Así se verá: <b>${mxn(p)}</b>, sin descuento.`;
+  };
+  const fmt = (el) => { const n = num(el.value); el.value = n ? n.toLocaleString("es-MX") : ""; };
+  $("ae-pre").oninput = () => { fmt($("ae-pre")); $("ae-desc").value = ""; prev(); };
+  $("ae-desc").oninput = () => { fmt($("ae-desc")); const d = num($("ae-desc").value); if (d > 0 && d < a.precio) $("ae-pre").value = (a.precio - d).toLocaleString("es-MX"); else if (!d) $("ae-pre").value = Number(a.precio).toLocaleString("es-MX"); prev(); };
+  prev();
+  const err = (m) => { $("ae-err").hidden = false; $("ae-err").textContent = m; };
+  const guarda = async (nombre, version, precio, precioAnterior, nota) => {
+    f.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    try {
+      await setDoc(doc(db, "autosweb", a.slug), { nombre, version, precio, precioAnterior, baseNombre: raw.nombre || raw.title, baseVersion: raw.version || "", basePrecio: raw.precio || 0, baseAnterior: anteriorDe(raw), fecha: new Date().toISOString(),
+        hist: arrayUnion({ fecha: new Date().toISOString(), nombre, version, precio, precioAnterior }) }, { merge: true });
+      AEDIT = ""; AMSG = nota; document.activeElement && document.activeElement.blur && document.activeElement.blur(); vPublicados();
+    } catch (e) {
+      f.querySelectorAll("button").forEach((b) => (b.disabled = false));
+      err(e.code === "permission-denied" ? "Falta publicar la actualización de seguridad (aviso de arriba). Tócala y vuelve a guardar." : "No se pudo guardar. Revisa tu conexión.");
+    }
+  };
+  f.onsubmit = (e) => {
+    e.preventDefault();
+    const limpio = (v) => v.trim().replace(/\s+/g, " ");
+    const nombre = limpio($("ae-nom").value), version = limpio($("ae-ver").value), p = num($("ae-pre").value), title = [nombre, version].filter(Boolean).join(" ");
+    if (!nombre) return err("Escribe el nombre.");
+    if (!p || p < 1000) return err("Escribe el precio.");
+    const t = tachado(p);
+    guarda(nombre, version, p, t, `${title}: ${mxn(p)}${t ? " (antes " + mxn(t) + ", sale en Ofertas)" : ""}. Ya está en la página.`);
+  };
+  $("ae-quitar") && ($("ae-quitar").onclick = () => guarda(a.nombre || a.title, a.version || "", a.precio, 0, `${a.nombre || a.title}: se quitó el descuento. Queda en ${mxn(a.precio)}.`));
+  $("ae-orig") && ($("ae-orig").onclick = async (e) => {
+    const b = e.currentTarget;
+    if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = `Toca otra vez: vuelve a ${[raw.nombre || raw.title, raw.version].filter(Boolean).join(" ")} en ${mxn(raw.precio)}`; return; }
+    try { await deleteDoc(doc(db, "autosweb", a.slug)); AEDIT = ""; AMSG = `${raw.title} regresó a como estaba.`; document.activeElement?.blur?.(); vPublicados(); } catch (er) { err("No se pudo. Revisa tu conexión."); }
+  });
+  $("ae-x").onclick = () => { AEDIT = ""; document.activeElement?.blur?.(); vPublicados(); };
+}
+
 /* ---------- Autos ofrecidos (los manda la gente desde "Vende tu auto") ---------- */
 const VEST = { nueva: "Nuevo", revision: "En revisión", propuesta: "Propuesta enviada", comprado: "Comprado", consignacion: "En consignación", descartado: "Descartado" };
 let VOPEN = "", VFOTOS = {}, VVER = false;
@@ -1149,9 +1244,15 @@ function cargaFotos(id) {
   const un = onSnapshot(collection(db, "ventas", id, "fotos"), (s) => { VFOTOS[id] = s.docs.map((d) => d.data()).sort((a, b) => a.i - b.i); un && un(); if (TAB === "autos") vAutos(); }, () => { VFOTOS[id] = []; });
 }
 const SLOTN = { frente: "Frente", atras: "Atrás", izq: "Costado izq.", der: "Costado der.", int1: "Interior del.", int2: "Interior tras.", tablero: "Kilometraje", motor: "Motor", serie: "No. de serie", llanta: "Llantas", factura: "Factura", tarjeta: "Tarjeta circ." };
-function vAutos() {
+function vAutos() { if (AVISTA === "pub") return vPublicados(); vOfrecidos(); }
+function autosSeg() {
+  const n = VENTAS.filter((v) => v.estado === "nueva").length;
+  return `<div class="seg" id="a-seg" style="margin-bottom:12px"><button type="button" data-av="pub" aria-pressed="${AVISTA === "pub"}">Publicados</button><button type="button" data-av="ofr" aria-pressed="${AVISTA === "ofr"}">Te ofrecen${n ? " (" + n + ")" : ""}</button></div>`;
+}
+function bindAutosSeg() { $("panel").querySelectorAll("[data-av]").forEach((b) => (b.onclick = () => { AVISTA = b.dataset.av; AEDIT = ""; vAutos(); })); }
+function vOfrecidos() {
   const L = VVER ? VENTAS : VENTAS.filter((v) => !["comprado", "descartado"].includes(v.estado));
-  $("panel").innerHTML = `<div class="card"><div class="head"><h2>Autos ofrecidos</h2>${VENTAS.length !== L.length || VVER ? `<button class="link" type="button" id="v-ver">${VVER ? "Solo activos" : "Ver todos (" + VENTAS.length + ")"}</button>` : ""}</div>
+  $("panel").innerHTML = autosSeg() + `<div class="card"><div class="head"><h2>Autos ofrecidos</h2>${VENTAS.length !== L.length || VVER ? `<button class="link" type="button" id="v-ver">${VVER ? "Solo activos" : "Ver todos (" + VENTAS.length + ")"}</button>` : ""}</div>
     <p class="muted">Autos que la gente te ofrece desde "Vende tu auto" en la página, con sus fotos y factura.</p>
     <div class="list">${L.length ? L.map((v) => {
       const open = VOPEN === v.id; if (open) cargaFotos(v.id);
@@ -1167,6 +1268,7 @@ function vAutos() {
         ${open ? (F ? `<div class="vgal">${F.map((f) => `<a href="${f.data}" target="_blank" rel="noopener" data-vimg><img src="${f.data}" alt="${esc(SLOTN[f.slot] || f.slot)}" loading="lazy"><span>${esc(SLOTN[f.slot] || "Extra")}</span></a>`).join("")}</div>` : `<p class="muted">Cargando fotos…</p>`) : ""}
       </div>`;
     }).join("") : `<p class="muted">Todavía no hay autos ofrecidos.</p>`}</div></div>`;
+  bindAutosSeg();
   $("v-ver") && ($("v-ver").onclick = () => { VVER = !VVER; vAutos(); });
   $("panel").querySelectorAll("[data-vopen]").forEach((b) => (b.onclick = () => { VOPEN = VOPEN === b.dataset.vopen ? "" : b.dataset.vopen; vAutos(); }));
   $("panel").querySelectorAll("select[data-vest]").forEach((s) => (s.onchange = () => updateDoc(doc(db, "ventas", s.dataset.vest), { estado: s.value })));
@@ -1181,7 +1283,7 @@ function vAutos() {
 }
 
 /* ---------- Reglas de seguridad: se publican desde la app con un toque ---------- */
-const RULES_V = 3; // subir este número cada vez que cambie firestore.rules
+const RULES_V = 4; // subir este número cada vez que cambie firestore.rules
 let RULES_CUR = null;
 async function publicarReglas(btn, out) {
   const say = (t, ok) => { out.textContent = t; out.className = ok ? "ok" : "err"; out.hidden = false; };
@@ -2947,8 +3049,9 @@ let AUTOS = null;
 const SITE = "https://ventaentreamigos.com";
 async function loadAutos() {
   if (AUTOS) return AUTOS;
-  try { const r = await fetch("../data/autos.json", { cache: "no-cache" }); AUTOS = (await r.json()).filter((a) => a.disponible).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999)); }
-  catch (e) { AUTOS = []; }
+  escuchaAutosWeb();
+  try { const r = await fetch("../data/autos.json", { cache: "no-cache" }); AUTOS_RAW = (await r.json()).filter((a) => a.disponible).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999)); mezclaAutos(); }
+  catch (e) { AUTOS_RAW = []; AUTOS = []; }
   return AUTOS;
 }
 async function vCotAuto() {

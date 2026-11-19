@@ -6,12 +6,40 @@ export const SITE = "https://ventaentreamigos.com";
 let cache = null;
 export async function autos() {
   if (cache) return cache;
+  const cp = cambiosApp();
   const r = await fetch(BASE + "data/autos.json", { cache: "no-cache" });
   if (!r.ok) throw new Error("inventario");
-  cache = (await r.json()).filter((a) => a.disponible && (BASE === "../" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
+  const [lista, cambios] = await Promise.all([r.json(), cp]);
+  cache = aplicaCambios(lista, cambios).filter((a) => a.disponible && (BASE === "../" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
   // Vista previa: video o fotos pendientes de aprobar (videoBorrador, galeriaBorrador) solo se ven en propuesta/.
   if (BASE === "../") cache.forEach((a) => { if (a.videoBorrador) { a.video = a.videoBorrador; a.videoPoster = a.videoPosterBorrador || a.videoPoster; } if (a.galeriaBorrador) { a.galeria = a.galeriaBorrador; a.foto = a.galeriaBorrador[0]; } });
   return cache;
+}
+// Cambios que el dueño hace desde su app (cotiza/, pestaña Autos): nombre, precio y descuento.
+// Viven en Firestore (autosweb/{slug}) y se aplican encima de data/autos.json solo si el JSON no ha cambiado
+// desde que se hizo el cambio (base*); si alguien edita el JSON después, manda el JSON.
+const FS = "https://firestore.googleapis.com/v1/projects/entre-amigos-financiera/databases/(default)/documents/autosweb?pageSize=300&key=AIzaSyDrp5lK7COul0RaI4nvN1vOx5sQ5tSJIW8";
+async function cambiosApp() {
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 2500);
+    const r = await fetch(FS, { signal: ctl.signal, cache: "no-cache" }); clearTimeout(t);
+    if (!r.ok) return {};
+    const val = (v) => (!v ? undefined : "stringValue" in v ? v.stringValue : "integerValue" in v ? Number(v.integerValue) : "doubleValue" in v ? v.doubleValue : undefined);
+    const out = {};
+    ((await r.json()).documents || []).forEach((d) => { const o = {}; Object.entries(d.fields || {}).forEach(([k, v]) => (o[k] = val(v))); out[d.name.split("/").pop()] = o; });
+    return out;
+  } catch (e) { return {}; }
+}
+export function aplicaCambios(lista, cambios) {
+  lista.forEach((a) => {
+    const o = cambios[a.slug]; if (!o || !o.precio) return;
+    const ant = a.precioEspecial && a.precioAnterior > a.precio ? a.precioAnterior : 0;
+    if (o.baseNombre !== (a.nombre || a.title) || (o.baseVersion || "") !== (a.version || "") || o.basePrecio !== (a.precio || 0) || (o.baseAnterior || 0) !== ant) return;
+    if (o.nombre && (o.nombre !== o.baseNombre || (o.version || "") !== (o.baseVersion || ""))) { a.nombre = o.nombre; a.version = o.version || ""; a.title = [o.nombre, o.version, a.anio].filter(Boolean).join(" "); }
+    a.precio = o.precio;
+    if (o.precioAnterior > o.precio) { a.precioAnterior = o.precioAnterior; a.precioEspecial = true; } else { a.precioEspecial = false; delete a.precioAnterior; }
+  });
+  return lista;
 }
 export function src(path, size) {
   if (!path) return "";
