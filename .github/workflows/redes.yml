@@ -1,0 +1,59 @@
+name: Publicar auto en Instagram y Facebook
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Auto (slug de data/autos.json). Escribe 'verificar' para solo probar la conexión."
+        required: true
+      precio:
+        description: "Mostrar precio en la portada"
+        type: boolean
+        default: true
+      fotos:
+        description: "Fotos a usar, en orden (ej. 02,05,07). Vacío = las primeras 9 de la galería"
+        required: false
+      solo:
+        description: "Dónde publicar"
+        type: choice
+        options: [ambos, ig, fb, ninguno]
+        default: ambos
+permissions:
+  contents: write
+concurrency: redes
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm i --no-save playwright@1.48.2 && npx playwright install --with-deps chromium
+      - name: Probar conexión con Meta
+        if: inputs.slug == 'verificar'
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}" }
+        run: node tools/redes/publicar.mjs verificar
+      - name: Preparar portada, fotos y textos
+        if: inputs.slug != 'verificar'
+        env: { SLUG: "${{ inputs.slug }}", FOTOS: "${{ inputs.fotos }}", PRECIO: "${{ inputs.precio }}" }
+        run: |
+          ARGS=""; [ "$PRECIO" = "true" ] || ARGS="--sin-precio"; [ -n "$FOTOS" ] && ARGS="$ARGS --fotos $FOTOS"
+          node tools/redes/publicar.mjs preparar "$SLUG" $ARGS
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add "fotos/$SLUG/redes"
+          git commit -m "Redes: prepara $SLUG" || echo "sin cambios"
+          git push
+          echo "RAW_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Publicar
+        if: inputs.slug != 'verificar' && inputs.solo != 'ninguno'
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SLUG: "${{ inputs.slug }}", SOLO: "${{ inputs.solo }}" }
+        run: |
+          ARGS=""; [ "$SOLO" = "ambos" ] || ARGS="--solo $SOLO"
+          node tools/redes/publicar.mjs publicar "$SLUG" $ARGS
+      - name: Guardar registro
+        if: always() && inputs.slug != 'verificar' && inputs.solo != 'ninguno'
+        env: { SLUG: "${{ inputs.slug }}" }
+        run: |
+          git add data/redes.json 2>/dev/null || true
+          git commit -m "Redes: publicado $SLUG" || echo "sin cambios"
+          git push
