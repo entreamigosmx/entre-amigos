@@ -829,7 +829,7 @@
   "marca": "Mercedes-Benz",
   "modelo": "CLA 250 Sport AMG",
   "anio": 2018,
-  "precio": 270000,
+  "precio": 261800,
   "precioEspecial": true,
   "categoria": "Sedán",
   "kilometraje": 99600,
@@ -861,7 +861,7 @@
   "portada": false,
   "nombre": "Mercedes-Benz CLA 250",
   "version": "Sport AMG",
-  "precioAnterior": 290000
+  "precioAnterior": 270000
  },
  {
   "title": "Toyota Sequoia Limited 2013",
@@ -1096,26 +1096,8 @@
   "disponible": true,
   "destacado": true,
   "orden": 14.5,
-  "foto": "fotos/bmw-f900-gs-2024/01.jpg",
+  "foto": "fotos/bmw-f900-gs-2024/nuevas/01.jpg",
   "galeria": [
-   "fotos/bmw-f900-gs-2024/01.jpg",
-   "fotos/bmw-f900-gs-2024/02.jpg",
-   "fotos/bmw-f900-gs-2024/03.jpg",
-   "fotos/bmw-f900-gs-2024/04.jpg",
-   "fotos/bmw-f900-gs-2024/05.jpg",
-   "fotos/bmw-f900-gs-2024/06.jpg",
-   "fotos/bmw-f900-gs-2024/07.jpg",
-   "fotos/bmw-f900-gs-2024/08.jpg"
-  ],
-  "descripcion": "<p>La aventura comienza donde termina el camino. No todas las F 900 GS son iguales: esta unidad fue equipada con más de $70,000 en accesorios premium, lista para viajar desde el primer día. Modelo 2024 con 9,000 km, un solo dueño y factura original. Seminueva certificada por Entre Amigos.</p><h4>Protección</h4><ul><li>Defensas con protector</li><li>Skid plate</li><li>Protector de faro</li><li>Handguards</li></ul><h4>Confort y manejo</h4><ul><li>Cristal alto</li><li>Alzas de manubrio</li><li>Extensión de pata lateral</li><li>Parador central</li><li>Espejos BMW Option 719</li></ul><h4>Equipaje</h4><ul><li>Top case</li><li>Maletas laterales</li><li>Tank bag</li></ul><h4>Tecnología e iluminación</h4><ul><li>Pantalla Carpuride con Apple CarPlay y Android Auto</li><li>Dos pares de faros LED auxiliares</li><li>Estrobo trasero</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>9,000 km</li><li>Factura original</li><li>Servicios realizados en tiempo y forma</li></ul><p>Recibimos tu vehículo a cuenta y trabajamos con los principales bancos y financieras del país. Agenda tu cita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "categorias": [
-   "Motos"
-  ],
-  "portada": false,
-  "nombre": "BMW F 900 GS",
-  "version": "",
-  "precioAnterior": 329000,
-  "galeriaBorrador": [
    "fotos/bmw-f900-gs-2024/nuevas/01.jpg",
    "fotos/bmw-f900-gs-2024/nuevas/02.jpg",
    "fotos/bmw-f900-gs-2024/nuevas/03.jpg",
@@ -1126,8 +1108,16 @@
    "fotos/bmw-f900-gs-2024/nuevas/08.jpg",
    "fotos/bmw-f900-gs-2024/nuevas/09.jpg"
   ],
-  "videoBorrador": "fotos/bmw-f900-gs-2024/nuevas/video.mp4",
-  "videoPosterBorrador": "fotos/bmw-f900-gs-2024/nuevas/video.jpg"
+  "descripcion": "<p>La aventura comienza donde termina el camino. No todas las F 900 GS son iguales: esta unidad fue equipada con más de $70,000 en accesorios premium, lista para viajar desde el primer día. Modelo 2024 con 9,000 km, un solo dueño y factura original. Seminueva certificada por Entre Amigos.</p><h4>Protección</h4><ul><li>Defensas con protector</li><li>Skid plate</li><li>Protector de faro</li><li>Handguards</li></ul><h4>Confort y manejo</h4><ul><li>Cristal alto</li><li>Alzas de manubrio</li><li>Extensión de pata lateral</li><li>Parador central</li><li>Espejos BMW Option 719</li></ul><h4>Equipaje</h4><ul><li>Top case</li><li>Maletas laterales</li><li>Tank bag</li></ul><h4>Tecnología e iluminación</h4><ul><li>Pantalla Carpuride con Apple CarPlay y Android Auto</li><li>Dos pares de faros LED auxiliares</li><li>Estrobo trasero</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>9,000 km</li><li>Factura original</li><li>Servicios realizados en tiempo y forma</li></ul><p>Recibimos tu vehículo a cuenta y trabajamos con los principales bancos y financieras del país. Agenda tu cita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "categorias": [
+   "Motos"
+  ],
+  "portada": false,
+  "nombre": "BMW F 900 GS",
+  "version": "",
+  "precioAnterior": 329000,
+  "video": "fotos/bmw-f900-gs-2024/nuevas/video.mp4",
+  "videoPoster": "fotos/bmw-f900-gs-2024/nuevas/video.jpg"
  },
  {
   "title": "Changan Hunter 4x4 2025",
@@ -1341,7 +1331,6 @@
   "version": "R-Dynamic",
   "video": "fotos/land-rover-discovery-sport-r-dynamic-2023/video.mp4",
   "videoPoster": "fotos/land-rover-discovery-sport-r-dynamic-2023/video.jpg",
-  "portada": false,
-  "borrador": true
+  "portada": false
  }
 ]
