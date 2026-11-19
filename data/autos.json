@@ -1378,8 +1378,7 @@
   "nombre": "Volkswagen Beetle",
   "version": "Sound · Estándar",
   "video": "fotos/volkswagen-beetle-sound-2018/video.mp4",
-  "videoPoster": "fotos/volkswagen-beetle-sound-2018/video.jpg",
-  "borrador": true
+  "videoPoster": "fotos/volkswagen-beetle-sound-2018/video.jpg"
  },
  {
   "title": "Kia Seltos EX Pack 2021",
@@ -1420,7 +1419,6 @@
   "nombre": "Kia Seltos",
   "version": "EX Pack automática",
   "video": "fotos/kia-seltos-ex-pack-2021/video.mp4",
-  "videoPoster": "fotos/kia-seltos-ex-pack-2021/video.jpg",
-  "borrador": true
+  "videoPoster": "fotos/kia-seltos-ex-pack-2021/video.jpg"
  }
 ]
