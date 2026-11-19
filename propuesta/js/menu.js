@@ -10,7 +10,7 @@
     ['creditos.html', 'Créditos'],
     ['nosotros.html', 'Nosotros'],
     ['nosotros.html#clientes', 'Nuestros clientes'],
-    ['./#visita', 'Visítanos']
+    ['visitanos.html', 'Visítanos']
   ];
   var here = location.pathname.split('/').pop() || './';
   var btn = document.createElement('button');
