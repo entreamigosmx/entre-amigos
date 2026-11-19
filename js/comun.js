@@ -9,8 +9,8 @@ export async function autos() {
   const r = await fetch(BASE + "data/autos.json", { cache: "no-cache" });
   if (!r.ok) throw new Error("inventario");
   cache = (await r.json()).filter((a) => a.disponible && (BASE === "../" || !a.borrador)).sort((a, b) => (a.orden ?? 999) - (b.orden ?? 999));
-  // Vista previa: un video pendiente de aprobar (videoBorrador) solo se ve en propuesta/.
-  if (BASE === "../") cache.forEach((a) => { if (a.videoBorrador) { a.video = a.videoBorrador; a.videoPoster = a.videoPosterBorrador || a.videoPoster; } });
+  // Vista previa: video o fotos pendientes de aprobar (videoBorrador, galeriaBorrador) solo se ven en propuesta/.
+  if (BASE === "../") cache.forEach((a) => { if (a.videoBorrador) { a.video = a.videoBorrador; a.videoPoster = a.videoPosterBorrador || a.videoPoster; } if (a.galeriaBorrador) { a.galeria = a.galeriaBorrador; a.foto = a.galeriaBorrador[0]; } });
   return cache;
 }
 export function src(path, size) {

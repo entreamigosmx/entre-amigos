@@ -1114,7 +1114,20 @@
   "portada": false,
   "nombre": "BMW F 900 GS",
   "version": "",
-  "precioAnterior": 329000
+  "precioAnterior": 329000,
+  "galeriaBorrador": [
+   "fotos/bmw-f900-gs-2024/nuevas/01.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/02.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/03.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/04.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/05.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/06.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/07.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/08.jpg",
+   "fotos/bmw-f900-gs-2024/nuevas/09.jpg"
+  ],
+  "videoBorrador": "fotos/bmw-f900-gs-2024/nuevas/video.mp4",
+  "videoPosterBorrador": "fotos/bmw-f900-gs-2024/nuevas/video.jpg"
  },
  {
   "title": "Changan Hunter 4x4 2025",
@@ -1287,5 +1300,48 @@
   "descripcion": "<p>Prácticamente nueva y con la versión más rápida de la gama. Tesla Model Y Performance 2026 de un solo dueño, con factura original y solo 14,500 km.</p><h4>Desempeño</h4><ul><li>Doble motor con tracción integral (AWD)</li><li>De 0 a 100 km/h en 3.5 segundos</li><li>Autonomía de hasta 492 km (estimado EPA)</li><li>Suspensión adaptativa</li></ul><h4>Interior y tecnología</h4><ul><li>Interior negro con asientos deportivos Performance</li><li>Pantalla táctil central de 16 pulgadas</li><li>Pantalla trasera de 8 pulgadas para los pasajeros</li><li>Cupo para 5 adultos y hasta 2,138 litros de carga</li><li>Actualizaciones de software por internet</li></ul><h4>Exterior</h4><ul><li>Color gris</li><li>Alerón Performance en fibra de carbono</li><li>Rines de 21 pulgadas con cálipers rojos</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>Factura original</li><li>14,500 km</li><li>Batería y motor con garantía de fábrica de 8 años o 192,000 km</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "video": "fotos/tesla-model-y-performance-2026/video.mp4",
   "videoPoster": "fotos/tesla-model-y-performance-2026/video.jpg"
+ },
+ {
+  "title": "Land Rover Discovery Sport R-Dynamic 2023",
+  "slug": "land-rover-discovery-sport-r-dynamic-2023",
+  "marca": "Land Rover",
+  "modelo": "Discovery Sport R-Dynamic",
+  "anio": 2023,
+  "precio": 789000,
+  "precioEspecial": false,
+  "categoria": "SUV",
+  "kilometraje": 39000,
+  "transmision": "Automática de 9 velocidades",
+  "combustible": "Gasolina",
+  "disponible": true,
+  "destacado": true,
+  "orden": 6.7,
+  "galeria": [
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/01.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/02.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/03.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/04.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/05.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/06.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/07.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/08.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/09.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/10.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/11.jpg",
+   "fotos/land-rover-discovery-sport-r-dynamic-2023/12.jpg"
+  ],
+  "descripcion": "<p>SUV premium compacta con el estilo deportivo de la versión R-Dynamic: interiores en piel con costuras en contraste, tablero digital y tracción integral. Modelo 2023 con 39,000 km, un solo dueño, factura original y todos sus servicios de agencia. Aún con garantía. Seminueva certificada por Entre Amigos.</p><h4>Motor y tracción</h4><ul><li>Motor 2.0L turbo de 4 cilindros a gasolina</li><li>Transmisión automática de 9 velocidades</li><li>Tracción integral (AWD)</li><li>Sistema Terrain Response con modos de manejo</li></ul><h4>Interior y tecnología</h4><ul><li>Asientos en piel con costuras rojas en contraste</li><li>Tablero de instrumentos digital</li><li>Pantalla táctil central con Apple CarPlay y Android Auto</li><li>Volante multifunciones con acabados R-Dynamic</li><li>Selector de transmisión giratorio</li></ul><h4>Exterior</h4><ul><li>Paquete de diseño R-Dynamic</li><li>Faros LED con firma luminosa</li><li>Calaveras LED</li><li>Rines de aluminio</li><li>Toldo en negro</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>39,000 km</li><li>Factura original</li><li>Servicios de agencia</li><li>Aún con garantía</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "foto": "fotos/land-rover-discovery-sport-r-dynamic-2023/01.jpg",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ],
+  "nombre": "Land Rover Discovery Sport",
+  "version": "R-Dynamic",
+  "video": "fotos/land-rover-discovery-sport-r-dynamic-2023/video.mp4",
+  "videoPoster": "fotos/land-rover-discovery-sport-r-dynamic-2023/video.jpg",
+  "portada": false,
+  "borrador": true
  }
 ]
