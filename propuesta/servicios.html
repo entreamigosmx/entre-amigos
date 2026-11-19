@@ -36,7 +36,7 @@
 .steps div{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:6px}
 .steps svg,.ic{width:28px;height:28px;fill:none;stroke:var(--lime);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .steps b{font-size:17px}.steps span{font-size:15px;color:var(--muted);line-height:1.35}
-.pk{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.pk{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
 .pkc{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:8px;align-content:start}
 .pkc.top{border-color:var(--lime)}
 .pkc .lvl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -73,6 +73,21 @@
 .cta-band .btn{background:var(--lime-ink);color:var(--ink);border-color:var(--lime-ink)}
 .mini{font-size:15px;color:var(--muted);margin:14px 0 0}
 section.blk.short{padding-block:clamp(40px,6vw,72px)}
+@media (min-width:900px){
+.pk{gap:18px}
+.pkc{padding:26px;gap:12px;display:flex;flex-direction:column}
+.pkc .badge{align-self:flex-start}
+.pkc details{margin-top:auto;padding-top:12px}
+.pkc h3{font-size:38px}
+.pkc p{font-size:18px}
+.pkc .lvl{font-size:13px}
+.pkc summary{font-size:16px}
+.pkc ul{font-size:16px}
+.tags{gap:8px}
+.tags span{font-size:15px;padding:6px 14px}
+.chips{justify-content:center}
+.chips a{font-size:16px;padding:9px 18px}
+}
 </style>
 </head>
 <body class="home2 nos">
