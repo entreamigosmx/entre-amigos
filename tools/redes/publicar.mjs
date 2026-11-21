@@ -167,10 +167,10 @@ async function publicar(slug, { solo, forzar } = {}) {
 }
 
 // Historias de Instagram con las imágenes historia-*.jpg de una carpeta del repo (p. ej. redes/disponibles).
-async function historias(dirRel) {
+async function historias(dirRel, prefijos = 'historia') {
   const token = process.env.META_TOKEN, ref = process.env.RAW_REF;
   if (!token || !ref) throw new Error('Faltan META_TOKEN o RAW_REF.');
-  const imgs = readdirSync(resolve(RAIZ, dirRel)).filter(n => /^historia-\d+\.jpg$/.test(n)).sort();
+  const imgs = readdirSync(resolve(RAIZ, dirRel)).filter(n => new RegExp(`^(${prefijos.split(',').join('|')})-\\d+\\.jpg$`).test(n)).sort();
   if (!imgs.length) throw new Error(`No hay historias en ${dirRel}`);
   const { ig } = await cuentas(token);
   for (const n of imgs) {
@@ -198,7 +198,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const opt = k => { const i = r.indexOf(k); return i >= 0 ? r[i + 1] : undefined; };
   const run = { preparar: () => preparar(slug, { conPrecio: !r.includes('--sin-precio'), fotos: opt('--fotos') }),
     publicar: () => publicar(slug, { solo: opt('--solo'), forzar: r.includes('--forzar') }),
-    historias: () => historias(slug),
+    historias: () => historias(slug, r[0]),
     verificar: () => verificar() }[accion];
   if (!run) { console.error('Uso: preparar|publicar|verificar <slug>'); process.exit(1); }
   run().catch(e => { console.error('ERROR:', e.message); process.exit(1); });
