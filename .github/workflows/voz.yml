@@ -1,0 +1,18 @@
+name: Voz de muestra para videos
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["tools/voz/*.json"]
+permissions:
+  contents: write
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install edge-tts
+      - run: |
+          for g in tools/voz/*.json; do n=$(basename $g .json); python3 tools/voz/generar.py $g tools/voz/salida/$n; done
+      - run: |
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add tools/voz/salida && git commit -m "Voz de muestra generada" && git push || true
