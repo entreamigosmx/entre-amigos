@@ -12,6 +12,10 @@ on:
       fotos:
         description: "Fotos a usar, en orden (ej. 02,05,07). Vacío = las primeras 9. Con slug 'destacadas': grupo de historias (servicios, ubicacion o resenas)"
         required: false
+      historia:
+        description: "Publicar también la historia individual del auto"
+        type: boolean
+        default: false
       solo:
         description: "Dónde publicar"
         type: choice
@@ -72,11 +76,11 @@ jobs:
           echo "RAW_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Publicar
         if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
-        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SLUG: "${{ inputs.slug }}", SOLO: "${{ inputs.solo }}" }
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SLUG: "${{ inputs.slug }}", SOLO: "${{ inputs.solo }}", HISTORIA: "${{ inputs.historia }}" }
         run: |
           ARGS=""; [ "$SOLO" = "ambos" ] || ARGS="--solo $SOLO"
           node tools/redes/publicar.mjs publicar "$SLUG" $ARGS
-          [ "$SOLO" = "fb" ] || node tools/redes/publicar.mjs historias "fotos/$SLUG/redes"
+          [ "$SOLO" = "fb" ] || [ "$HISTORIA" != "true" ] || node tools/redes/publicar.mjs historias "fotos/$SLUG/redes"
       - name: Guardar registro
         if: always() && inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
         env: { SLUG: "${{ inputs.slug }}" }
