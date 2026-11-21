@@ -1,0 +1,179 @@
+// Publica un auto en Instagram (carrusel) y en la página de Facebook, sin Canva.
+//
+//   node tools/redes/publicar.mjs preparar <slug> [--sin-precio] [--fotos 01,03,05]
+//       Genera en fotos/<slug>/redes/: portada.jpg, 01.jpg... (1080x1350) y texto.txt
+//       (texto para Instagram/Facebook y para Marketplace). No publica nada.
+//   node tools/redes/publicar.mjs publicar <slug> [--solo ig|fb] [--forzar]
+//       Sube lo preparado. Necesita META_TOKEN (secreto de GitHub) y RAW_REF (commit
+//       donde ya están las imágenes, para que Meta las descargue de GitHub).
+//
+// Lo publicado se anota en data/redes.json para no repetir un auto por error.
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { html as portadaHTML } from './portada.mjs';
+const require = createRequire(import.meta.url);
+
+const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const REPO = 'entreamigosmx/entre-amigos';
+const GRAPH = `https://graph.facebook.com/${process.env.META_API_VERSION || 'v24.0'}`;
+const MAX_FOTOS = 9; // Instagram: 10 por carrusel = portada + 9 fotos
+const b64 = p => `data:image/jpeg;base64,` + readFileSync(p).toString('base64');
+const mx = n => '$' + Math.round(n).toLocaleString('en-US');
+const leeJSON = (p, d) => existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : d;
+
+function autoDe(slug) {
+  const autos = leeJSON(resolve(RAIZ, 'data/autos.json'), []);
+  const a = autos.find(x => x.slug === slug);
+  if (!a) throw new Error(`No existe el auto "${slug}" en data/autos.json`);
+  if (a.borrador) throw new Error(`"${slug}" sigue en borrador: primero publícalo en la página`);
+  if (a.disponible === false) throw new Error(`"${slug}" está marcado como vendido`);
+  return a;
+}
+
+const sinHTML = s => (s || '').replace(/<li>/g, '- ').replace(/<\/(p|h4|li)>/g, '\n').replace(/<[^>]+>/g, '')
+  .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+
+function textos(a, conPrecio) {
+  const nombre = a.nombre || `${a.marca} ${a.modelo}`;
+  const titulo = `${nombre} ${a.version || ''} ${a.anio}`.replace(/\s+/g, ' ').trim();
+  const datos = [a.kilometraje && `${Math.round(a.kilometraje).toLocaleString('en-US')} km`,
+    a.transmision && a.transmision.split(' de ')[0], a.combustible].filter(Boolean).join(' | ');
+  const precio = conPrecio && a.precio ? `Precio: ${mx(a.precio)}${a.precioAnterior ? ` (antes ${mx(a.precioAnterior)})` : ''}` : 'Precio por WhatsApp';
+  const tags = ['EntreAmigos', 'AutosGuadalajara', 'Seminuevos', 'Guadalajara', a.marca, nombre]
+    .map(t => '#' + t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, ''));
+  const ficha = `ventaentreamigos.com/auto.html?a=${a.slug}`;
+  const redes = [
+    `${titulo}`, '', datos, precio, '',
+    'Crédito con enganche desde 35%. Recibimos tu auto a cuenta.',
+    'Escríbenos por WhatsApp: 33 3306 3319',
+    'Visítanos en Av. Aztecas 1021, Col. Monraz, Guadalajara.', '',
+    'Fotos, video y ficha completa en el enlace del perfil.', '',
+    'Más que clientes, amigos.', '', [...new Set(tags)].join(' '),
+  ].join('\n');
+  const facebook = redes.replace('en el enlace del perfil.', `aquí: https://${ficha}`);
+  const marketplace = [
+    `TÍTULO: ${titulo}`, `PRECIO: ${a.precio ? Math.round(a.precio) : ''}`,
+    `AÑO: ${a.anio}   MARCA: ${a.marca}   MODELO: ${a.modelo}`,
+    a.kilometraje ? `KILOMETRAJE: ${Math.round(a.kilometraje)}` : '', '',
+    'DESCRIPCIÓN:', `${titulo}. ${datos}.`, sinHTML(a.descripcion), '',
+    'Crédito con enganche desde 35%. Recibimos tu auto a cuenta.',
+    'WhatsApp 33 3306 3319. Av. Aztecas 1021, Col. Monraz, Guadalajara.',
+    `Ficha completa: https://${ficha}`, 'Entre Amigos. Más que clientes, amigos.',
+  ].filter(l => l !== null).join('\n').replace(/\n{3,}/g, '\n\n');
+  return { redes, facebook, marketplace };
+}
+
+// Foto a 1080x1350 (4:5). Vertical: recorte centrado. Horizontal: completa sobre fondo difuminado.
+const fotoHTML = src => `<!doctype html><html><body style="margin:0;width:1080px;height:1350px;overflow:hidden;background:#0a0b0a;position:relative">
+<div style="position:absolute;inset:-40px;background:url(${src}) center/cover;filter:blur(30px) brightness(.55)"></div>
+<img id="f" src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+<script>const f=document.getElementById('f');f.onload=()=>{const r=f.naturalWidth/f.naturalHeight;if(r>.9)f.style.objectFit='contain'};</script>
+</body></html>`;
+
+async function preparar(slug, { conPrecio = true, fotos } = {}) {
+  const a = autoDe(slug);
+  const dir = resolve(RAIZ, `fotos/${slug}/redes`);
+  mkdirSync(dir, { recursive: true });
+  let lista = (a.galeria || [a.foto]).filter(p => !/^https?:/.test(p));
+  if (fotos) lista = fotos.split(',').map(n => `fotos/${slug}/${n.trim()}.jpg`);
+  lista = lista.filter(p => p !== a.foto).slice(0, MAX_FOTOS);
+  const { chromium } = require('playwright');
+  const b = await chromium.launch();
+  const pg = await b.newPage({ viewport: { width: 1080, height: 1350 } });
+  await pg.setContent(portadaHTML(a, b64(resolve(RAIZ, a.foto)), conPrecio), { waitUntil: 'networkidle' });
+  await pg.evaluate(() => document.fonts.ready);
+  await pg.screenshot({ path: resolve(dir, 'portada.jpg'), type: 'jpeg', quality: 90 });
+  const salida = ['portada.jpg'];
+  for (const [i, p] of lista.entries()) {
+    const nombre = String(i + 1).padStart(2, '0') + '.jpg';
+    await pg.setContent(fotoHTML(b64(resolve(RAIZ, p))), { waitUntil: 'load' });
+    await pg.screenshot({ path: resolve(dir, nombre), type: 'jpeg', quality: 88 });
+    salida.push(nombre);
+  }
+  await b.close();
+  const t = textos(a, conPrecio);
+  writeFileSync(resolve(dir, 'texto.txt'), `=== INSTAGRAM ===\n${t.redes}\n\n=== FACEBOOK ===\n${t.facebook}\n\n=== MARKETPLACE ===\n${t.marketplace}\n`);
+  writeFileSync(resolve(dir, 'publicacion.json'), JSON.stringify({ slug, imagenes: salida, instagram: t.redes, facebook: t.facebook, marketplace: t.marketplace }, null, 1));
+  console.log(`Listo: ${salida.length} imágenes y texto en fotos/${slug}/redes/`);
+}
+
+async function graph(ruta, params = {}, metodo = 'POST') {
+  const url = new URL(GRAPH + ruta);
+  const opt = { method: metodo };
+  if (metodo === 'GET') Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  else opt.body = new URLSearchParams(params);
+  const r = await fetch(url, opt);
+  const j = await r.json();
+  if (j.error) throw new Error(`Meta respondió: ${j.error.message} (código ${j.error.code})`);
+  return j;
+}
+const espera = ms => new Promise(r => setTimeout(r, ms));
+
+async function cuentas(token) {
+  const { data } = await graph('/me/accounts', { fields: 'id,name,access_token,instagram_business_account{id,username}', access_token: token }, 'GET');
+  const pagina = data.find(p => p.id === process.env.META_PAGE_ID) || data.find(p => p.instagram_business_account);
+  if (!pagina) throw new Error('El token no ve ninguna página con Instagram ligado. Revisa "Asignar activos" del usuario del sistema.');
+  return { pagina, ig: pagina.instagram_business_account };
+}
+
+async function publicar(slug, { solo, forzar } = {}) {
+  const token = process.env.META_TOKEN, ref = process.env.RAW_REF;
+  if (!token) throw new Error('Falta META_TOKEN (secreto de GitHub).');
+  if (!ref) throw new Error('Falta RAW_REF (commit con las imágenes).');
+  const dir = resolve(RAIZ, `fotos/${slug}/redes`);
+  const pub = leeJSON(resolve(dir, 'publicacion.json'), null);
+  if (!pub) throw new Error(`Primero corre: preparar ${slug}`);
+  const regPath = resolve(RAIZ, 'data/redes.json');
+  const reg = leeJSON(regPath, {});
+  const ya = reg[slug] || {};
+  const url = n => `https://raw.githubusercontent.com/${REPO}/${ref}/fotos/${slug}/redes/${n}`;
+  const { pagina, ig } = await cuentas(token);
+  const hacerIG = solo !== 'fb' && (forzar || !ya.instagram);
+  const hacerFB = solo !== 'ig' && (forzar || !ya.facebook);
+
+  if (hacerIG) {
+    const hijos = [];
+    for (const n of pub.imagenes) hijos.push((await graph(`/${ig.id}/media`, { image_url: url(n), is_carousel_item: 'true', access_token: token })).id);
+    const car = await graph(`/${ig.id}/media`, { media_type: 'CAROUSEL', children: hijos.join(','), caption: pub.instagram, access_token: token });
+    for (let i = 0; i < 30; i++) {
+      const s = await graph(`/${car.id}`, { fields: 'status_code', access_token: token }, 'GET');
+      if (s.status_code === 'FINISHED') break;
+      if (s.status_code === 'ERROR') throw new Error('Instagram no pudo procesar las imágenes.');
+      await espera(5000);
+    }
+    const p = await graph(`/${ig.id}/media_publish`, { creation_id: car.id, access_token: token });
+    const { permalink } = await graph(`/${p.id}`, { fields: 'permalink', access_token: token }, 'GET');
+    ya.instagram = { id: p.id, url: permalink, fecha: new Date().toISOString() };
+    console.log('Instagram:', permalink);
+  } else if (solo !== 'fb') console.log('Instagram: ya estaba publicado', ya.instagram?.url);
+
+  if (hacerFB) {
+    const pt = pagina.access_token, fotos = [];
+    for (const n of pub.imagenes) fotos.push((await graph(`/${pagina.id}/photos`, { url: url(n), published: 'false', access_token: pt })).id);
+    const post = await graph(`/${pagina.id}/feed`, { message: pub.facebook, attached_media: JSON.stringify(fotos.map(id => ({ media_fbid: id }))), access_token: pt });
+    ya.facebook = { id: post.id, url: `https://www.facebook.com/${post.id}`, fecha: new Date().toISOString() };
+    console.log('Facebook:', ya.facebook.url);
+  } else if (solo !== 'ig') console.log('Facebook: ya estaba publicado', ya.facebook?.url);
+
+  reg[slug] = ya;
+  writeFileSync(regPath, JSON.stringify(reg, null, 1) + '\n');
+}
+
+async function verificar() {
+  const token = process.env.META_TOKEN;
+  if (!token) throw new Error('Falta META_TOKEN (secreto de GitHub).');
+  const { pagina, ig } = await cuentas(token);
+  console.log(`Conexión correcta. Página: ${pagina.name}. Instagram: @${ig.username}.`);
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const [accion, slug, ...r] = process.argv.slice(2);
+  const opt = k => { const i = r.indexOf(k); return i >= 0 ? r[i + 1] : undefined; };
+  const run = { preparar: () => preparar(slug, { conPrecio: !r.includes('--sin-precio'), fotos: opt('--fotos') }),
+    publicar: () => publicar(slug, { solo: opt('--solo'), forzar: r.includes('--forzar') }),
+    verificar: () => verificar() }[accion];
+  if (!run) { console.error('Uso: preparar|publicar|verificar <slug>'); process.exit(1); }
+  run().catch(e => { console.error('ERROR:', e.message); process.exit(1); });
+}
