@@ -85,7 +85,7 @@ export async function generar(salida) {
 
   const S = [
     { icono: 'servicios', k: 'QUÉ HACEMOS', titulo: 'Servicios', texto: 'Todo lo que necesitas para comprar o vender tu auto, en un solo lugar y con trato entre amigos.',
-      puntos: ['Venta de autos seleccionados', 'Consignación', 'Te compramos tu auto', 'Toma a cuenta', 'Crédito', 'Detallado, gestoría y seguros'] },
+      puntos: ['Venta de autos seleccionados', 'Consignación', 'Te compramos tu auto', 'Toma a cuenta', 'Crédito', 'Préstamos con garantía', 'Detallado, gestoría y seguros'] },
     { icono: 'disponibles', k: 'CONSIGNACIÓN', titulo: 'Vendemos tu auto por ti', foto: 'assets/img/showroom.jpg',
       texto: 'Tu auto se exhibe en nuestro piso de venta y en nuestras redes. Nosotros atendemos a los interesados, negociamos y hacemos los trámites en un lugar seguro.',
       cierre: 'Tú no tienes que recibir desconocidos en tu casa.' },
@@ -94,6 +94,8 @@ export async function generar(salida) {
       cierre: 'ventaentreamigos.com/vender' },
     { icono: 'credito', k: 'CRÉDITO', titulo: 'Estrena con crédito', texto: 'Te ayudamos a financiar tu próximo auto.',
       puntos: ['Enganche desde 35%', 'Plazos de 12 a 60 meses', 'Simula tu mensualidad en nuestra página'], cierre: 'Con buen historial, el enganche puede ser menor.' },
+    { icono: 'credito', k: 'PRÉSTAMOS', titulo: 'Préstamos con garantía', texto: 'Si necesitas liquidez, te prestamos con garantía, con pagos mensuales y plazos a tu medida.',
+      puntos: ['Con tu auto: lo sigues usando', 'Con relojes, oro o monedas', 'Corrida de pagos antes de firmar'], cierre: 'Solicítalo en ventaentreamigos.com/prestamos' },
   ];
   for (const [i, s] of S.entries()) await shot(servicio({ ...s, n: i + 1, de: S.length }), `servicios-${String(i + 1).padStart(2, '0')}.jpg`);
   await shot(ubicacion(), 'ubicacion-01.jpg');
