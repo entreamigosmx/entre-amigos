@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       slug:
-        description: "Auto (slug de data/autos.json). Escribe 'verificar' para solo probar la conexión."
+        description: "Auto (slug de data/autos.json). 'verificar' = probar conexión; 'disponibles' = historias de Disponibles."
         required: true
       precio:
         description: "Mostrar precio en la portada"
@@ -32,8 +32,21 @@ jobs:
         if: inputs.slug == 'verificar'
         env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}" }
         run: node tools/redes/publicar.mjs verificar
+      - name: Historias de Disponibles
+        if: inputs.slug == 'disponibles'
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SOLO: "${{ inputs.solo }}" }
+        run: |
+          rm -rf redes/disponibles
+          node tools/redes/disponibles.mjs --salida redes/disponibles
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A redes/disponibles
+          git commit -m "Redes: historias de Disponibles" || echo "sin cambios"
+          git push
+          export RAW_REF=$(git rev-parse HEAD)
+          [ "$SOLO" = "ninguno" ] || node tools/redes/publicar.mjs historias redes/disponibles
       - name: Preparar portada, fotos y textos
-        if: inputs.slug != 'verificar'
+        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles'
         env: { SLUG: "${{ inputs.slug }}", FOTOS: "${{ inputs.fotos }}", PRECIO: "${{ inputs.precio }}" }
         run: |
           ARGS=""; [ "$PRECIO" = "true" ] || ARGS="--sin-precio"; [ -n "$FOTOS" ] && ARGS="$ARGS --fotos $FOTOS"
@@ -45,13 +58,13 @@ jobs:
           git push
           echo "RAW_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Publicar
-        if: inputs.slug != 'verificar' && inputs.solo != 'ninguno'
+        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.solo != 'ninguno'
         env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SLUG: "${{ inputs.slug }}", SOLO: "${{ inputs.solo }}" }
         run: |
           ARGS=""; [ "$SOLO" = "ambos" ] || ARGS="--solo $SOLO"
           node tools/redes/publicar.mjs publicar "$SLUG" $ARGS
       - name: Guardar registro
-        if: always() && inputs.slug != 'verificar' && inputs.solo != 'ninguno'
+        if: always() && inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.solo != 'ninguno'
         env: { SLUG: "${{ inputs.slug }}" }
         run: |
           git add data/redes.json 2>/dev/null || true

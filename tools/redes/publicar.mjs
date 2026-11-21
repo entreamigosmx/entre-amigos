@@ -166,6 +166,26 @@ async function publicar(slug, { solo, forzar } = {}) {
   writeFileSync(regPath, JSON.stringify(reg, null, 1) + '\n');
 }
 
+// Historias de Instagram con las imágenes historia-*.jpg de una carpeta del repo (p. ej. redes/disponibles).
+async function historias(dirRel) {
+  const token = process.env.META_TOKEN, ref = process.env.RAW_REF;
+  if (!token || !ref) throw new Error('Faltan META_TOKEN o RAW_REF.');
+  const imgs = readdirSync(resolve(RAIZ, dirRel)).filter(n => /^historia-\d+\.jpg$/.test(n)).sort();
+  if (!imgs.length) throw new Error(`No hay historias en ${dirRel}`);
+  const { ig } = await cuentas(token);
+  for (const n of imgs) {
+    const c = await graph(`/${ig.id}/media`, { image_url: `https://raw.githubusercontent.com/${REPO}/${ref}/${dirRel}/${n}`, media_type: 'STORIES', access_token: token });
+    for (let i = 0; i < 30; i++) {
+      const st = await graph(`/${c.id}`, { fields: 'status_code', access_token: token }, 'GET');
+      if (st.status_code === 'FINISHED') break;
+      if (st.status_code === 'ERROR') throw new Error(`Instagram no pudo procesar ${n}`);
+      await espera(4000);
+    }
+    const p = await graph(`/${ig.id}/media_publish`, { creation_id: c.id, access_token: token });
+    console.log('Historia publicada:', n, p.id);
+  }
+}
+
 async function verificar() {
   const token = process.env.META_TOKEN;
   if (!token) throw new Error('Falta META_TOKEN (secreto de GitHub).');
@@ -178,6 +198,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const opt = k => { const i = r.indexOf(k); return i >= 0 ? r[i + 1] : undefined; };
   const run = { preparar: () => preparar(slug, { conPrecio: !r.includes('--sin-precio'), fotos: opt('--fotos') }),
     publicar: () => publicar(slug, { solo: opt('--solo'), forzar: r.includes('--forzar') }),
+    historias: () => historias(slug),
     verificar: () => verificar() }[accion];
   if (!run) { console.error('Uso: preparar|publicar|verificar <slug>'); process.exit(1); }
   run().catch(e => { console.error('ERROR:', e.message); process.exit(1); });
