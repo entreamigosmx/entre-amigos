@@ -76,6 +76,7 @@ jobs:
         run: |
           ARGS=""; [ "$SOLO" = "ambos" ] || ARGS="--solo $SOLO"
           node tools/redes/publicar.mjs publicar "$SLUG" $ARGS
+          [ "$SOLO" = "fb" ] || node tools/redes/publicar.mjs historias "fotos/$SLUG/redes"
       - name: Guardar registro
         if: always() && inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
         env: { SLUG: "${{ inputs.slug }}" }
