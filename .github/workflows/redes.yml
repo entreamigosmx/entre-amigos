@@ -45,8 +45,21 @@ jobs:
           git push
           export RAW_REF=$(git rev-parse HEAD)
           [ "$SOLO" = "ninguno" ] || node tools/redes/publicar.mjs historias redes/disponibles
+      - name: Historias de Servicios, Ubicación y Reseñas
+        if: inputs.slug == 'destacadas'
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SOLO: "${{ inputs.solo }}" }
+        run: |
+          rm -rf redes/destacadas
+          node tools/redes/destacadas.mjs --salida redes/destacadas
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A redes/destacadas
+          git commit -m "Redes: historias para destacadas" || echo "sin cambios"
+          git push
+          export RAW_REF=$(git rev-parse HEAD)
+          [ "$SOLO" = "ninguno" ] || node tools/redes/publicar.mjs historias redes/destacadas servicios,ubicacion,resenas
       - name: Preparar portada, fotos y textos
-        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles'
+        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas'
         env: { SLUG: "${{ inputs.slug }}", FOTOS: "${{ inputs.fotos }}", PRECIO: "${{ inputs.precio }}" }
         run: |
           ARGS=""; [ "$PRECIO" = "true" ] || ARGS="--sin-precio"; [ -n "$FOTOS" ] && ARGS="$ARGS --fotos $FOTOS"
@@ -58,13 +71,13 @@ jobs:
           git push
           echo "RAW_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Publicar
-        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.solo != 'ninguno'
+        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
         env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SLUG: "${{ inputs.slug }}", SOLO: "${{ inputs.solo }}" }
         run: |
           ARGS=""; [ "$SOLO" = "ambos" ] || ARGS="--solo $SOLO"
           node tools/redes/publicar.mjs publicar "$SLUG" $ARGS
       - name: Guardar registro
-        if: always() && inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.solo != 'ninguno'
+        if: always() && inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
         env: { SLUG: "${{ inputs.slug }}" }
         run: |
           git add data/redes.json 2>/dev/null || true
