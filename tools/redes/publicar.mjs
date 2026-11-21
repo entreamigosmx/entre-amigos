@@ -75,6 +75,30 @@ const fotoHTML = src => `<!doctype html><html><head><link href="https://fonts.go
 <script>const f=document.getElementById('f');f.onload=()=>{const r=f.naturalWidth/f.naturalHeight;if(r>.9)f.style.objectFit='contain'};</script>
 </body></html>`;
 
+
+// Historia individual del auto (1080x1920) para la destacada "Disponibles". Deja libre la franja
+// central de abajo para que el dueño ponga el sticker de enlace a la ficha (la API no permite stickers).
+function historiaHTML(a, foto, conPrecio) {
+  const nombre = a.nombre || `${a.marca} ${a.modelo}`;
+  const datos = [a.kilometraje && `${Math.round(a.kilometraje).toLocaleString('en-US')} km`, a.transmision && a.transmision.split(' de ')[0], a.combustible].filter(Boolean);
+  const precio = conPrecio && a.precio ? `<div style="display:flex;align-items:baseline;gap:20px;margin-top:26px"><b style="font-family:'Barlow Condensed';font-weight:700;font-size:100px;color:#b6e21f;line-height:1">${mx(a.precio)}</b>${a.precioAnterior > a.precio ? `<s style="font-size:40px;color:#9ea597">${mx(a.precioAnterior)}</s>` : ''}</div>` : '';
+  return `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;1,800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0}body{width:1080px;height:1920px;background:#0a0b0a;color:#f3f4ef;font-family:'Source Sans 3',sans-serif;overflow:hidden;position:relative}</style></head><body>
+<div style="position:absolute;inset:0 0 auto 0;height:1120px;background:url(${foto}) center/cover"></div>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,11,10,.7) 0,rgba(10,11,10,0) 14%,rgba(10,11,10,0) 40%,#0a0b0a 58%)"></div>
+<div style="position:absolute;top:150px;left:64px;right:64px;display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;align-items:center;gap:14px"><img src="${LOGO}" style="height:56px"><b style="font-family:'Barlow Condensed';font-weight:800;font-style:italic;font-size:40px;text-transform:uppercase">Entre <i style="color:#b6e21f">Amigos</i></b></div>
+<div style="background:#b6e21f;color:#0a0b0a;font-family:'Barlow Condensed';font-weight:700;font-size:32px;letter-spacing:.12em;padding:8px 22px;border-radius:6px">${a.apartado ? 'APARTADO' : 'DISPONIBLE'}</div></div>
+<div style="position:absolute;left:64px;right:64px;top:860px">
+<div style="font-family:'Barlow Condensed';font-weight:700;font-size:50px;color:#b6e21f;letter-spacing:.06em">${a.anio || ''}</div>
+<h1 style="font-family:'Barlow Condensed';font-weight:700;font-size:120px;line-height:.9;text-transform:uppercase">${nombre}</h1>
+<div style="font-size:44px;font-weight:600;color:#d7dbd1;margin-top:12px">${(a.version || '').replace(/ · /g, ' ')}</div>
+<div style="display:flex;gap:14px;margin-top:26px;flex-wrap:wrap">${datos.map(d => `<span style="border:2px solid rgba(243,244,239,.35);border-radius:999px;padding:8px 24px;font-size:32px;font-weight:600">${d}</span>`).join('')}</div>
+${precio}</div>
+<div style="position:absolute;left:64px;right:64px;bottom:240px;text-align:center;font-size:34px;font-weight:600;color:#d7dbd1">Fotos, video y ficha completa en<br><b style="color:#f3f4ef;font-size:44px">ventaentreamigos.com</b></div>
+</body></html>`;
+}
+
 async function preparar(slug, { conPrecio = true, fotos } = {}) {
   const a = autoDe(slug);
   const dir = resolve(RAIZ, `fotos/${slug}/redes`);
@@ -89,6 +113,11 @@ async function preparar(slug, { conPrecio = true, fotos } = {}) {
   await pg.setContent(portadaHTML(a, b64(resolve(RAIZ, a.foto)), conPrecio), { waitUntil: 'networkidle' });
   await pg.evaluate(() => document.fonts.ready);
   await pg.screenshot({ path: resolve(dir, 'portada.jpg'), type: 'jpeg', quality: 90 });
+  await pg.setViewportSize({ width: 1080, height: 1920 });
+  await pg.setContent(historiaHTML(a, b64(resolve(RAIZ, a.foto)), conPrecio), { waitUntil: 'networkidle' });
+  await pg.evaluate(() => document.fonts.ready);
+  await pg.screenshot({ path: resolve(dir, 'historia-01.jpg'), type: 'jpeg', quality: 90 });
+  await pg.setViewportSize({ width: 1080, height: 1350 });
   const salida = ['portada.jpg'];
   for (const [i, p] of lista.entries()) {
     const nombre = String(i + 1).padStart(2, '0') + '.jpg';
