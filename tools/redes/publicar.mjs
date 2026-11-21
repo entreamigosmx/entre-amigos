@@ -20,6 +20,7 @@ const REPO = 'entreamigosmx/entre-amigos';
 const GRAPH = `https://graph.facebook.com/${process.env.META_API_VERSION || 'v24.0'}`;
 const MAX_FOTOS = 9; // Instagram: 10 por carrusel = portada + 9 fotos
 const b64 = p => `data:image/jpeg;base64,` + readFileSync(p).toString('base64');
+let LOGO = '';
 const mx = n => '$' + Math.round(n).toLocaleString('en-US');
 const leeJSON = (p, d) => existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : d;
 
@@ -37,7 +38,7 @@ const sinHTML = s => (s || '').replace(/<li>/g, '- ').replace(/<\/(p|h4|li)>/g, 
 
 function textos(a, conPrecio) {
   const nombre = a.nombre || `${a.marca} ${a.modelo}`;
-  const titulo = `${nombre} ${a.version || ''} ${a.anio}`.replace(/\s+/g, ' ').trim();
+  const titulo = `${nombre} ${a.version || ''} ${a.anio}`.replace(/ · /g, ' ').replace(/\s+/g, ' ').trim();
   const datos = [a.kilometraje && `${Math.round(a.kilometraje).toLocaleString('en-US')} km`,
     a.transmision && a.transmision.split(' de ')[0], a.combustible].filter(Boolean).join(' | ');
   const precio = conPrecio && a.precio ? `Precio: ${mx(a.precio)}${a.precioAnterior ? ` (antes ${mx(a.precioAnterior)})` : ''}` : 'Precio por WhatsApp';
@@ -66,9 +67,11 @@ function textos(a, conPrecio) {
 }
 
 // Foto a 1080x1350 (4:5). Vertical: recorte centrado. Horizontal: completa sobre fondo difuminado.
-const fotoHTML = src => `<!doctype html><html><body style="margin:0;width:1080px;height:1350px;overflow:hidden;background:#0a0b0a;position:relative">
+const fotoHTML = src => `<!doctype html><html><head><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@700&display=swap" rel="stylesheet"></head><body style="margin:0;width:1080px;height:1350px;overflow:hidden;background:#0a0b0a;position:relative">
 <div style="position:absolute;inset:-40px;background:url(${src}) center/cover;filter:blur(30px) brightness(.55)"></div>
 <img id="f" src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+<div style="position:absolute;right:36px;bottom:34px;display:flex;align-items:center;gap:12px;opacity:.6;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))">
+<img src="${LOGO}" style="height:52px"><span style="font:700 30px 'Source Sans 3',sans-serif;color:#fff;letter-spacing:.01em">@entreamigosmx</span></div>
 <script>const f=document.getElementById('f');f.onload=()=>{const r=f.naturalWidth/f.naturalHeight;if(r>.9)f.style.objectFit='contain'};</script>
 </body></html>`;
 
@@ -79,6 +82,7 @@ async function preparar(slug, { conPrecio = true, fotos } = {}) {
   let lista = (a.galeria || [a.foto]).filter(p => !/^https?:/.test(p));
   if (fotos) lista = fotos.split(',').map(n => `fotos/${slug}/${n.trim()}.jpg`);
   lista = lista.filter(p => p !== a.foto).slice(0, MAX_FOTOS);
+  LOGO = 'data:image/png;base64,' + readFileSync(resolve(RAIZ, 'assets/img/logo-mark.png')).toString('base64');
   const { chromium } = require('playwright');
   const b = await chromium.launch();
   const pg = await b.newPage({ viewport: { width: 1080, height: 1350 } });
@@ -88,7 +92,8 @@ async function preparar(slug, { conPrecio = true, fotos } = {}) {
   const salida = ['portada.jpg'];
   for (const [i, p] of lista.entries()) {
     const nombre = String(i + 1).padStart(2, '0') + '.jpg';
-    await pg.setContent(fotoHTML(b64(resolve(RAIZ, p))), { waitUntil: 'load' });
+    await pg.setContent(fotoHTML(b64(resolve(RAIZ, p))), { waitUntil: 'networkidle' });
+    await pg.evaluate(() => document.fonts.ready);
     await pg.screenshot({ path: resolve(dir, nombre), type: 'jpeg', quality: 88 });
     salida.push(nombre);
   }
