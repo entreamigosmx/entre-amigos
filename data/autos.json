@@ -1381,10 +1381,10 @@
   "videoPoster": "fotos/volkswagen-beetle-sound-2018/video.jpg"
  },
  {
-  "title": "Kia Seltos EX Pack 2021",
+  "title": "Kia Seltos SX 2021",
   "slug": "kia-seltos-ex-pack-2021",
   "marca": "Kia",
-  "modelo": "Seltos EX Pack",
+  "modelo": "Seltos SX",
   "anio": 2021,
   "precio": 319000,
   "precioEspecial": false,
@@ -1410,14 +1410,14 @@
    "fotos/kia-seltos-ex-pack-2021/12.jpg",
    "fotos/kia-seltos-ex-pack-2021/13.jpg"
   ],
-  "descripcion": "<p>SUV compacta con gran presencia y muy bien equipada en su versión EX Pack: pantalla de 10.25 pulgadas, clima automático y cargador inalámbrico. Modelo 2021 con 53,187 km, dos dueños, factura original, placas de Jalisco y sin adeudos. Seminueva certificada por Entre Amigos.</p><h4>Motor y transmisión</h4><ul><li>Motor 1.6L de 4 cilindros, 121 hp</li><li>Transmisión automática de 6 velocidades</li></ul><h4>Interior y tecnología</h4><ul><li>Pantalla táctil de 10.25 pulgadas con Apple CarPlay y Android Auto</li><li>Clima automático</li><li>Cargador inalámbrico</li><li>Llave inteligente con botón de encendido</li><li>Control de crucero</li><li>Asientos tipo piel</li><li>Cámara de reversa</li></ul><h4>Exterior</h4><ul><li>Rines de aluminio de 17 pulgadas</li><li>Luces de día LED y calaveras LED</li><li>Barras en el toldo</li></ul><h4>Historial</h4><ul><li>Dos dueños</li><li>53,187 km</li><li>Factura original</li><li>Placas de Jalisco</li><li>Sin adeudos</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "descripcion": "<p>SUV compacta con gran presencia y muy bien equipada en su versión SX: pantalla de 10.25 pulgadas, clima automático y cargador inalámbrico. Modelo 2021 con 53,187 km, dos dueños, factura original, placas de Jalisco y sin adeudos. Seminueva certificada por Entre Amigos.</p><h4>Motor y transmisión</h4><ul><li>Motor 1.6L de 4 cilindros, 121 hp</li><li>Transmisión automática de 6 velocidades</li></ul><h4>Interior y tecnología</h4><ul><li>Pantalla táctil de 10.25 pulgadas con Apple CarPlay y Android Auto</li><li>Clima automático</li><li>Cargador inalámbrico</li><li>Llave inteligente con botón de encendido</li><li>Control de crucero</li><li>Asientos tipo piel</li><li>Cámara de reversa</li></ul><h4>Exterior</h4><ul><li>Rines de aluminio de 17 pulgadas</li><li>Luces de día LED y calaveras LED</li><li>Barras en el toldo</li></ul><h4>Historial</h4><ul><li>Dos dueños</li><li>53,187 km</li><li>Factura original</li><li>Placas de Jalisco</li><li>Sin adeudos</li></ul><p>Tomamos tu auto a cuenta y contamos con opciones de financiamiento con los mejores bancos y financieras. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
   "foto": "fotos/kia-seltos-ex-pack-2021/01.jpg",
   "categorias": [
    "SUVs",
    "Familiares"
   ],
   "nombre": "Kia Seltos",
-  "version": "EX Pack automática",
+  "version": "SX automática",
   "video": "fotos/kia-seltos-ex-pack-2021/video.mp4",
   "videoPoster": "fotos/kia-seltos-ex-pack-2021/video.jpg"
  }
