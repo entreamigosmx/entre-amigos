@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       slug:
-        description: "Auto (slug de data/autos.json). 'verificar' = probar conexión; 'disponibles' = historias de Disponibles."
+        description: "Auto (slug de data/autos.json). 'verificar' = probar conexión; 'disponibles' = historias de Disponibles; 'comentarios' = leer comentarios (fotos = slug opcional); 'responder' = publicar respuestas aprobadas de data/respuestas.json."
         required: true
       precio:
         description: "Mostrar precio en la portada"
@@ -36,6 +36,21 @@ jobs:
         if: inputs.slug == 'verificar'
         env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}" }
         run: node tools/redes/publicar.mjs verificar
+      - name: Leer comentarios
+        if: inputs.slug == 'comentarios'
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", FILTRO: "${{ inputs.fotos }}" }
+        run: node tools/redes/comentarios.mjs leer "$FILTRO"
+      - name: Responder comentarios aprobados
+        if: inputs.slug == 'responder'
+        env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}" }
+        run: |
+          node tools/redes/comentarios.mjs responder || FALLA=1
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/respuestas.json
+          git commit -m "Redes: respuestas a comentarios" || echo "sin cambios"
+          git push
+          [ -z "$FALLA" ]
       - name: Historias de Disponibles
         if: inputs.slug == 'disponibles'
         env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SOLO: "${{ inputs.solo }}" }
@@ -63,7 +78,7 @@ jobs:
           export RAW_REF=$(git rev-parse HEAD)
           [ "$SOLO" = "ninguno" ] || node tools/redes/publicar.mjs historias redes/destacadas "${GRUPOS:-servicios,ubicacion,resenas}"
       - name: Preparar portada, fotos y textos
-        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas'
+        if: ${{ !contains(fromJSON('["verificar","disponibles","destacadas","comentarios","responder"]'), inputs.slug) }}
         env: { SLUG: "${{ inputs.slug }}", FOTOS: "${{ inputs.fotos }}", PRECIO: "${{ inputs.precio }}" }
         run: |
           ARGS=""; [ "$PRECIO" = "true" ] || ARGS="--sin-precio"; [ -n "$FOTOS" ] && ARGS="$ARGS --fotos $FOTOS"
@@ -75,14 +90,14 @@ jobs:
           git push
           echo "RAW_REF=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: Publicar
-        if: inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
+        if: ${{ !contains(fromJSON('["verificar","disponibles","destacadas","comentarios","responder"]'), inputs.slug) && inputs.solo != 'ninguno' }}
         env: { META_TOKEN: "${{ secrets.META_TOKEN }}", META_PAGE_ID: "${{ vars.META_PAGE_ID }}", SLUG: "${{ inputs.slug }}", SOLO: "${{ inputs.solo }}", HISTORIA: "${{ inputs.historia }}" }
         run: |
           ARGS=""; [ "$SOLO" = "ambos" ] || ARGS="--solo $SOLO"
           node tools/redes/publicar.mjs publicar "$SLUG" $ARGS
           [ "$SOLO" = "fb" ] || [ "$HISTORIA" != "true" ] || node tools/redes/publicar.mjs historias "fotos/$SLUG/redes"
       - name: Guardar registro
-        if: always() && inputs.slug != 'verificar' && inputs.slug != 'disponibles' && inputs.slug != 'destacadas' && inputs.solo != 'ninguno'
+        if: ${{ always() && !contains(fromJSON('["verificar","disponibles","destacadas","comentarios","responder"]'), inputs.slug) && inputs.solo != 'ninguno' }}
         env: { SLUG: "${{ inputs.slug }}" }
         run: |
           git add data/redes.json 2>/dev/null || true
