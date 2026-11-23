@@ -2,7 +2,7 @@ name: Transcribir nota de voz (subtitulos de reels)
 on:
   push:
     branches: ["claude/**"]
-    paths: ["tools/transcribir/*.m4a"]
+    paths: ["tools/transcribir/*.m4a", "tools/transcribir/*.py"]
 permissions:
   contents: write
 jobs:
