@@ -1155,7 +1155,15 @@
    "correo": "Correo",
    "mm_monta": "monta directa",
    "mm_fresco": "semen fresco",
-   "mm_congelado": "semen congelado"
+   "mm_congelado": "semen congelado",
+   "hist_eyebrow": "Nuestra historia · Desde 2010",
+   "hist_titulo": "Orgullo mexicano. Genética de élite.",
+   "hist_p1": "Mezcal Quarter Horses nació en 2010 con la visión de Eduardo Gómez: criar caballos Cuarto de Milla que trasciendan generaciones. El nombre honra una de las tradiciones más mexicanas.",
+   "hist_p2": "Hoy reunimos sementales de líneas como Gunner, Wimpys Little Step, Spooks Gotta Whiz y Shiners Voodoo Dr, y ponemos esa genética al alcance de cada criador.",
+   "hs_1": "Fundado",
+   "hs_2": "Sementales",
+   "hs_3": "Sedes en Jalisco",
+   "hist_cta": "Conoce el rancho"
   },
   "en": {
    "nav_rancho": "About",
@@ -1430,7 +1438,15 @@
    "correo": "Email",
    "mm_monta": "live cover",
    "mm_fresco": "fresh semen",
-   "mm_congelado": "frozen semen"
+   "mm_congelado": "frozen semen",
+   "hist_eyebrow": "Our story · Since 2010",
+   "hist_titulo": "Mexican pride. Elite genetics.",
+   "hist_p1": "Mezcal Quarter Horses was born in 2010 from Eduardo Gómez's vision: breeding Quarter Horses that last for generations. The name honors one of Mexico's most iconic traditions.",
+   "hist_p2": "Today we stand stallions from lines like Gunner, Wimpys Little Step, Spooks Gotta Whiz and Shiners Voodoo Dr, and bring that genetics within reach of every breeder.",
+   "hs_1": "Founded",
+   "hs_2": "Stallions",
+   "hs_3": "Ranches in Jalisco",
+   "hist_cta": "Meet the ranch"
   },
   "whatsapp": "523325483880",
   "instagram": "mezcal_quarter_horses",

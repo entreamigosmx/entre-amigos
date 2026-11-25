@@ -84,6 +84,13 @@ nav .cta:hover{background:var(--gold2);color:#0b0b0c}
 .rancho .pics img:last-child{margin-top:48px}
 .rancho p{color:#ddd5c9;margin-top:16px;font-size:18px}
 .note{display:inline-block;margin-top:16px;font-size:13px;color:var(--gold);border:1px dashed #d6aa4e88;padding:6px 12px;border-radius:999px}
+.hist{padding-top:clamp(56px,8vw,96px);padding-bottom:clamp(56px,8vw,96px)}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:center}
+.himg{border-radius:28px;overflow:hidden;aspect-ratio:4/3;border:1px solid var(--line)}.himg img{width:100%;height:100%;object-fit:cover}
+.hist h2{font-size:clamp(32px,4vw,52px);line-height:1.05}.hist .lead{max-width:560px}
+.hstats{display:flex;gap:clamp(18px,4vw,40px);margin:26px 0 28px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.hstats b{display:block;font:700 clamp(30px,3.4vw,42px)/1 "Barlow Semi Condensed",Inter,sans-serif;color:var(--gold2)}.hstats span{font-size:14px;color:var(--muted)}
+@media(max-width:760px){.hgrid{grid-template-columns:1fr}}
 .locs{margin-top:24px;padding:18px 20px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}.locs h4{font-size:20px;font-weight:600}.locs>p{margin:2px 0 8px;font-size:15px;color:var(--muted)}
 .loc{margin-top:10px;padding:20px 22px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .sede{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.sede b{display:block;font-size:16px}.sede small{color:var(--muted);font-size:13px}.sede .btn{padding:9px 14px;font-size:14px}
@@ -515,7 +522,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
     <div class="pane on" data-pane="sem" id="sementales"><div class="panels" id="panels"></div></div>
     <div class="pane" data-pane="pot" id="potrillos"><div class="panels" id="fpanels"></div></div>
     <div class="pane nos" data-pane="nos" id="rancho">
-      <div class="nimg"><img src="fotos/rancho-atardecer.jpg" alt=""></div>
+      <div class="nimg"><img src="fotos/mezcalero-voodoo-gun-2.jpg" alt=""></div>
       <div class="ntx"><h2 class="serif" data-t="nos_titulo"></h2><p data-t="nos_p"></p><span class="note" data-t="rancho_nota"></span>
         <div class="locs"><h4 data-t="ubicacion_titulo"></h4><p data-t="ubicacion_texto"></p><div id="sedes"></div></div></div>
     </div>
@@ -524,6 +531,13 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
 <div class="ticker" data-v="inicio"><span class="tk-l" data-t="noticias"></span><div class="tk"><div class="tk-in" id="tk"></div></div></div>
 <a class="rbar" id="rbar" href="#/rifa" data-go-v="rifa" data-v="inicio" hidden></a>
 <div class="claims" id="claims" data-v="inicio"></div>
+<section class="hist" data-v="inicio"><div class="wrap hgrid">
+  <div class="himg"><img src="fotos/lh-wimpys-gotta-gun-4.jpg" alt="" loading="lazy"></div>
+  <div><div class="eyebrow" data-t="hist_eyebrow"></div><h2 class="serif" data-t="hist_titulo"></h2>
+    <p class="lead" data-t="hist_p1"></p><p class="lead" data-t="hist_p2"></p>
+    <div class="hstats"><div><b>2010</b><span data-t="hs_1"></span></div><div><b id="hsN"></b><span data-t="hs_2"></span></div><div><b>2</b><span data-t="hs_3"></span></div></div>
+    <a class="btn" href="#/nosotros" data-go-v="nosotros" data-t="hist_cta"></a></div>
+</div></section>
 
 <section class="tlw" data-v="apartar"><div class="wrap">
   <div class="eyebrow" data-t="tl_titulo"></div>
@@ -674,6 +688,7 @@ function render() {
   $('#heroT').innerHTML = ht.length > 1 ? `${esc(ht[0])},<br><em>${esc(ht.slice(1).join(',').trim())}</em>` : esc(ht[0]);
   $('#sedes').innerHTML = (D.sitio.sedes || []).map(x => `<div class="sede"><div><b>${esc(x[L])}</b><small>${esc(x['s_' + L])}</small></div><a class="btn" target="_blank" rel="noopener" href="${esc(x.mapa)}">${t('ubicacion_mapa')}</a></div>`).join('');
   const CK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>';
+  $('#hsN').textContent = S.length;
   $('#claims').innerHTML = [1, 2, 3, 4].map(i => `<div>${CK}<span>${t('cl_' + i)}</span></div>`).join('');
   $('#tl').innerHTML = [1, 2, 3, 4, 5].map(i => `<li><i>${i}</i><div><b>${t('tl_' + i)}</b>${t('tl_' + i + 's') ? `<small>${t('tl_' + i + 's')}</small>` : ''}</div></li>`).join('');
   setW(win, false);
@@ -688,14 +703,14 @@ function render() {
 function renderMenu() {
   const r = D.rifa, sold = r && r.activa ? rSold().length : 0, left = r ? r.total - sold : 0;
   const it = [
-    ['inicio', 'm_sem', 'm_sem_s', S[0].fotos[0], '', ''],
-    ['potrillos', 'm_pot', 'm_pot_s', 'fotos/yegua-palomina-potrillo.jpg', '', ''],
-    ['color', 'm_sim', 'm_sim_s', 'fotos/galeria-potrillo-2.jpg', '', ''],
-    ['potrillos#panza', 'm_panza', 'm_panza_s', 'fotos/potrillo-alazan-pasto.jpg', '', ''],
+    ['inicio', 'm_sem', 'm_sem_s', 'fotos/ha-calico-joe-2.jpg', '', ''],
+    ['potrillos', 'm_pot', 'm_pot_s', 'fotos/potrillo-coronel.jpg', '', ''],
+    ['color', 'm_sim', 'm_sim_s', 'fotos/mezcal-step-face-1.jpg', '', ''],
+    ['potrillos#panza', 'm_panza', 'm_panza_s', 'fotos/mezcal-gunner-black-2.jpg', '', ''],
     r && r.activa ? ['rifa', 'm_rifa', '', r.mini || r.foto, `${t('rifa_tag').replace('{n}', r.numero || '')}`, left <= r.ultimos ? tf('rifa_ultimos', { n: left }) : tf('rifa_quedan', { n: left, t: r.total })] : null,
-    ['confianza', 'm_conf', 'm_conf_s', 'fotos/cliente-potrillo-alazan.jpg', '', ''],
-    ['apartar', 'm_book', 'm_book_s', (S[1] || S[0]).fotos[0], '', ''],
-    ['nosotros', 'm_nos', 'm_nos_s', 'fotos/rancho-atardecer.jpg', '', '']
+    ['confianza', 'm_conf', 'm_conf_s', 'fotos/entrega-rifa2.jpg', '', ''],
+    ['apartar', 'm_book', 'm_book_s', 'fotos/chics-loaded-gun-1.jpg', '', ''],
+    ['nosotros', 'm_nos', 'm_nos_s', 'fotos/lh-wimpys-gotta-gun-4.jpg', '', '']
   ].filter(Boolean);
   $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><img src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
   $('#mWa').innerHTML = WA_ICON + t('m_wa'); $('#mWa').href = waLink(L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses');
