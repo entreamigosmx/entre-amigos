@@ -1,4 +1,4 @@
-import { autos, card, src, fotos, mxn, km, esc, BASE, WA_ICON, ficha } from "./comun.js?v=p4";
+import { autos, card, src, fotos, mxn, km, esc, BASE, WA_ICON, ficha } from "./comun.js?v=p6";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -17,7 +17,7 @@ function showroom(list) {
         <span class="eyebrow">Disponible</span>
         <h2>${esc(a.nombre || a.title)}</h2>
         <p class="sub">${esc([a.version, sub].filter(Boolean).join(" · "))}</p>
-        <p class="price">${mxn(a.precio)}</p>
+        <p class="price">${mxn(a.precio)}${a.arrendamiento === "solo" ? " · Solo arrendamiento" : ""}</p>
         <div class="btns"><a class="btn primary" href="${ficha(a)}">Ver ${a.categoria === "Moto" ? "moto" : "auto"}</a><a class="btn ghost" href="inventario.html">Ver inventario</a></div>
       </div>
     </article>`;
@@ -125,7 +125,7 @@ fetch(BASE + "data/opiniones.json", { cache: "no-cache" }).then((r) => r.json())
   }
   $("m-eng").addEventListener("input", calc); $("m-auto").addEventListener("change", calc);
   Promise.all([fetch(BASE + "data/credito.json", { cache: "no-cache" }).then((r) => r.json()).catch(() => ({})), autos()]).then(([cfg, list]) => {
-    CFG = { ...CFG, ...cfg }; LIST = list.filter((a) => !a.apartado && a.precio);
+    CFG = { ...CFG, ...cfg }; LIST = list.filter((a) => !a.apartado && a.precio && a.arrendamiento !== "solo");
     PL = CFG.plazos.includes(CFG.plazoInicial) ? CFG.plazoInicial : CFG.plazos.at(-1);
     $("m-eng").value = CFG.engancheSugerido;
     $("m-auto").innerHTML = LIST.map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");

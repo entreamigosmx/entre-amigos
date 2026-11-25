@@ -45,9 +45,13 @@ function textos(a, conPrecio) {
   const tags = ['EntreAmigos', 'AutosGuadalajara', 'Seminuevos', 'Guadalajara', a.marca, nombre]
     .map(t => '#' + t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, ''));
   const ficha = `ventaentreamigos.com/auto.html?a=${a.slug}`;
+  // Arrendamiento: "solo" = únicamente arrendamiento; "si" = también en arrendamiento.
+  const oferta = a.arrendamiento === 'solo' ? 'Disponible solo en arrendamiento. Te cotizamos la renta mensual y el plazo a tu medida.'
+    : a.arrendamiento ? 'Crédito con enganche desde 35% o arrendamiento. Recibimos tu auto a cuenta.'
+    : 'Crédito con enganche desde 35%. Recibimos tu auto a cuenta.';
   const redes = [
     `${titulo}`, '', datos, precio, '',
-    'Crédito con enganche desde 35%. Recibimos tu auto a cuenta.',
+    oferta,
     'Escríbenos por WhatsApp: 33 3306 3319',
     'Visítanos en Av. Aztecas 1021, Col. Monraz, Guadalajara.', '',
     'Fotos, video y ficha completa en el enlace del perfil.', '',
@@ -59,7 +63,7 @@ function textos(a, conPrecio) {
     `AÑO: ${a.anio}   MARCA: ${a.marca}   MODELO: ${a.modelo}`,
     a.kilometraje ? `KILOMETRAJE: ${Math.round(a.kilometraje)}` : '', '',
     'DESCRIPCIÓN:', `${titulo}. ${datos}.`, sinHTML(a.descripcion), '',
-    'Crédito con enganche desde 35%. Recibimos tu auto a cuenta.',
+    oferta,
     'WhatsApp 33 3306 3319. Av. Aztecas 1021, Col. Monraz, Guadalajara.',
     `Ficha completa: https://${ficha}`, 'Entre Amigos. Más que clientes, amigos.',
   ].filter(l => l !== null).join('\n').replace(/\n{3,}/g, '\n\n');
@@ -88,7 +92,7 @@ function historiaHTML(a, foto, conPrecio) {
 <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,11,10,.7) 0,rgba(10,11,10,0) 14%,rgba(10,11,10,0) 40%,#0a0b0a 58%)"></div>
 <div style="position:absolute;top:150px;left:64px;right:64px;display:flex;justify-content:space-between;align-items:center">
 <div style="display:flex;align-items:center;gap:14px"><img src="${LOGO}" style="height:56px"><b style="font-family:'Barlow Condensed';font-weight:800;font-style:italic;font-size:40px;text-transform:uppercase">Entre <i style="color:#b6e21f">Amigos</i></b></div>
-<div style="background:#b6e21f;color:#0a0b0a;font-family:'Barlow Condensed';font-weight:700;font-size:32px;letter-spacing:.12em;padding:8px 22px;border-radius:6px">${a.apartado ? 'APARTADO' : 'DISPONIBLE'}</div></div>
+<div style="background:#b6e21f;color:#0a0b0a;font-family:'Barlow Condensed';font-weight:700;font-size:32px;letter-spacing:.12em;padding:8px 22px;border-radius:6px">${a.apartado ? 'APARTADO' : a.arrendamiento === 'solo' ? 'SOLO ARRENDAMIENTO' : 'DISPONIBLE'}</div></div>
 <div style="position:absolute;left:64px;right:64px;top:860px">
 <div style="font-family:'Barlow Condensed';font-weight:700;font-size:50px;color:#b6e21f;letter-spacing:.06em">${a.anio || ''}</div>
 <h1 style="font-family:'Barlow Condensed';font-weight:700;font-size:120px;line-height:.9;text-transform:uppercase">${nombre}</h1>
