@@ -215,6 +215,57 @@ async function historias(dirRel, prefijos = 'historia') {
   }
 }
 
+// Reel: carpeta del repo con video.mp4, portada.jpg y texto.txt (p. ej. redes/reels/reel-1-enganche).
+// Antes de publicar revisa los posts recientes para no duplicar (mismo inicio del texto).
+async function reel(dirRel, { solo } = {}) {
+  const token = process.env.META_TOKEN, ref = process.env.RAW_REF;
+  if (!token || !ref) throw new Error('Faltan META_TOKEN o RAW_REF.');
+  const nombre = dirRel.split('/').filter(Boolean).pop();
+  const caption = readFileSync(resolve(RAIZ, dirRel, 'texto.txt'), 'utf8').trim();
+  const firma = caption.slice(0, 60);
+  const url = n => `https://raw.githubusercontent.com/${REPO}/${ref}/${dirRel}/${n}`;
+  const regPath = resolve(RAIZ, 'data/redes.json');
+  const reg = leeJSON(regPath, {});
+  const ya = reg[nombre] || {};
+  const { pagina, ig } = await cuentas(token);
+  const guarda = () => { reg[nombre] = ya; writeFileSync(regPath, JSON.stringify(reg, null, 1) + '\n'); };
+
+  if (solo !== 'fb' && !ya.instagram) {
+    const { data = [] } = await graph(`/${ig.id}/media`, { fields: 'id,caption,permalink,timestamp,media_product_type', limit: '25', access_token: token }, 'GET');
+    const dup = data.find(m => (m.caption || '').trim().startsWith(firma));
+    if (dup) { ya.instagram = { id: dup.id, url: dup.permalink, fecha: dup.timestamp }; console.log('Instagram: ya estaba publicado', dup.permalink); }
+    else {
+      const c = await graph(`/${ig.id}/media`, { media_type: 'REELS', video_url: url('video.mp4'), cover_url: url('portada.jpg'), caption, share_to_feed: 'true', access_token: token });
+      let ok = false;
+      for (let i = 0; i < 60; i++) {
+        const st = await graph(`/${c.id}`, { fields: 'status_code,status', access_token: token }, 'GET');
+        if (st.status_code === 'FINISHED') { ok = true; break; }
+        if (st.status_code === 'ERROR') throw new Error(`Instagram no pudo procesar el video: ${st.status || ''}`);
+        await espera(10000);
+      }
+      if (!ok) throw new Error('Instagram tardó demasiado en procesar el video.');
+      const p = await graph(`/${ig.id}/media_publish`, { creation_id: c.id, access_token: token });
+      const { permalink } = await graph(`/${p.id}`, { fields: 'permalink', access_token: token }, 'GET');
+      ya.instagram = { id: p.id, url: permalink, fecha: new Date().toISOString() };
+      console.log('Instagram:', permalink);
+    }
+    guarda();
+  } else if (solo !== 'fb') console.log('Instagram: ya estaba publicado', ya.instagram.url);
+
+  if (solo !== 'ig' && !ya.facebook) {
+    const pt = pagina.access_token;
+    const { data = [] } = await graph(`/${pagina.id}/videos`, { fields: 'id,description,permalink_url,created_time', limit: '25', access_token: pt }, 'GET');
+    const dup = data.find(v => (v.description || '').trim().startsWith(firma));
+    if (dup) { ya.facebook = { id: dup.id, url: `https://www.facebook.com${dup.permalink_url || '/' + dup.id}`, fecha: dup.created_time }; console.log('Facebook: ya estaba publicado', ya.facebook.url); }
+    else {
+      const v = await graph(`/${pagina.id}/videos`, { file_url: url('video.mp4'), description: caption, access_token: pt });
+      ya.facebook = { id: v.id, url: `https://www.facebook.com/${pagina.id}/videos/${v.id}`, fecha: new Date().toISOString() };
+      console.log('Facebook:', ya.facebook.url);
+    }
+    guarda();
+  } else if (solo !== 'ig') console.log('Facebook: ya estaba publicado', ya.facebook.url);
+}
+
 async function verificar() {
   const token = process.env.META_TOKEN;
   if (!token) throw new Error('Falta META_TOKEN (secreto de GitHub).');
@@ -228,6 +279,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const run = { preparar: () => preparar(slug, { conPrecio: !r.includes('--sin-precio'), fotos: opt('--fotos') }),
     publicar: () => publicar(slug, { solo: opt('--solo'), forzar: r.includes('--forzar') }),
     historias: () => historias(slug, r[0]),
+    reel: () => reel(slug, { solo: opt('--solo') }),
     verificar: () => verificar() }[accion];
   if (!run) { console.error('Uso: preparar|publicar|verificar <slug>'); process.exit(1); }
   run().catch(e => { console.error('ERROR:', e.message); process.exit(1); });
