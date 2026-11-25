@@ -1,0 +1,19 @@
+name: Transcribir nota de voz (subtitulos de reels)
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["tools/transcribir/*.wav", "tools/transcribir/*.py"]
+permissions:
+  contents: write
+jobs:
+  transcribir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install faster-whisper
+      - run: |
+          mkdir -p tools/transcribir/salida
+          for f in tools/transcribir/*.wav; do n=$(basename $f .wav); python3 tools/transcribir/transcribir.py $f tools/transcribir/salida/$n.json; done
+      - run: |
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add tools/transcribir/salida && git commit -m "Transcripcion de nota de voz" && git push || true
