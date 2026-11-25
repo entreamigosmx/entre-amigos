@@ -1,4 +1,4 @@
-import { wa, WA_ICON } from "./comun.js?v=p4";
+import { wa, WA_ICON } from "./comun.js?v=p5";
 
 const $ = (id) => document.getElementById(id);
 $("fixwa") && ($("fixwa").innerHTML = WA_ICON);
