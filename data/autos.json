@@ -1420,5 +1420,45 @@
   "version": "SX automática",
   "video": "fotos/kia-seltos-ex-pack-2021/video.mp4",
   "videoPoster": "fotos/kia-seltos-ex-pack-2021/video.jpg"
+ },
+ {
+  "title": "Jeep Wrangler TJ 1998",
+  "slug": "jeep-wrangler-tj-1998",
+  "marca": "Jeep",
+  "modelo": "Wrangler TJ",
+  "anio": 1998,
+  "precio": 199800,
+  "precioEspecial": false,
+  "categoria": "Todo terreno",
+  "categorias": [
+   "Todo terreno",
+   "SUVs"
+  ],
+  "kilometraje": 262000,
+  "disponible": true,
+  "destacado": false,
+  "orden": 1.3,
+  "foto": "fotos/jeep-wrangler-tj-1998/01.jpg",
+  "galeria": [
+   "fotos/jeep-wrangler-tj-1998/01.jpg",
+   "fotos/jeep-wrangler-tj-1998/02.jpg",
+   "fotos/jeep-wrangler-tj-1998/03.jpg",
+   "fotos/jeep-wrangler-tj-1998/04.jpg",
+   "fotos/jeep-wrangler-tj-1998/05.jpg",
+   "fotos/jeep-wrangler-tj-1998/06.jpg",
+   "fotos/jeep-wrangler-tj-1998/07.jpg",
+   "fotos/jeep-wrangler-tj-1998/08.jpg",
+   "fotos/jeep-wrangler-tj-1998/09.jpg",
+   "fotos/jeep-wrangler-tj-1998/10.jpg",
+   "fotos/jeep-wrangler-tj-1998/11.jpg",
+   "fotos/jeep-wrangler-tj-1998/12.jpg",
+   "fotos/jeep-wrangler-tj-1998/13.jpg",
+   "fotos/jeep-wrangler-tj-1998/14.jpg"
+  ],
+  "nombre": "Jeep Wrangler",
+  "version": "TJ 4x4",
+  "descripcion": "<p>Un clásico listo para el campo y la ciudad. Jeep Wrangler TJ 1998 levantado, con condiciones mecánicas impecables, factura original de agencia en Guadalajara y placas nuevas de Jalisco, todo pagado.</p><h4>Motor y tracción</h4><ul><li>Motor de 4 cilindros funcionando al 100%</li><li>Sin códigos de error en el tablero</li><li>Transmisión estándar</li><li>Tracción 4x4</li></ul><h4>Preparación todo terreno</h4><ul><li>Levantado 4 pulgadas</li><li>Frenos de disco en las 4 ruedas</li><li>Diferencial trasero Ford 8.8</li><li>5 llantas todo terreno Cooper, incluida la de refacción</li><li>Interior y laderas con recubrimiento Linex</li><li>Defensa delantera tubular con faros auxiliares</li><li>Capota de lona</li></ul><h4>Historial</h4><ul><li>Nacional, factura original de agencia</li><li>Placas nuevas de Jalisco, todo pagado</li><li>262,000 km</li></ul><p>Tomamos tu auto a cuenta. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
+  "transmision": "Estándar",
+  "borrador": true
  }
 ]
