@@ -1,4 +1,4 @@
-import { autos, card, src, fotos, mxn, km, esc, BASE, WA_ICON, ficha } from "./comun.js?v=p5";
+import { autos, card, src, fotos, mxn, km, esc, BASE, WA_ICON, ficha } from "./comun.js?v=p6";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -17,7 +17,7 @@ function showroom(list) {
         <span class="eyebrow">Disponible</span>
         <h2>${esc(a.nombre || a.title)}</h2>
         <p class="sub">${esc([a.version, sub].filter(Boolean).join(" · "))}</p>
-        <p class="price">${a.arrendamiento === "solo" ? "Solo arrendamiento" : mxn(a.precio)}</p>
+        <p class="price">${mxn(a.precio)}${a.arrendamiento === "solo" ? " · Solo arrendamiento" : ""}</p>
         <div class="btns"><a class="btn primary" href="${ficha(a)}">Ver ${a.categoria === "Moto" ? "moto" : "auto"}</a><a class="btn ghost" href="inventario.html">Ver inventario</a></div>
       </div>
     </article>`;

@@ -72,7 +72,7 @@ export function card(a) {
     <a class="cl" href="${ficha(a)}"><div class="ph">${img}${tag}${vtag}</div>
     <div class="cb"><h3>${esc(a.nombre || a.title)}</h3>${a.version ? `<p class="ver">${esc(a.version)}</p>` : ""}
       <div class="m">${meta.map((x) => `<span>${esc(x)}</span>`).join("")}</div>
-      <div class="pr">${soloArr(a) ? `<b class="arr">Arrendamiento</b>` : `<b>${mxn(a.precio)}</b>${prev}`}</div>${prev && a.precioAnterior > a.precio ? `<span class="ahorro">Ahorras ${mxn(a.precioAnterior - a.precio)}</span>` : ""}</div></a>
+      <div class="pr"><b>${mxn(a.precio)}</b>${prev}</div>${soloArr(a) ? `<span class="ahorro">Solo arrendamiento</span>` : ""}${prev && a.precioAnterior > a.precio ? `<span class="ahorro">Ahorras ${mxn(a.precioAnterior - a.precio)}</span>` : ""}</div></a>
     <div class="ca"><a class="btn sm quiet" href="${ficha(a)}">Ver detalles</a>${a.apartado ? `<span class="st res">Apartado</span>` : soloArr(a) ? `<a class="btn sm ghost" href="${arrWa(a)}" target="_blank" rel="noopener">Cotizar arrendamiento</a>` : `<a class="btn sm ghost" href="${credito(a)}">Cotizar crédito</a>`}</div>
   </article>`;
 }

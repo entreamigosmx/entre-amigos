@@ -1,4 +1,4 @@
-import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE, soloArr, arrWa } from "./comun.js?v=p5";
+import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE, soloArr, arrWa } from "./comun.js?v=p6";
 
 const root = document.getElementById("car");
 const back = `<a class="back" href="inventario.html">← Ver todo el inventario</a>`;
@@ -15,7 +15,7 @@ function render(a, list) {
   const isV = (x) => x && typeof x === "object";
   const thumb = (x) => (isV(x) ? x.poster : x);
   document.title = `${name} | Entre Amigos`;
-  document.querySelector('meta[name="description"]').setAttribute("content", `${name}${soloArr(a) ? " en arrendamiento" : " en " + mxn(a.precio)}. Fotos, kilometraje y equipamiento. Entre Amigos, Guadalajara.`);
+  document.querySelector('meta[name="description"]').setAttribute("content", `${name} en ${mxn(a.precio)}${soloArr(a) ? ", solo en arrendamiento" : ""}. Fotos, kilometraje y equipamiento. Entre Amigos, Guadalajara.`);
   const specs = [["Versión", a.version || a.modelo], ["Año", a.anio], ["Kilometraje", a.kilometraje ? km(a.kilometraje) : "Consultar"], ["Transmisión", a.transmision], ["Combustible", a.combustible], ["Categoría", a.categoria]].filter(([, v]) => v);
   const prev = a.precioEspecial && a.precioAnterior ? `<s>${mxn(a.precioAnterior)}</s>` : "";
   const ask = wa(a.apartado ? `Hola, vi que el ${name} está apartado. ¿Tienen algo similar o me avisan si se libera?` : `Hola, me interesa el ${name}${soloArr(a) ? " en arrendamiento" : ` (${mxn(a.precio)})`} que vi en su página: ${SITE}/auto.html?a=${encodeURIComponent(a.slug)}`);
@@ -26,7 +26,7 @@ function render(a, list) {
     : `<div class="stage"><p class="empty" style="position:absolute;inset:0;display:grid;place-items:center">Fotos próximamente</p></div>`;
   const similares = list.filter((x) => x.slug !== a.slug && x.categoria === a.categoria).slice(0, 4);
   const so = soloArr(a);
-  const prBox = so ? `<div class="pr"><b>Solo arrendamiento</b></div>` : `<div class="pr"><b>${mxn(a.precio)}</b>${prev}</div>`;
+  const prBox = `<div class="pr"><b>${mxn(a.precio)}</b>${prev}</div>${so ? `<p class="res-note" style="margin-top:8px">Disponible solo en arrendamiento</p>` : ""}`;
   const arrBtn = a.arrendamiento && !a.apartado ? `<a class="btn ${so ? "ghost" : "quiet"}" style="grid-column:1/-1" href="${arrWa(a)}" target="_blank" rel="noopener">Cotizar arrendamiento</a>` : "";
   const sub = [a.version, a.anio, a.kilometraje ? km(a.kilometraje) : ""].filter(Boolean).map(esc).join(" · ");
   root.innerHTML = `${back}
