@@ -443,8 +443,8 @@ body.v-sec .sim{margin-top:clamp(16px,3vw,32px)}
 .mt{font-size:clamp(30px,4vw,46px);font-weight:700;margin-bottom:20px}
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 @media(max-width:900px){.mgrid{grid-template-columns:1fr 1fr;gap:10px}}
-.mt-i{position:relative;display:block;border-radius:22px;overflow:hidden;aspect-ratio:4/3;background:var(--panel);border:1px solid var(--line);color:#fff;text-align:left;cursor:pointer;padding:0}
-.mt-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:transform .5s}
+.mt-i{position:relative;display:block;border-radius:22px;overflow:hidden;aspect-ratio:3/2;background:var(--panel);border:1px solid var(--line);color:#fff;text-align:left;cursor:pointer;padding:0}
+.mt-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s}
 .mt-i:hover img{transform:scale(1.06)}
 .mt-i:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#000d 0%,#0006 45%,#0000 75%)}
 .mt-i div{position:absolute;left:14px;right:14px;bottom:12px;z-index:1}
@@ -453,7 +453,7 @@ body.v-sec .sim{margin-top:clamp(16px,3vw,32px)}
 .mt-i em{position:absolute;top:10px;left:10px;z-index:1;font-style:normal;font-size:12px;font-weight:700;background:var(--wine);color:#fff;padding:4px 10px;border-radius:99px}
 .mt-i.hot{border:2px solid var(--gold)}
 .mwa{margin-top:18px;width:100%}
-@media(max-width:620px){.mt-i{aspect-ratio:1}.mt-i b{font-size:16px}}
+@media(max-width:620px){.mt-i{aspect-ratio:3/2}.mt-i b{font-size:16px}}
 body.mopen{overflow:hidden}
 body.mopen .fab{display:none}
 /* rifa */
@@ -752,19 +752,19 @@ function render() {
 function renderMenu() {
   const r = D.rifa, sold = r && r.activa ? rSold().length : 0, left = r ? r.total - sold : 0;
   const it = [
-    ['inicio', 'm_sem', 'm_sem_s', 'fotos/ha-calico-joe-2.jpg', '', ''],
-    ['potrillos', 'm_pot', 'm_pot_s', 'fotos/potrillo-coronel.jpg', '', ''],
+    ['inicio', 'm_sem', 'm_sem_s', 'fotos/ha-calico-joe-2.jpg', '', '', 'center 45%'],
+    ['potrillos', 'm_pot', 'm_pot_s', 'fotos/yegua-palomina-potrillo.jpg', '', '', 'center 60%'],
     ['color', 'm_sim', 'm_sim_s', 'fotos/mezcal-step-face-1.jpg', '', ''],
     ['potrillos#panza', 'm_panza', 'm_panza_s', 'fotos/mezcal-gunner-black-2.jpg', '', ''],
-    r && r.activa ? ['rifa', 'm_rifa', '', r.mini || r.foto, `${t('rifa_tag').replace('{n}', r.numero || '')}`, left <= r.ultimos ? tf('rifa_ultimos', { n: left }) : tf('rifa_quedan', { n: left, t: r.total })] : null,
+    r && r.activa ? ['rifa', 'm_rifa', '', 'fotos/rifa7-poster.jpg', `${t('rifa_tag').replace('{n}', r.numero || '')}`, left <= r.ultimos ? tf('rifa_ultimos', { n: left }) : tf('rifa_quedan', { n: left, t: r.total }), 'center 32%'] : null,
     ['confianza', 'm_conf', 'm_conf_s', 'fotos/entrega-rifa2.jpg', '', ''],
-    ['apartar', 'm_book', 'm_book_s', 'fotos/chics-loaded-gun-1.jpg', '', ''],
+    ['apartar', 'm_book', 'm_book_s', 'fotos/chics-loaded-gun-1.jpg', '', '', 'center 55%'],
     ['tienda', 'm_tienda', 'm_tienda_s', 'fotos/tienda-gorra.jpg', '', ''],
-    ['premios', 'm_pr', 'm_pr_s', 'fotos/gunner-missed-my-spot-1.jpg', '', ''],
-    ['preguntas', 'm_faq', 'm_faq_s', 'fotos/mezcal-blue-roan-gun-3.jpg', '', ''],
-    ['nosotros', 'm_nos', 'm_nos_s', 'fotos/lh-wimpys-gotta-gun-4.jpg', '', '']
+    ['premios', 'm_pr', 'm_pr_s', 'fotos/gunner-missed-my-spot-3.jpg', '', ''],
+    ['preguntas', 'm_faq', 'm_faq_s', 'fotos/slidin-for-trash-3.jpg', '', ''],
+    ['nosotros', 'm_nos', 'm_nos_s', 'fotos/mezcalero-voodoo-gun-2.jpg', '', '']
   ].filter(Boolean);
-  $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><i class="fit" style="background-image:url('${esc(img)}')"></i><img src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
+  $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2, pos]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><img style="object-position:${pos || 'center'}" src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
   $('#mWa').innerHTML = WA_ICON + t('m_wa'); $('#mWa').href = waLink(L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses');
 }
 function menu(open) {
