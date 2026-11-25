@@ -1,4 +1,4 @@
-import { autos, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=p4";
+import { autos, mxn, esc, wa, BASE, WA_ICON } from "./comun.js?v=p5";
 
 const $ = (id) => document.getElementById(id);
 $("fixwa") && ($("fixwa").innerHTML = WA_ICON);
@@ -109,7 +109,7 @@ Promise.all([
     $("c-tasa-n").hidden = false; $("c-tasa-n").textContent = `La tasa empieza en ${CFG.tasaAnual}% anual y depende de tu historial crediticio y de la financiera. Si sabes que tu tasa es mayor, cámbiala aquí.`;
   }
   else { $("c-tasa").closest(".field").hidden = true; $("r-men").classList.add("sm"); $("c-sin").hidden = false; }
-  $("c-auto").innerHTML = `<option value="otro">Otro auto (escribe el precio)</option>` + list.filter((a) => !a.apartado).map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");
+  $("c-auto").innerHTML = `<option value="otro">Otro auto (escribe el precio)</option>` + list.filter((a) => !a.apartado && a.arrendamiento !== "solo").map((a) => `<option value="${esc(a.slug)}">${esc(a.title)} · ${mxn(a.precio)}</option>`).join("");
   const want = new URLSearchParams(location.search).get("a"), a = list.find((x) => x.slug === want);
   const qp = new URLSearchParams(location.search), qe = Number(qp.get("e")), qn = Number(qp.get("p"));
   if (CFG.plazos.includes(qn)) PLAZO = qn;

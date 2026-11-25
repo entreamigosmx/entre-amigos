@@ -37,7 +37,8 @@
   ],
   "portada": true,
   "nombre": "GMC Yukon",
-  "version": "Denali XL"
+  "version": "Denali XL",
+  "arrendamiento": "si"
  },
  {
   "title": "Mercedes-AMG GLE 63 4MATIC+ 2022",
@@ -253,7 +254,8 @@
   "transmision": "Automática",
   "portada": true,
   "nombre": "Range Rover Sport",
-  "version": "HSE Dynamic"
+  "version": "HSE Dynamic",
+  "arrendamiento": "si"
  },
  {
   "title": "RAM Limited 2021",
@@ -1458,7 +1460,52 @@
   "nombre": "Jeep Wrangler",
   "version": "TJ 4x4",
   "descripcion": "<p>Un clásico listo para el campo y la ciudad. Jeep Wrangler TJ 1998 levantado, con condiciones mecánicas impecables, factura original de agencia en Guadalajara y placas nuevas de Jalisco, todo pagado.</p><h4>Motor y tracción</h4><ul><li>Motor de 4 cilindros funcionando al 100%</li><li>Sin códigos de error en el tablero</li><li>Transmisión estándar</li><li>Tracción 4x4</li></ul><h4>Preparación todo terreno</h4><ul><li>Levantado 4 pulgadas</li><li>Frenos de disco en las 4 ruedas</li><li>Diferencial trasero Ford 8.8</li><li>5 llantas todo terreno Cooper, incluida la de refacción</li><li>Interior y laderas con recubrimiento Linex</li><li>Defensa delantera tubular con faros auxiliares</li><li>Capota de lona</li></ul><h4>Historial</h4><ul><li>Nacional, factura original de agencia</li><li>Placas nuevas de Jalisco, todo pagado</li><li>262,000 km</li></ul><p>Tomamos tu auto a cuenta. Agenda tu visita en Entre Amigos, Guadalajara, Jalisco.</p>",
-  "transmision": "Estándar",
-  "borrador": true
+  "transmision": "Estándar"
+ },
+ {
+  "title": "Jeep Grand Cherokee Summit 2024",
+  "slug": "jeep-grand-cherokee-summit-2024",
+  "marca": "Jeep",
+  "modelo": "Grand Cherokee Summit",
+  "anio": 2024,
+  "precio": 1400000,
+  "precioEspecial": false,
+  "categoria": "SUV",
+  "categorias": [
+   "SUVs",
+   "Familiares",
+   "Lujo"
+  ],
+  "kilometraje": 60000,
+  "disponible": true,
+  "destacado": false,
+  "orden": 1.25,
+  "foto": "fotos/jeep-grand-cherokee-summit-2024/01.jpg",
+  "galeria": [
+   "fotos/jeep-grand-cherokee-summit-2024/01.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/02.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/03.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/04.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/05.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/06.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/07.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/08.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/09.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/10.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/11.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/12.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/13.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/14.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/15.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/16.jpg",
+   "fotos/jeep-grand-cherokee-summit-2024/17.jpg"
+  ],
+  "nombre": "Jeep Grand Cherokee",
+  "version": "Summit 4x4",
+  "transmision": "Automática",
+  "combustible": "Gasolina",
+  "arrendamiento": "solo",
+  "borrador": true,
+  "descripcion": "<p>La versión más completa de la Grand Cherokee, de un solo dueño y con 60,000 km. Disponible únicamente en arrendamiento.</p><h4>Motor y tracción</h4><ul><li>Motor 3.6 L de 6 cilindros, 293 hp</li><li>Sistema 4x4 Quadra-Trac II</li><li>Transmisión automática</li><li>Gasolina</li></ul><h4>Interior y diseño</h4><ul><li>Color negro con interior en piel color camel</li><li>Asientos acolchados con diseño Summit</li><li>Pantalla central táctil y tablero digital</li><li>Rines de aluminio</li></ul><h4>Historial</h4><ul><li>Un solo dueño</li><li>60,000 km</li></ul><p>Escríbenos y te cotizamos el arrendamiento a tu medida. Entre Amigos, Guadalajara, Jalisco.</p>"
  }
 ]

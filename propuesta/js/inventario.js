@@ -1,12 +1,12 @@
-import { autos, card, esc, WA_ICON } from "./comun.js?v=p4";
+import { autos, card, esc, WA_ICON } from "./comun.js?v=p5";
 
 document.getElementById("fixwa").innerHTML = WA_ICON;
 const $ = (id) => document.getElementById(id);
-const ORDEN = ["Ofertas", "SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Hatchbacks", "Lujo", "Eléctricos", "Motos"];
+const ORDEN = ["Ofertas", "Arrendamiento", "SUVs", "Familiares", "Pickups", "Trabajo", "Todo terreno", "Sedanes", "Hatchbacks", "Lujo", "Eléctricos", "Motos"];
 const LBL = { Motos: "Motocicletas y trimotos" };
 // "Ofertas" se llena sola: todo auto con precio especial y precio anterior mayor al actual.
 const oferta = (a) => !!(a.precioEspecial && a.precioAnterior && a.precioAnterior > a.precio);
-const cats = (a) => [...(oferta(a) ? ["Ofertas"] : []), ...(a.categorias && a.categorias.length ? a.categorias : [a.categoria].filter(Boolean))];
+const cats = (a) => [...(oferta(a) ? ["Ofertas"] : []), ...(a.arrendamiento ? ["Arrendamiento"] : []), ...(a.categorias && a.categorias.length ? a.categorias : [a.categoria].filter(Boolean))];
 let ALL = [], CAT = new URLSearchParams(location.search).get("cat") || "";
 
 function draw() {
@@ -17,7 +17,7 @@ function draw() {
   const by = { pa: (a, b) => a.precio - b.precio, pd: (a, b) => b.precio - a.precio, ad: (a, b) => b.anio - a.anio, km: (a, b) => (a.kilometraje ?? 1e9) - (b.kilometraje ?? 1e9) }[ord];
   if (by) l = l.slice().sort(by);
   else if (CAT === "Ofertas") l = l.slice().sort((a, b) => (b.precioAnterior - b.precio) / b.precioAnterior - (a.precioAnterior - a.precio) / a.precioAnterior);
-  $("count").textContent = CAT === "Ofertas" ? "Precios especiales" : `${l.length} ${l.length === 1 ? "vehículo" : "vehículos"}`; // en Ofertas no se muestra cantidad
+  $("count").innerHTML = CAT === "Ofertas" ? "Precios especiales" : CAT === "Arrendamiento" ? `${l.length} ${l.length === 1 ? "vehículo" : "vehículos"} en arrendamiento · <a href="arrendamiento.html">Cómo funciona</a>` : `${l.length} ${l.length === 1 ? "vehículo" : "vehículos"}`; // en Ofertas no se muestra cantidad
   $("cars").innerHTML = l.length ? l.map(card).join("") : `<p class="empty">No hay vehículos con esos filtros. Prueba con otros filtros o escríbenos: si no lo tenemos, te lo buscamos.</p>`;
   const u = new URL(location); CAT ? u.searchParams.set("cat", CAT) : u.searchParams.delete("cat"); history.replaceState(null, "", u);
 }
