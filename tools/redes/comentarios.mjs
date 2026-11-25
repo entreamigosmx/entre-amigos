@@ -30,6 +30,7 @@ async function cuentas(token) {
 const linea = s => String(s || '').replace(/\s+/g, ' ').trim();
 
 async function leer(soloSlug) {
+  if (soloSlug && soloSlug.startsWith('recientes')) return recientes(Number(soloSlug.split(':')[1]) || 50);
   const token = process.env.META_TOKEN;
   if (!token) throw new Error('Falta META_TOKEN.');
   const { pagina, ig } = await cuentas(token);
@@ -58,6 +59,50 @@ async function leer(soloSlug) {
       } catch (e) { console.log('--- Facebook: ERROR', e.message); }
     }
   }
+}
+
+// Últimas N publicaciones de IG y FB: solo comentarios que la cuenta aún no ha contestado.
+async function recientes(n = 50) {
+  const token = process.env.META_TOKEN;
+  if (!token) throw new Error('Falta META_TOKEN.');
+  const { pagina, ig } = await cuentas(token);
+  const pt = pagina.access_token;
+  let pend = 0;
+  const media = [];
+  let url = `/${ig.id}/media`, params = { fields: 'id,caption,permalink,timestamp,comments_count', limit: 50, access_token: token };
+  while (media.length < n) {
+    const r = await graph(url, params);
+    media.push(...r.data);
+    if (!r.paging?.cursors?.after || !r.data.length) break;
+    params = { ...params, after: r.paging.cursors.after };
+  }
+  console.log(`===== INSTAGRAM: ${Math.min(n, media.length)} publicaciones revisadas`);
+  for (const m of media.slice(0, n)) {
+    if (!m.comments_count) continue;
+    const { data } = await graph(`/${m.id}/comments`, { fields: 'id,text,username,timestamp,replies{id,text,username}', limit: 100, access_token: token });
+    const sin = data.filter(c => c.username !== ig.username && !(c.replies?.data || []).some(x => x.username === ig.username));
+    if (!sin.length) continue;
+    console.log(`\n### ${m.timestamp.slice(0, 10)} ${m.permalink} | ${linea(m.caption).slice(0, 70)}`);
+    for (const c of sin) { pend++; console.log(`[ig ${c.id}] @${c.username} (${c.timestamp}): ${linea(c.text)}`); for (const x of c.replies?.data || []) console.log(`    -> @${x.username}: ${linea(x.text)}`); }
+  }
+  const posts = [];
+  url = `/${pagina.id}/posts`; params = { fields: 'id,message,permalink_url,created_time', limit: 50, access_token: pt };
+  while (posts.length < n) {
+    const r = await graph(url, params);
+    posts.push(...r.data);
+    if (!r.paging?.cursors?.after || !r.data.length) break;
+    params = { ...params, after: r.paging.cursors.after };
+  }
+  console.log(`\n===== FACEBOOK: ${Math.min(n, posts.length)} publicaciones revisadas`);
+  for (const p of posts.slice(0, n)) {
+    let data = [];
+    try { ({ data } = await graph(`/${p.id}/comments`, { fields: 'id,message,from,created_time,comments{id,message,from}', filter: 'toplevel', limit: 100, access_token: pt })); } catch (e) { console.log('ERROR', p.id, e.message); continue; }
+    const sin = data.filter(c => c.from?.id !== pagina.id && !(c.comments?.data || []).some(x => x.from?.id === pagina.id));
+    if (!sin.length) continue;
+    console.log(`\n### ${p.created_time.slice(0, 10)} ${p.permalink_url} | ${linea(p.message).slice(0, 70)}`);
+    for (const c of sin) { pend++; console.log(`[fb ${c.id}] ${c.from?.name || '(sin nombre)'} (${c.created_time}): ${linea(c.message)}`); for (const x of c.comments?.data || []) console.log(`    -> ${x.from?.name || '(sin nombre)'}: ${linea(x.message)}`); }
+  }
+  console.log(`\nTOTAL sin responder: ${pend}`);
 }
 
 async function responder() {
