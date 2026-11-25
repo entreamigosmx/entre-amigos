@@ -527,6 +527,29 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .8s,transform .8s}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.tk-in{animation-duration:200s}.reveal{opacity:1;transform:none}.slides img.on{animation:none}}
+
+.cartp{position:fixed;left:16px;bottom:16px;z-index:35;background:var(--gold);color:#0b0b0c;border:0;border-radius:999px;padding:0 20px;min-height:52px;font:700 15px Inter,sans-serif;display:none;gap:10px;align-items:center;box-shadow:0 10px 30px #000a;cursor:pointer}
+.cartp.on{display:flex}.cartp svg{width:20px;height:20px}.cartp i{font-style:normal;background:#0b0b0c;color:var(--gold);border-radius:99px;min-width:24px;height:24px;display:inline-grid;place-items:center;font-size:13px;padding:0 7px}
+.cartp.bump{animation:bump .5s}@keyframes bump{40%{transform:scale(1.12)}}
+body.mopen .cartp{display:none}
+dialog#cart{width:min(560px,100%);height:auto;max-height:92vh;margin:auto;border-radius:24px;border:1px solid var(--line)}
+@media(max-width:760px){dialog#cart{margin:auto 0 0;max-height:88vh;border-radius:24px 24px 0 0}}
+#cart .cw{padding:22px 22px 24px;display:flex;flex-direction:column;gap:14px}
+#cart .ch{display:flex;justify-content:space-between;align-items:center}#cart .ch b{font:700 28px/1 "Barlow Semi Condensed",Inter,sans-serif}
+#cart .ch button{background:none;border:1px solid var(--line);color:var(--text);border-radius:99px;padding:8px 14px;cursor:pointer;font-size:14px}
+#cart .lbl{margin:6px 0 0}
+.ci{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.ci img{width:56px;height:56px;border-radius:12px;object-fit:cover;background:#000}.ci b{display:block;font-size:15px}.ci small{color:var(--muted);font-size:13px}
+.ci .qt{display:flex;align-items:center;gap:6px}.ci .qt button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--text);font-size:18px;cursor:pointer}
+.ci .qt span{min-width:20px;text-align:center;font-weight:600}.ci .rm{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;padding:4px 0}
+.ctot{display:flex;justify-content:space-between;font-weight:700;font-size:17px;padding-top:4px}.ctot span{color:var(--gold2)}
+#cart .empty{color:var(--muted);text-align:center;padding:24px 0}
+.sp .add{margin-top:auto}.sp .solo{color:var(--muted);font-size:13px;text-align:center;text-decoration:underline;margin-top:-2px}
+.sp .add.ok{background:#1f7a4a;border-color:#1f7a4a;color:#fff}
+.inc{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}.inc small{color:var(--muted);width:100%}
+.inc span{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold);color:var(--gold);border-radius:99px;padding:6px 8px 6px 14px;font-size:14px;font-weight:600}
+.inc span button{background:none;border:0;color:var(--gold);font-size:18px;line-height:1;cursor:pointer;padding:0 4px}
+#dlg .actions{display:flex;gap:10px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -657,6 +680,8 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
 </div></section>
 <footer>Mezcal Quarter Horses · <span data-t="pie"></span></footer>
 <a class="fab" id="fab" target="_blank" rel="noopener"></a>
+<button class="cartp" id="cartp"></button>
+<dialog id="cart"><div class="cw" id="cartw"></div></dialog>
 
 <dialog id="dlg"><div class="f">
   <div class="left"><img class="main" id="dImg" alt=""><div class="thumbs" id="dTh"></div></div>
@@ -668,7 +693,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
     <div class="quick" id="dQuick"></div>
     <div class="tabs" id="dTabs"></div>
     <div id="dBody"></div>
-    <div class="actions"><button class="btn solid" id="dBook" data-t="apartar_este"></button></div>
+    <div class="actions"><button class="btn solid" id="dBook" data-t="apartar_este"></button><a class="btn wa" id="dWa" target="_blank" rel="noopener"></a></div>
   </div>
 </div></dialog>
 
@@ -741,8 +766,7 @@ function render() {
   $('#claims').innerHTML = [1, 2, 3, 4].map(i => `<div>${CK}<span>${t('cl_' + i)}</span></div>`).join('');
   $('#tl').innerHTML = [1, 2, 3, 4, 5].map(i => `<li><i>${i}</i><div><b>${t('tl_' + i)}</b>${t('tl_' + i + 's') ? `<small>${t('tl_' + i + 's')}</small>` : ''}</div></li>`).join('');
   setW(win, false);
-  const fabMsg = L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses';
-  $('#fab').innerHTML = WA_ICON + t('whatsapp'); $('#fab').href = waLink(fabMsg);
+  $('#fab').innerHTML = WA_ICON + t('whatsapp'); updWa(); renderCart();
   $('#dClose').innerHTML = '&times; ' + t('cerrar');
   renderFaq(); renderPrem(); renderShop(); buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
   if (cur && $('#dlg').open) fill(cur);
@@ -765,7 +789,7 @@ function renderMenu() {
     ['nosotros', 'm_nos', 'm_nos_s', 'fotos/mezcalero-voodoo-gun-2.jpg', '', '']
   ].filter(Boolean);
   $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2, pos]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><img style="object-position:${pos || 'center'}" src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
-  $('#mWa').innerHTML = WA_ICON + t('m_wa'); $('#mWa').href = waLink(L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses');
+  $('#mWa').innerHTML = WA_ICON + t('m_wa'); updWa();
 }
 function menu(open) {
   $('#menu').hidden = !open; $('#burger').setAttribute('aria-expanded', open); document.body.classList.toggle('mopen', open);
@@ -783,6 +807,7 @@ function show(v, anchor) {
   if (['inicio', 'potrillos', 'nosotros'].includes(v)) setW(v === 'inicio' ? 'sem' : v === 'potrillos' ? 'pot' : 'nos', false);
   const el = anchor && document.getElementById(anchor);
   if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth' })); else scrollTo({ top: 0 });
+  vAnchor = anchor || ''; updWa();
 }
 function go(v, anchor) { const h = v === 'inicio' ? '#/' : '#/' + v; if (location.hash !== h) history.pushState(null, '', h); show(v, anchor); }
 addEventListener('popstate', () => show(location.hash.replace(/^#\/?/, '') || 'inicio'));
@@ -803,6 +828,7 @@ function setW(w, scroll) {
   $('#wtag').textContent = w === 'sem' ? t('hero_tag') : w === 'pot' ? t('toca_potrillo') : '';
   $('#wtag').style.display = w === 'nos' ? 'none' : '';
   if (scroll) scrollTo({ top: 0, behavior: 'smooth' });
+  if (D) updWa();
 }
 $('#wtabs').onclick = e => { const b = e.target.closest('button'); if (b) setW(b.dataset.w, false); };
 document.querySelectorAll('nav a[data-w]').forEach(a => a.onclick = e => { e.preventDefault(); setW(a.dataset.w, true); });
@@ -939,6 +965,8 @@ function fill(s) {
       : `<div class="video-empty"><div><b>${t('video_vacio')}</b>${t('video_vacio_2')}</div></div>`;
   }
   $('#dBody').innerHTML = h;
+  $('#dWa').innerHTML = WA_ICON + t('preguntar_wa');
+  $('#dWa').href = waLink(L === 'es' ? `Hola, me interesa el semental ${s.apodo ? s.apodo + ' (' + s.nombre + ')' : s.nombre}. ¿Me dan información de maquila y disponibilidad para 2027?` : `Hi, I'm interested in the stallion ${s.nombre}${s.apodo ? ' (' + s.apodo + ')' : ''}. Could you send breeding info and 2027 availability?`);
 }
 $('#dTabs').onclick = e => { const b = e.target.closest('button'); if (b) { tab = b.dataset.k; fill(cur); } };
 $('#dTh').onclick = e => { const b = e.target.closest('button'); if (!b) return; $('#dImg').src = b.dataset.p; $('#dImg').parentElement.style.setProperty('--bgimg', `url('${b.dataset.p}')`); $('#dTh').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
@@ -1037,18 +1065,21 @@ function renderBook() {
   if (bk.step === 1) {
     h = `<label class="l">${t('elige_semental')}</label><div class="picks" id="bPicks">${S.map(x => `<button class="pick ${x.id === bk.id ? 'on' : ''}" data-id="${x.id}"><img loading="lazy" src="${esc(x.fotos[0])}" alt=""><div><b>${esc(x.apodo || x.nombre)}</b><span>${esc(x.color[L])}</span></div></button>`).join('')}</div>
       <label class="l">${t('modalidad')}</label><div class="opts">${mods(s).map(m => `<label class="opt"><input type="radio" name="bm" value="${m}" ${bk.mod === m ? 'checked' : ''}><div><b>${t('mod_' + m)}</b><span>${t('mod_' + m + '_t')}</span></div></label>`).join('')}</div>
-      <div class="nav-b"><span></span><button class="btn solid" data-go="2">${t('siguiente')} &rarr;</button></div>`;
+      ${maqChips()}
+      <div class="nav-b"><button class="btn" data-addm>+ ${t('otra_maquila')}</button><button class="btn solid" data-go="2">${t('siguiente')} &rarr;</button></div>`;
   } else if (bk.step === 2) {
     h = `<div class="two"><div><label class="l">${t('tu_nombre')}</label><input class="inp" id="bN" value="${esc(bk.nombre)}" autocomplete="name"></div><div><label class="l">${t('tu_whatsapp')}</label><input class="inp" id="bW" inputmode="tel" autocomplete="tel" value="${esc(bk.wa)}"></div></div>
       <div class="two"><div><label class="l">${t('tu_ciudad')}</label><input class="inp" id="bC" value="${esc(bk.ciudad)}"></div><div><label class="l">${t('yegua_nombre')}</label><input class="inp" id="bY" value="${esc(bk.yegua)}"></div></div>
       <div class="nav-b"><button class="btn" data-go="1">&larr; ${t('atras')}</button><button class="btn solid" data-go="3" id="b2n">${t('siguiente')} &rarr;</button></div>`;
   } else {
-    const costs = (D.sitio.costos || []).filter(c => c.m === bk.mod);
-    const bmsg = L === 'es' ? `Hola, soy ${bk.nombre}${bk.ciudad ? ' de ' + bk.ciudad : ''}. Quiero cotizar una maquila de ${s.nombre}${s.apodo ? ' (' + s.apodo + ')' : ''}, ${t('mm_' + bk.mod)}, temporada 2027${bk.yegua ? ', para mi yegua ' + bk.yegua : ''}.` : `Hi, I'm ${bk.nombre}${bk.ciudad ? ' from ' + bk.ciudad : ''}. I'd like a quote to breed to ${s.nombre}, ${t('mm_' + bk.mod)}, 2027 season${bk.yegua ? ', for my mare ' + bk.yegua : ''}.`;
-    h = `<div class="sum"><img src="${esc(s.fotos[0])}" alt=""><div><b>${esc(s.nombre)}</b><span>${esc(s.apodo)} · ${t('mm_' + bk.mod)}</span></div></div>
+    addMaq(bk.id, bk.mod, true);
+    const costs = (D.sitio.costos || []).filter(c => cart.m.some(x => x.mod === c.m));
+    const bmsg = cartMsg(); const _old = L === 'es' ? `Hola, soy ${bk.nombre}${bk.ciudad ? ' de ' + bk.ciudad : ''}. Quiero cotizar una maquila de ${s.nombre}${s.apodo ? ' (' + s.apodo + ')' : ''}, ${t('mm_' + bk.mod)}, temporada 2027${bk.yegua ? ', para mi yegua ' + bk.yegua : ''}.` : `Hi, I'm ${bk.nombre}${bk.ciudad ? ' from ' + bk.ciudad : ''}. I'd like a quote to breed to ${s.nombre}, ${t('mm_' + bk.mod)}, 2027 season${bk.yegua ? ', for my mare ' + bk.yegua : ''}.`;
+    h = cart.m.map(x => { const z = S.find(y => y.id === x.id); return z ? `<div class="sum" style="margin-bottom:8px"><img src="${esc(z.fotos[0])}" alt=""><div><b>${esc(z.nombre)}</b><span>${esc(z.apodo)} · ${t('mm_' + x.mod)}</span></div><button class="rm" data-rmm="${x.id}|${x.mod}" style="margin-left:auto;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer">${t('quitar')}</button></div>` : ''; }).join('') + `
+      <button class="btn" data-go="1" style="margin-top:6px">+ ${t('otra_maquila')}</button>
       ${costs.length ? `<p class="lbl" style="margin-top:14px">${t('costos_t')}</p><div class="lines2">${costs.map(c => `<div><span>${esc(c[L])}</span><span>${c.mxn ? money(c.mxn) : t('variable')}</span></div>`).join('')}</div>` : ''}
       <p class="small" style="margin-top:10px">${t('cotiza_t')}</p>
-      <div class="pay"><a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(bmsg)}">${WA_ICON}${t('cotiza_wa')}</a></div>
+      <div class="pay"><a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(bmsg)}">${WA_ICON}${cart.p.length ? t('enviar_pedido') : t('cotiza_wa')}</a></div>
       <div class="nav-b"><button class="btn" data-go="2">&larr; ${t('atras')}</button><span></span></div>`;
   }
   $('#bk').innerHTML = h;
@@ -1057,9 +1088,86 @@ function renderBook() {
 }
 $('#bk').addEventListener('change', e => { if (e.target.name === 'bm') bk.mod = e.target.value; });
 $('#bk').addEventListener('click', e => {
+  if (e.target.closest('[data-addm]')) { addMaq(bk.id, bk.mod); renderBook(); return; }
+  const rmm = e.target.closest('[data-rmm]'); if (rmm) { const [i, m] = rmm.dataset.rmm.split('|'); cart.m = cart.m.filter(x => !(x.id === i && x.mod === m)); saveCart(); if (!cart.m.length) bk.step = 1; else { bk.id = cart.m[0].id; bk.mod = cart.m[0].mod; } renderBook(); return; }
   const p = e.target.closest('#bPicks .pick'); if (p) { const sc = $('#bPicks').scrollLeft; bk.id = p.dataset.id; renderBook(); $('#bPicks').scrollLeft = sc; return; }
   const g = e.target.closest('[data-go]');
   if (g) { if (bk.step === 2) { bk.nombre = $('#bN').value.trim(); bk.wa = $('#bW').value.trim(); bk.ciudad = $('#bC').value.trim(); bk.yegua = $('#bY').value.trim(); } bk.step = +g.dataset.go; renderBook(); return; }
+});
+
+
+/* ---------- WhatsApp según la sección + pedido ---------- */
+const CART_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>';
+let vAnchor = '';
+let cart = { p: [], m: [] };
+try { const c = JSON.parse(localStorage.getItem('mqh-cart')); if (c && Array.isArray(c.p) && Array.isArray(c.m)) cart = c; } catch (e) {}
+function saveCart(quiet) { try { localStorage.setItem('mqh-cart', JSON.stringify(cart)); } catch (e) {} renderCart(!quiet); updWa(); }
+function addProd(id, z) { const it = cart.p.find(x => x.id === id && x.z === z); if (it) it.q++; else cart.p.push({ id, z, q: 1 }); saveCart(); }
+function addMaq(id, mod, quiet) { if (!cart.m.some(x => x.id === id && x.mod === mod)) { cart.m.push({ id, mod }); saveCart(quiet); } }
+const cartP = () => cart.p.map(x => ({ ...x, it: (D.tienda || []).find(y => y.id === x.id) })).filter(x => x.it);
+const cartM = () => cart.m.map(x => ({ ...x, s: S.find(y => y.id === x.id) })).filter(x => x.s);
+const cartN = () => cartP().reduce((a, x) => a + x.q, 0) + cartM().length;
+function cartMsg() {
+  const es = L === 'es', P = cartP(), M = cartM(), l = [];
+  const who = bk.nombre ? (es ? `Hola, soy ${bk.nombre}${bk.ciudad ? ' de ' + bk.ciudad : ''}.` : `Hi, I'm ${bk.nombre}${bk.ciudad ? ' from ' + bk.ciudad : ''}.`) : (es ? 'Hola,' : 'Hi,');
+  l.push(who + (es ? ' quiero hacer este pedido en Mezcal Quarter Horses:' : ' I would like to place this order with Mezcal Quarter Horses:'));
+  if (M.length) { l.push('', es ? 'Maquilas para cotizar (temporada 2027):' : 'Breedings to quote (2027 season):');
+    M.forEach(x => l.push(`- ${x.s.apodo ? x.s.apodo + ' (' + x.s.nombre + ')' : x.s.nombre}: ${t('mm_' + x.mod)}`));
+    if (bk.yegua) l.push(es ? `Para mi yegua: ${bk.yegua}` : `For my mare: ${bk.yegua}`); }
+  if (P.length) { l.push('', es ? 'Tienda:' : 'Store:');
+    P.forEach(x => l.push(`- ${x.q} x ${x.it['n_' + L]}${x.z ? (es ? ', talla ' : ', size ') + x.z : ''}: ${money(x.it.mxn * x.q)}`));
+    l.push((es ? 'Total tienda: ' : 'Store total: ') + money(P.reduce((a, x) => a + x.it.mxn * x.q, 0))); }
+  l.push('', M.length && !P.length ? (es ? '¿Me pasan la cotización y disponibilidad?' : 'Could you send me a quote and availability?') : (es ? '¿Me confirman disponibilidad, envío y forma de pago?' : 'Could you confirm availability, shipping and payment?'));
+  return l.join('\n');
+}
+function ctxMsg() {
+  const es = L === 'es', n = cartN();
+  if (n && ['tienda', 'apartar'].includes(view)) return cartMsg();
+  let k = view;
+  if (['inicio', 'potrillos', 'nosotros'].includes(view)) k = win === 'pot' ? (vAnchor === 'panza' ? 'panza' : 'potrillos') : win === 'nos' ? 'nosotros' : 'inicio';
+  const M = {
+    inicio: ['Hola, vi su página y quiero información de sus sementales.', 'Hi, I saw your website and would like information about your stallions.'],
+    potrillos: ['Hola, me interesan los potrillos en venta. ¿Qué tienen disponible?', 'Hi, I\'m interested in your foals for sale. What do you have available?'],
+    panza: ['Hola, me interesa comprar un potrillo desde la panza. ¿Cómo funciona?', 'Hi, I\'m interested in buying a foal before it\'s born. How does it work?'],
+    nosotros: ['Hola, quiero agendar una visita al rancho. ¿Qué día puedo ir?', 'Hi, I\'d like to schedule a visit to the ranch. What day works?'],
+    color: ['Hola, usé el simulador de colores y tengo una duda sobre una cruza.', 'Hi, I used the color simulator and have a question about a cross.'],
+    rifa: ['Hola, quiero información de la rifa y apartar boletos.', 'Hi, I\'d like information about the raffle and to reserve tickets.'],
+    confianza: ['Hola, vi las opiniones de sus clientes y quiero información.', 'Hi, I saw your customer reviews and would like information.'],
+    apartar: ['Hola, quiero cotizar una maquila para la temporada 2027.', 'Hi, I\'d like a breeding quote for the 2027 season.'],
+    preguntas: ['Hola, tengo una pregunta.', 'Hi, I have a question.'],
+    premios: ['Hola, vi los premios de sus sementales y quiero información.', 'Hi, I saw your stallions\' awards and would like information.'],
+    tienda: ['Hola, quiero información de la tienda Mezcal.', 'Hi, I\'d like information about the Mezcal store.']
+  };
+  return (M[k] || M.inicio)[es ? 0 : 1];
+}
+function updWa() { if (!D) return; const h = waLink(ctxMsg()); $('#fab').href = h; $('#mWa').href = h; }
+function maqChips() {
+  const M = cartM(); if (!M.length) return '';
+  return `<div class="inc"><small>${t('en_pedido')}</small>${M.map(x => `<span>${esc(x.s.apodo || x.s.nombre)} · ${t('mm_' + x.mod)}<button data-rmm="${x.id}|${x.mod}" aria-label="${t('quitar')}">&times;</button></span>`).join('')}</div>`;
+}
+function renderCart(bump) {
+  const n = cartN(), p = $('#cartp');
+  p.classList.toggle('on', n > 0); p.innerHTML = `${CART_ICON}${t('mi_pedido')}<i>${n}</i>`;
+  if (bump && n) { p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
+  if (!$('#cart').open) return;
+  const P = cartP(), M = cartM();
+  let h = `<div class="ch"><b>${t('mi_pedido')}</b><button data-cx>&times; ${t('cerrar')}</button></div>`;
+  if (!n) h += `<p class="empty">${t('pedido_vacio')}</p>`;
+  if (M.length) h += `<p class="lbl">${t('maq_cotizar')}</p>` + M.map(x => `<div class="ci"><img src="${esc(x.s.fotos[0])}" alt=""><div><b>${esc(x.s.apodo || x.s.nombre)}</b><small>${esc(x.s.nombre)} · ${t('mm_' + x.mod)}</small></div><button class="rm" data-rmm="${x.id}|${x.mod}">${t('quitar')}</button></div>`).join('');
+  if (P.length) h += `<p class="lbl">${t('m_tienda')}</p>` + P.map((x, i) => `<div class="ci"><img src="${esc(x.it.foto)}" alt=""><div><b>${esc(x.it['n_' + L])}</b><small>${x.z ? t('talla') + ' ' + x.z + ' · ' : ''}${money(x.it.mxn)}</small></div><div class="qt"><button data-q="${x.id}|${x.z}|-1">&minus;</button><span>${x.q}</span><button data-q="${x.id}|${x.z}|1">+</button></div></div>`).join('')
+    + `<div class="ctot"><b>${t('total_tienda')}</b><span>${money(P.reduce((a, x) => a + x.it.mxn * x.q, 0))}</span></div>`;
+  if (n) h += `<p class="small" style="margin:0">${t('pedido_nota')}</p><a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(cartMsg())}">${WA_ICON}${t('enviar_pedido')}</a>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-more="tienda" style="flex:1">${t('seguir_tienda')}</button><button class="btn" data-more="apartar" style="flex:1">+ ${t('otra_maquila')}</button></div>
+    <button class="rm" data-clear style="background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;align-self:center">${t('vaciar')}</button>`;
+  $('#cartw').innerHTML = h;
+}
+$('#cartp').onclick = () => { $('#cart').showModal(); renderCart(); };
+$('#cart').addEventListener('click', e => {
+  if (e.target.id === 'cart' || e.target.closest('[data-cx]')) { $('#cart').close(); return; }
+  const q = e.target.closest('[data-q]'); if (q) { const [id, z, d] = q.dataset.q.split('|'); const it = cart.p.find(x => x.id === id && x.z === z); if (it) { it.q += +d; if (it.q < 1) cart.p = cart.p.filter(x => x !== it); } saveCart(true); renderCart(); return; }
+  const r = e.target.closest('[data-rmm]'); if (r) { const [i, m] = r.dataset.rmm.split('|'); cart.m = cart.m.filter(x => !(x.id === i && x.mod === m)); saveCart(true); renderCart(); if (view === 'apartar') renderBook(); return; }
+  if (e.target.closest('[data-clear]')) { cart = { p: [], m: [] }; saveCart(true); renderCart(); if (view === 'apartar') { bk.step = 1; renderBook(); } return; }
+  const m = e.target.closest('[data-more]'); if (m) { $('#cart').close(); if (m.dataset.more === 'apartar') { bk.step = 1; renderBook(); } go(m.dataset.more); }
 });
 
 function renderFaq() {
@@ -1081,9 +1189,14 @@ function renderShop() {
     return `<div class="sp"><div class="si"><img src="${esc(x.foto)}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
     <div class="sb"><div class="st1"><b>${esc(x['n_' + L])}</b><span>${money(x.mxn)}</span></div><p>${esc(x['d_' + L])}</p>
     ${x.tallas ? `<div class="sz"><small>${t('talla')}</small>${x.tallas.map(s => `<button data-p="${x.id}" data-z="${s}" class="${s === sz ? 'on' : ''}">${s}</button>`).join('')}</div>` : ''}
-    <a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(msg)}">${WA_ICON}${t('tienda_wa')}</a></div></div>`; }).join('');
+    <button class="btn solid add" data-add="${x.id}">${CART_ICON}${t('agregar_pedido')}</button>
+    <a class="solo" target="_blank" rel="noopener" href="${waLink(msg)}">${t('pedir_solo')}</a></div></div>`; }).join('');
 }
-$('#shg').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b) { shopSel[b.dataset.p] = b.dataset.z; renderShop(); } });
+$('#shg').addEventListener('click', e => {
+  const b = e.target.closest('[data-z]'); if (b) { shopSel[b.dataset.p] = b.dataset.z; renderShop(); return; }
+  const a = e.target.closest('[data-add]'); if (a) { const x = D.tienda.find(y => y.id === a.dataset.add); addProd(x.id, x.tallas ? (shopSel[x.id] || x.tallas[1]) : '');
+    a.classList.add('ok'); a.innerHTML = '&#10003; ' + t('agregado'); setTimeout(() => { a.classList.remove('ok'); a.innerHTML = CART_ICON + t('agregar_pedido'); }, 1600); }
+});
 function renderLinks() {
   const s = D.sitio, l = [];
   l.push(`<a class="btn wa" target="_blank" rel="noopener" href="${waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question')}">${WA_ICON}${t('whatsapp')}</a>`);
