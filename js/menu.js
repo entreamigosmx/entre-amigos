@@ -8,6 +8,7 @@
     ['servicios.html', 'Servicios'],
     ['vender.html', 'Vende tu auto'],
     ['creditos.html', 'Créditos'],
+    ['arrendamiento.html', 'Arrendamiento'],
     ['nosotros.html', 'Nosotros'],
     ['nosotros.html#clientes', 'Nuestros clientes'],
     ['./#visita', 'Visítanos']
