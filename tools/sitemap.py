@@ -3,7 +3,7 @@
 import json
 
 A = json.load(open('data/autos.json'))
-pages = ['', 'inventario.html', 'servicios.html', 'nosotros.html', 'vender.html', 'creditos.html', 'prestamos.html', 'visitanos.html']
+pages = ['', 'inventario.html', 'servicios.html', 'nosotros.html', 'vender.html', 'creditos.html', 'prestamos.html', 'arrendamiento.html', 'visitanos.html']
 urls = ['https://ventaentreamigos.com/' + p for p in pages]
 urls += ['https://ventaentreamigos.com/auto.html?a=' + a['slug']
          for a in sorted(A, key=lambda a: a.get('orden', 999))
