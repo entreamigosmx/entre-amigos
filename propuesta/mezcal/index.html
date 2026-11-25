@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex">
+<link rel="icon" href="fotos/icono.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mezcal Quarter Horses</title>
 <meta name="description" content="Sementales Quarter Horse y crianza de potrillos en Zapopan, Jalisco.">
@@ -33,7 +34,11 @@ h2.big{font-size:clamp(36px,5.4vw,60px);font-weight:700;line-height:1.05}
 
 header{position:fixed;inset:0 0 auto;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:12px clamp(16px,4vw,44px);transition:background .3s}
 header.solid{background:#0b0b0cf2;backdrop-filter:blur(8px);box-shadow:0 1px 0 var(--line)}
-header .logo img{height:74px;width:auto;filter:drop-shadow(0 2px 6px #000a)}
+header .logo{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none}
+header .logo img{height:50px;width:auto;filter:drop-shadow(0 2px 6px #000a)}
+header .logo .wm{display:flex;flex-direction:column;line-height:1;border-left:1px solid #d6aa4e66;padding-left:12px}
+header .logo .wm b{font:700 25px/1 "Barlow Semi Condensed",Inter,sans-serif;letter-spacing:.2em}
+header .logo .wm small{font:600 10.5px/1 Inter,sans-serif;letter-spacing:.32em;color:var(--gold2);margin-top:6px}
 nav{display:flex;gap:clamp(14px,2vw,26px);align-items:center;font-size:15px;font-weight:500}
 nav a:hover{color:var(--gold)}
 nav .cta{background:var(--gold);color:#0b0b0c;padding:10px 18px;border-radius:999px;font-weight:600}
@@ -42,7 +47,7 @@ nav .cta:hover{background:var(--gold2);color:#0b0b0c}
 .lang button{background:none;border:0;color:var(--muted);font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer}
 .lang button.on{background:var(--gold);color:#000}
 @media(max-width:1060px){nav .hide-m{display:none}}
-@media(max-width:560px){header .logo img{height:48px}nav .cta{display:none}}
+@media(max-width:560px){header .logo{gap:9px}header .logo img{height:36px}header .logo .wm{padding-left:9px}header .logo .wm b{font-size:18px;letter-spacing:.16em}header .logo .wm small{font-size:8px;letter-spacing:.24em;margin-top:4px}nav .cta{display:none}}
 
 .hero{position:relative;min-height:100svh;display:flex;align-items:flex-end;padding:0 clamp(16px,6vw,80px) clamp(56px,10vh,110px);overflow:hidden}
 .slides{position:absolute;inset:0}
@@ -489,7 +494,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
 </head>
 <body>
 <header id="hdr">
-  <a class="logo" href="#/" id="logo" aria-label="Inicio"><img src="fotos/logo.png" alt="Mezcal Quarter Horses"></a>
+  <a class="logo" href="#/" id="logo" aria-label="Inicio"><img src="fotos/emblema.png" alt=""><span class="wm"><b>MEZCAL</b><small>QUARTER HORSES</small></span></a>
   <nav>
     <a class="cta" href="#/apartar" data-go-v="apartar" data-t="nav_apartar"></a>
     <div class="lang"><button data-l="es">ES</button><button data-l="en">EN</button></div>
