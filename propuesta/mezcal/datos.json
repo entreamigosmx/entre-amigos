@@ -2297,19 +2297,35 @@
    "id": "gorra",
    "n_es": "Gorra Mezcal",
    "n_en": "Mezcal Cap",
-   "d_es": "Negra, bordado dorado, ajustable.",
-   "d_en": "Black, gold embroidery, adjustable.",
+   "d_es": "Negra, logo bordado en dorado, ajustable.",
+   "d_en": "Black, gold embroidered logo, adjustable.",
    "mxn": 450,
    "tallas": null,
    "foto": "fotos/tienda-gorra.jpg",
    "ejemplo": true
   },
   {
+   "id": "sombrero",
+   "n_es": "Sombrero Mezcal",
+   "n_en": "Mezcal Hat",
+   "d_es": "Color hueso, con emblema dorado en la toquilla.",
+   "d_en": "Bone white, gold emblem on the band.",
+   "mxn": 1450,
+   "tallas": [
+    "56",
+    "57",
+    "58",
+    "59"
+   ],
+   "foto": "fotos/tienda-sombrero.jpg",
+   "ejemplo": true
+  },
+  {
    "id": "playera",
    "n_es": "Playera Mezcal",
    "n_en": "Mezcal T-shirt",
-   "d_es": "Algodón, color hueso.",
-   "d_en": "Cotton, bone white.",
+   "d_es": "Algodón blanco, logo estampado al frente.",
+   "d_en": "White cotton, printed front logo.",
    "mxn": 390,
    "tallas": [
     "S",
@@ -2321,12 +2337,28 @@
    "ejemplo": true
   },
   {
+   "id": "mezclilla",
+   "n_es": "Chamarra de mezclilla",
+   "n_en": "Denim Jacket",
+   "d_es": "Logo grande bordado en la espalda.",
+   "d_en": "Large embroidered logo on the back.",
+   "mxn": 1650,
+   "tallas": [
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "foto": "fotos/tienda-mezclilla.jpg",
+   "ejemplo": true
+  },
+  {
    "id": "chamarra",
-   "n_es": "Chamarra de trabajo",
-   "n_en": "Work Jacket",
-   "d_es": "Lona café con cuello de pana.",
-   "d_en": "Brown canvas, corduroy collar.",
-   "mxn": 1850,
+   "n_es": "Chamarra negra",
+   "n_en": "Black Jacket",
+   "d_es": "Mezclilla negra, emblema bordado en el pecho.",
+   "d_en": "Black denim, embroidered chest emblem.",
+   "mxn": 1650,
    "tallas": [
     "S",
     "M",
@@ -2337,30 +2369,25 @@
    "ejemplo": true
   },
   {
-   "id": "chaleco",
-   "n_es": "Chaleco acolchado",
-   "n_en": "Quilted Vest",
-   "d_es": "Negro, ligero y abrigador.",
-   "d_en": "Black, light and warm.",
-   "mxn": 1250,
-   "tallas": [
-    "S",
-    "M",
-    "L",
-    "XL"
-   ],
-   "foto": "fotos/tienda-chaleco.jpg",
-   "ejemplo": true
-  },
-  {
    "id": "termo",
    "n_es": "Termo Mezcal",
    "n_en": "Mezcal Tumbler",
-   "d_es": "Acero inoxidable, 590 ml.",
-   "d_en": "Stainless steel, 20 oz.",
-   "mxn": 490,
+   "d_es": "Acero inoxidable, 1.2 litros, logo grabado.",
+   "d_en": "Stainless steel, 40 oz, engraved logo.",
+   "mxn": 590,
    "tallas": null,
    "foto": "fotos/tienda-termo.jpg",
+   "ejemplo": true
+  },
+  {
+   "id": "cuchillo",
+   "n_es": "Cuchillo de campo",
+   "n_en": "Field Knife",
+   "d_es": "Hoja de acero con logo grabado.",
+   "d_en": "Steel blade with etched logo.",
+   "mxn": 890,
+   "tallas": null,
+   "foto": "fotos/tienda-cuchillo.jpg",
    "ejemplo": true
   },
   {
