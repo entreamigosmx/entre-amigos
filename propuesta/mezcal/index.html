@@ -79,7 +79,9 @@ nav .cta:hover{background:var(--gold2);color:#0b0b0c}
 .rancho .pics img:last-child{margin-top:48px}
 .rancho p{color:#ddd5c9;margin-top:16px;font-size:18px}
 .note{display:inline-block;margin-top:16px;font-size:13px;color:var(--gold);border:1px dashed #d6aa4e88;padding:6px 12px;border-radius:999px}
-.loc{margin-top:28px;padding:20px 22px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.locs{margin-top:24px;padding:18px 20px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}.locs h4{font-size:20px;font-weight:600}.locs>p{margin:2px 0 8px;font-size:15px;color:var(--muted)}
+.loc{margin-top:10px;padding:20px 22px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.sede{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.sede b{display:block;font-size:16px}.sede small{color:var(--muted);font-size:13px}.sede .btn{padding:9px 14px;font-size:14px}
 .loc h4{font-size:20px;font-weight:600}
 .loc p{margin:0;font-size:15px;color:var(--muted)}
 @media(max-width:860px){.rancho{grid-template-columns:1fr}}
@@ -183,6 +185,15 @@ dialog .f{border-radius:inherit}
   .st .lab{opacity:1;transform:none}
   .st .v{display:none}.st .bdg{opacity:1}
   body.v-potrillos .stable,body.v-nosotros .stable{padding-top:82px}
+  #panels{flex-direction:column;overflow:visible;scroll-snap-type:none;gap:4px;height:min(680px,calc(100svh - 190px));min-height:520px}
+  #panels .st{flex:1 1 0;min-height:0;aspect-ratio:auto;border-radius:12px}
+  #panels .st.on{flex:14 1 0}
+  #panels .st img{filter:grayscale(.75) brightness(.5);object-position:center 35%}
+  #panels .st.on img{filter:none}
+  #panels .st .lab{opacity:0;transform:translateY(10px);padding:18px}
+  #panels .st.on .lab{opacity:1;transform:none}
+  #panels .st .lab b{font-size:32px}
+  #panels .st .v{display:block;writing-mode:horizontal-tb;transform:translateY(-50%);top:50%;bottom:auto;left:14px;font-size:10px;letter-spacing:.18em}
 }
 .ticker{display:flex;align-items:stretch;background:linear-gradient(90deg,var(--gold),var(--gold2));color:#0b0b0c;font-weight:600;overflow:hidden;font-size:16px}
 .tk-l{background:var(--wine);color:#fff;padding:13px 20px;text-transform:uppercase;font-size:13px;letter-spacing:.14em;flex:none;display:flex;align-items:center}
@@ -234,6 +245,7 @@ dialog .f{border-radius:inherit}
 .fpi span{color:var(--gold2);font-size:13px}
 .fpi.on{border-color:var(--gold);box-shadow:0 0 0 3px #d6aa4e44}
 .fpi em{position:absolute;top:8px;left:8px;font-style:normal;font-size:11px;font-weight:600;background:#1f5f7a;color:#fff;padding:3px 8px;border-radius:99px}
+.finl{margin:6px 0 8px;padding-left:20px;color:var(--text);font-size:15px;line-height:1.55}.finl li{margin:3px 0}
 .engs{display:flex;gap:8px;flex-wrap:wrap}
 .engs button{background:var(--bg);border:2px solid var(--line);border-radius:999px;padding:10px 18px;font-weight:600;cursor:pointer}
 .engs button.on{border-color:var(--gold);color:var(--gold)}
@@ -499,7 +511,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
     <div class="pane nos" data-pane="nos" id="rancho">
       <div class="nimg"><img src="fotos/rancho-atardecer.jpg" alt=""></div>
       <div class="ntx"><h2 class="serif" data-t="nos_titulo"></h2><p data-t="nos_p"></p><span class="note" data-t="rancho_nota"></span>
-        <div class="loc"><div><h4 data-t="ubicacion_titulo"></h4><p data-t="ubicacion_texto"></p></div><a class="btn" id="mapa" target="_blank" rel="noopener" data-t="ubicacion_mapa"></a></div></div>
+        <div class="locs"><h4 data-t="ubicacion_titulo"></h4><p data-t="ubicacion_texto"></p><div id="sedes"></div></div></div>
     </div>
   </div>
 </div>
@@ -641,8 +653,9 @@ function setSt(i) { stI = i; [...$('#panels').children].forEach((b, k) => b.clas
 const wide = () => matchMedia('(min-width:761px)').matches;
 $('#panels').addEventListener('mouseover', e => { const b = e.target.closest('.st'); if (b && wide()) { stHold = true; setSt(+b.dataset.i); } });
 $('#panels').addEventListener('mouseleave', () => { stHold = false; });
-$('#panels').addEventListener('click', e => { const b = e.target.closest('.st'); if (!b) return; const i = +b.dataset.i; if (!wide() || i === stI) openF(S[i]); else setSt(i); });
-setInterval(() => { if (!stHold && wide() && D && !document.hidden) setSt((stI + 1) % S.length); }, 4000);
+$('#panels').addEventListener('click', e => { const b = e.target.closest('.st'); if (!b) return; const i = +b.dataset.i; if (i === stI) openF(S[i]); else { stHold = true; setSt(i); clearTimeout(stT); stT = setTimeout(() => { stHold = false; }, 8000); } });
+let stT = 0;
+setInterval(() => { if (!stHold && D && !document.hidden && view === 'inicio') setSt((stI + 1) % S.length); }, 4000);
 
 function render() {
   document.documentElement.lang = L; document.body.classList.toggle('pres', !!D.sitio.presentacion);
@@ -652,7 +665,7 @@ function render() {
   $('#demoNote').style.display = D.sitio.pagos_demo ? '' : 'none';
   const ht = t('hero_titulo').split(',');
   $('#heroT').innerHTML = ht.length > 1 ? `${esc(ht[0])},<br><em>${esc(ht.slice(1).join(',').trim())}</em>` : esc(ht[0]);
-  $('#mapa').href = D.sitio.mapa;
+  $('#sedes').innerHTML = (D.sitio.sedes || []).map(x => `<div class="sede"><div><b>${esc(x[L])}</b><small>${esc(x['s_' + L])}</small></div><a class="btn" target="_blank" rel="noopener" href="${esc(x.mapa)}">${t('ubicacion_mapa')}</a></div>`).join('');
   const CK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>';
   $('#claims').innerHTML = [1, 2, 3, 4].map(i => `<div>${CK}<span>${t('cl_' + i)}</span></div>`).join('');
   $('#tl').innerHTML = [1, 2, 3, 4, 5].map(i => `<li><i>${i}</i><div><b>${t('tl_' + i)}</b>${t('tl_' + i + 's') ? `<small>${t('tl_' + i + 's')}</small>` : ''}</div></li>`).join('');
@@ -741,21 +754,19 @@ function buildFoals() {
 $('#fpanels').addEventListener('mouseover', e => { const b = e.target.closest('.st'); if (b && wide()) [...$('#fpanels').children].forEach(x => x.classList.toggle('on', x === b)); });
 $('#fpanels').addEventListener('click', e => { const b = e.target.closest('.st'); if (!b) return; fsel = b.dataset.f; renderCalc(); $('#panza').scrollIntoView({ behavior: 'smooth' }); });
 function renderCalc() {
-  const fin = D.sitio.financiamiento; if (!fsel) fsel = D.venta[0].id; if (!eng) eng = fin.enganches[0];
+  const fin = D.sitio.financiamiento; if (!fsel) fsel = D.venta[0].id; 
   const f = D.venta.find(x => x.id === fsel), sr = sire(f);
   let h = `<p class="lbl">${t('panza_elige')}</p><div class="fp">${D.venta.map(x => `<button class="fpi ${x.id === fsel ? 'on' : ''}" data-f="${x.id}"><img src="${esc(fPic(x))}" alt=""><em>${t(x.estado)}</em><div><b>${esc(fName(x))}</b><span>${esc(fColor(x))}</span></div></button>`).join('')}</div>
     <div class="lines2" style="margin-top:16px"><div><span>${t('padre_l')}</span><span>${esc(sr.nombre)}</span></div><div><span>${t('madre_l')}</span><span style="text-align:right">${esc(mareTxt(f))}</span></div>
-    <div><span>${f.estado === 'por_nacer' ? t('nace') : t('nacio')}</span><span>${esc(fDate(f))}</span></div><div><span>${t('panza_contado')}</span><b>${money(f.precio_mxn)}</b></div></div>`;
+    <div><span>${f.estado === 'por_nacer' ? t('nace') : t('nacio')}</span><span>${esc(fDate(f))}</span></div></div>`;
   if (f.estado === 'por_nacer') {
     h += `<div class="pzp"><p class="lbl">${t('pz_probs')}</p><div class="pzw"><img src="${esc(sr.fotos[0])}" alt=""><span>+</span><div class="mare" style="background:${SW[f.madre.color] || SW.nose}">${t('c_' + f.madre.color)}</div></div>
       <div class="bars">${fProbs(f).map(([k, v]) => `<div class="bar"><i style="background:${SW[k]}"></i><div class="t"><b>${PH[L][k]}${L === 'es' && AQ[k] !== PH.es[k] ? ` <small style="color:var(--muted);font-weight:500">(${AQ[k]})</small>` : ''}</b><div><span style="width:${Math.round(v * 100)}%"></span></div></div><div class="pct">${Math.round(v * 100)}%</div></div>`).join('')}</div>
       <p class="small" style="margin-top:8px">${t('pz_probs_n')}</p></div>`;
-    const n = monthsTo(f), e = Math.round(f.precio_mxn * eng), mo = Math.ceil((f.precio_mxn - e) / n);
-    h += `<p class="lbl" style="margin-top:18px">${t('panza_enganche')}</p><div class="engs">${fin.enganches.map(x => `<button data-e="${x}" class="${x === eng ? 'on' : ''}">${Math.round(x * 100)}%</button>`).join('')}</div>
-      <div class="big-n"><div><small>${t('panza_enganche')}</small><b>${money(e)}</b></div><div><small>${n} ${t('panza_meses')}</small><b>${money(mo)}</b></div></div>`;
   }
-  const msg = L === 'es' ? `Hola, me interesa el ${fName(f).toLowerCase()}.` : `Hi, I'm interested in the ${fName(f)}.`;
-  h += `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="btn solid" data-res>${t('panza_cta')}</button><a class="btn wa" target="_blank" rel="noopener" href="${waLink(msg)}">${WA_ICON}${t('panza_wa')}</a></div><div class="demo" id="calcDemo"></div>`;
+  const msg = L === 'es' ? `Hola, me interesa el ${fName(f).toLowerCase()} (mamá: ${f.madre.es}). ¿Me pasan precio y plan de pagos?` : `Hi, I'm interested in the ${fName(f)} (dam: ${f.madre.en}). Could you send price and payment plan?`;
+  h += `<p class="lbl" style="margin-top:18px">${t('panza_eyebrow')}</p><ul class="finl">${(fin[L] || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="small">${t('panza_nota')}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(msg)}">${WA_ICON}${t('panza_wa')}</a></div>`;
   $('#calc').innerHTML = h;
 }
 $('#calc').addEventListener('click', e => {
@@ -802,27 +813,13 @@ function renderRifa() {
       <div class="two"><div><label class="l">${t('tu_nombre')}</label><input class="inp" id="rN" value="${esc(rf.nombre)}" autocomplete="name"></div><div><label class="l">${t('tu_whatsapp')}</label><input class="inp" id="rW" inputmode="tel" autocomplete="tel" value="${esc(rf.wa)}"></div></div>
       <button class="btn solid" id="rGo" style="width:100%;margin-top:8px">${t('rifa_apartar')}</button>`;
   } else {
-    const nums = rf.sel.map(pad).join(' '), concepto = `RIFA${r.numero || ''} ${nums} ${rf.nombre}`.slice(0, 40);
-    const clabe = String(r.clabe).replace(/(\d{3})(\d{3})(\d{11})(\d)/, '$1 $2 $3 $4');
-    const msg = L === 'es' ? `Hola, soy ${rf.nombre}. Aparté los boletos ${nums} de la rifa (${r.premio.es}). Te mando mi comprobante de ${money(tot)}.` : `Hi, I'm ${rf.nombre}. I reserved tickets ${nums} in the raffle (${r.premio.en}). Here is my receipt for ${money(tot)}.`;
+    const nums = rf.sel.map(pad).join(' ');
+    const msg = L === 'es' ? `Hola, soy ${rf.nombre}. Quiero apartar los boletos ${nums} de la rifa (${r.premio.es}), total ${money(tot)}. ¿Me pasan los datos para pagar?` : `Hi, I'm ${rf.nombre}. I'd like to reserve tickets ${nums} in the raffle (${r.premio.en}), total ${money(tot)}. Could you send the payment details?`;
     h = `<div class="sum" style="margin-bottom:14px"><img src="${esc(r.foto)}" alt=""><div><b>${t('rifa_tus')}: ${esc(nums)}</b><span>${esc(r.premio[L])}</span></div></div>
-      <p class="lbl">${t('rifa_como_pagar')}</p>
-      <div class="pm">${['tarjeta', 'transf'].map(m => `<button data-m="${m}" class="${rf.metodo === m ? 'on' : ''}"><b>${t('rifa_m_' + m)}</b><span>${t('rifa_m_' + m + '_s')}</span></button>`).join('')}</div>
-      ${rf.metodo === 'tarjeta' ? `<div class="xfer"><h4>${t('rifa_tarjeta_t')}</h4>
-      <div class="ln"><span>${t('rifa_monto')}</span><b>${money(tot)}</b></div>
-      <p class="small" style="margin:10px 0 14px">${t('rifa_tarjeta_p')}</p>
-      <button class="btn solid" data-card style="width:100%">${tf('rifa_pagar', { m: money(tot) })}</button>
-      <p class="small" style="text-align:center;margin-top:10px">${t('rifa_tarjetas')}</p>
-      <div class="demo" id="rfCard"></div></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button class="btn" data-back>&larr; ${t('rifa_otro')}</button></div>` : `
       <div class="xfer"><h4>${t('rifa_paga_t')}</h4>
       <div class="ln"><span>${t('rifa_monto')}</span><b>${money(tot)}</b></div>
-      <div class="ln"><span>${t('rifa_banco')}</span><b>${esc(r.banco)}</b></div>
-      <div class="ln"><span>${t('rifa_clabe')}</span><b>${esc(clabe)}<button class="cp" data-cp="${esc(r.clabe)}">${rf.copied ? t('rifa_copiado') : t('rifa_copiar')}</button></b></div>
-      <div class="ln"><span>${t('rifa_titular')}</span><b>${esc(r.titular)}</b></div>
-      <div class="ln"><span>${t('rifa_concepto')}</span><b>${esc(concepto)}</b></div></div>
-      <p class="small" style="margin:12px 0">${tf('rifa_aviso', { h: r.apartado_horas })}</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn wa" target="_blank" rel="noopener" href="${waLink(msg)}">${WA_ICON}${t('rifa_comprobante')}</a><button class="btn" data-back>&larr; ${t('rifa_otro')}</button></div>`}`;
+      <p class="small" style="margin:12px 0 0">${t('rifa_wa_t')}</p></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(msg)}">${WA_ICON}${t('rifa_wa')}</a><button class="btn" data-back>&larr; ${t('rifa_otro')}</button></div>`;
   }
   $('#tix').innerHTML = h;
   if (rf.paso === 1) { const v = () => { rf.nombre = $('#rN').value.trim(); rf.wa = $('#rW').value.trim(); $('#rGo').disabled = !(rf.sel.length && rf.nombre && rf.wa); }; ['rN', 'rW'].forEach(i => $('#' + i).addEventListener('input', v)); v(); }
@@ -850,7 +847,7 @@ function openF(s) { cur = s; tab = 'fam'; fill(s); $('#dlg').showModal(); $('#dl
 function fill(s) {
   $('#dName').textContent = s.nombre; $('#dNick').textContent = s.apodo || '';
   $('#dDesc').textContent = s.texto[L] || '';
-  $('#dQuick').innerHTML = [s.color[L], s.anio, s.registro].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
+  $('#dQuick').innerHTML = [s.color[L], s.anio, s.registro].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('') + (s.modalidades ? `<span class="mods">${t('modalidad_l')}: ${s.modalidades.map(m => t('mm_' + m)).join(', ')}</span>` : '');
   $('#dImg').src = s.fotos[0]; $('#dImg').alt = s.nombre; $('#dImg').parentElement.style.setProperty('--bgimg', `url('${s.fotos[0]}')`);
   $('#dTh').innerHTML = s.fotos.map((p, i) => `<button data-p="${esc(p)}" class="${i ? '' : 'on'}"><img src="${esc(p)}" alt=""></button>`).join('');
   $('#dTabs').innerHTML = [['fam', 'tab_pedigri'], ['reg', 'tab_registro'], ['vid', 'tab_video']].filter(([k]) => k !== 'vid' || s.video || !D.sitio.presentacion).map(([k, l]) => `<button data-k="${k}" class="${tab === k ? 'on' : ''}">${t(l)}</button>`).join('');
@@ -958,24 +955,26 @@ $('#upOk').addEventListener('change', upCheck);
 $('#up').addEventListener('submit', e => { e.preventDefault(); $('#upDone').innerHTML = `<b>${t('sube_gracias')}</b>`; $('#upDone').classList.add('on'); $('#upBtn').disabled = true; });
 
 /* ---------- apartar ---------- */
+const mods = s => (s && s.modalidades) || ['fresco', 'congelado', 'monta'];
 function renderBook() {
   [...$('#steps').children].forEach((d, i) => { d.className = i + 1 === bk.step ? 'on' : i + 1 < bk.step ? 'done' : ''; });
-  const s = S.find(x => x.id === bk.id); let h = '';
+  const s = S.find(x => x.id === bk.id) || S[0]; if (!bk.id) bk.id = s.id; let h = '';
+  if (!mods(s).includes(bk.mod)) bk.mod = mods(s)[0];
   if (bk.step === 1) {
     h = `<label class="l">${t('elige_semental')}</label><div class="picks" id="bPicks">${S.map(x => `<button class="pick ${x.id === bk.id ? 'on' : ''}" data-id="${x.id}"><img loading="lazy" src="${esc(x.fotos[0])}" alt=""><div><b>${esc(x.apodo || x.nombre)}</b><span>${esc(x.color[L])}</span></div></button>`).join('')}</div>
-      <label class="l">${t('modalidad')}</label><div class="opts">${['fresco', 'congelado', 'monta'].map(m => `<label class="opt"><input type="radio" name="bm" value="${m}" ${bk.mod === m ? 'checked' : ''}><div><b>${t('mod_' + m)}</b><span>${t('mod_' + m + '_t')}</span></div></label>`).join('')}</div>
+      <label class="l">${t('modalidad')}</label><div class="opts">${mods(s).map(m => `<label class="opt"><input type="radio" name="bm" value="${m}" ${bk.mod === m ? 'checked' : ''}><div><b>${t('mod_' + m)}</b><span>${t('mod_' + m + '_t')}</span></div></label>`).join('')}</div>
       <div class="nav-b"><span></span><button class="btn solid" data-go="2">${t('siguiente')} &rarr;</button></div>`;
   } else if (bk.step === 2) {
     h = `<div class="two"><div><label class="l">${t('tu_nombre')}</label><input class="inp" id="bN" value="${esc(bk.nombre)}" autocomplete="name"></div><div><label class="l">${t('tu_whatsapp')}</label><input class="inp" id="bW" inputmode="tel" autocomplete="tel" value="${esc(bk.wa)}"></div></div>
       <div class="two"><div><label class="l">${t('tu_ciudad')}</label><input class="inp" id="bC" value="${esc(bk.ciudad)}"></div><div><label class="l">${t('yegua_nombre')}</label><input class="inp" id="bY" value="${esc(bk.yegua)}"></div></div>
       <div class="nav-b"><button class="btn" data-go="1">&larr; ${t('atras')}</button><button class="btn solid" data-go="3" id="b2n">${t('siguiente')} &rarr;</button></div>`;
   } else {
-    h = `<div class="sum"><img src="${esc(s.fotos[0])}" alt=""><div><b>${esc(s.nombre)}</b><span>${esc(s.apodo)} · ${t('mod_' + bk.mod)}</span></div></div>
-      <div class="lines2"><div><span>${t('precio_maquila')}</span><span>${s.precio_maquila_mxn ? money(s.precio_maquila_mxn) : t('a_consultar')}</span></div>
-      <div><span>${t('anticipo')}</span><b>${money(D.sitio.apartado_mxn)}</b></div></div>
-      <p class="small">${t('resto')}</p>
-      <div class="pay"><button class="btn solid" data-pay>${t('pagar_tarjeta')}</button><button class="btn" data-pay>${t('pagar_mp')}</button><button class="btn" data-pay>${t('pagar_spei')}</button><button class="btn wa" data-call>${WA_ICON}${t('pagar_llamada')}</button></div>
-      <div class="demo" id="demo"></div>
+    const costs = (D.sitio.costos || []).filter(c => c.m === bk.mod);
+    const bmsg = L === 'es' ? `Hola, soy ${bk.nombre}${bk.ciudad ? ' de ' + bk.ciudad : ''}. Quiero cotizar una maquila de ${s.nombre}${s.apodo ? ' (' + s.apodo + ')' : ''}, ${t('mm_' + bk.mod)}, temporada 2027${bk.yegua ? ', para mi yegua ' + bk.yegua : ''}.` : `Hi, I'm ${bk.nombre}${bk.ciudad ? ' from ' + bk.ciudad : ''}. I'd like a quote to breed to ${s.nombre}, ${t('mm_' + bk.mod)}, 2027 season${bk.yegua ? ', for my mare ' + bk.yegua : ''}.`;
+    h = `<div class="sum"><img src="${esc(s.fotos[0])}" alt=""><div><b>${esc(s.nombre)}</b><span>${esc(s.apodo)} · ${t('mm_' + bk.mod)}</span></div></div>
+      ${costs.length ? `<p class="lbl" style="margin-top:14px">${t('costos_t')}</p><div class="lines2">${costs.map(c => `<div><span>${esc(c[L])}</span><span>${c.mxn ? money(c.mxn) : t('variable')}</span></div>`).join('')}</div>` : ''}
+      <p class="small" style="margin-top:10px">${t('cotiza_t')}</p>
+      <div class="pay"><a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(bmsg)}">${WA_ICON}${t('cotiza_wa')}</a></div>
       <div class="nav-b"><button class="btn" data-go="2">&larr; ${t('atras')}</button><span></span></div>`;
   }
   $('#bk').innerHTML = h;
@@ -984,16 +983,17 @@ function renderBook() {
 }
 $('#bk').addEventListener('change', e => { if (e.target.name === 'bm') bk.mod = e.target.value; });
 $('#bk').addEventListener('click', e => {
-  const p = e.target.closest('#bPicks .pick'); if (p) { bk.id = p.dataset.id; $('#bPicks').querySelectorAll('.pick').forEach(x => x.classList.toggle('on', x === p)); return; }
+  const p = e.target.closest('#bPicks .pick'); if (p) { const sc = $('#bPicks').scrollLeft; bk.id = p.dataset.id; renderBook(); $('#bPicks').scrollLeft = sc; return; }
   const g = e.target.closest('[data-go]');
   if (g) { if (bk.step === 2) { bk.nombre = $('#bN').value.trim(); bk.wa = $('#bW').value.trim(); bk.ciudad = $('#bC').value.trim(); bk.yegua = $('#bY').value.trim(); } bk.step = +g.dataset.go; renderBook(); return; }
-  if (e.target.closest('[data-pay]')) { $('#demo').innerHTML = `<b>${t('demo_titulo')}</b><p>${t('demo_texto')}</p>`; $('#demo').classList.add('on'); }
-  if (e.target.closest('[data-call]')) { $('#demo').innerHTML = `<b>${t('llamada_t')}</b>`; $('#demo').classList.add('on'); }
 });
 
 function renderLinks() {
   const s = D.sitio, l = [];
   l.push(`<a class="btn wa" target="_blank" rel="noopener" href="${waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question')}">${WA_ICON}${t('whatsapp')}</a>`);
+  if (s.facebook) l.push(`<a class="btn" target="_blank" rel="noopener" href="${esc(s.facebook)}">Facebook</a>`);
+  if (s.tiktok) l.push(`<a class="btn" target="_blank" rel="noopener" href="${esc(s.tiktok)}">TikTok</a>`);
+  if (s.correo) l.push(`<a class="btn" href="mailto:${esc(s.correo)}">${t('correo')}</a>`);
   if (s.instagram) l.push(`<a class="btn" target="_blank" rel="noopener" href="https://instagram.com/${esc(s.instagram)}">${t('instagram')}</a>`);
   $('#links').innerHTML = l.join('');
 }

@@ -18,8 +18,8 @@
    },
    "pedigri": "Wimpys Little Step x Seven S Mimosa (Hollywood Dun It)",
    "texto": {
-    "es": "Campeón NRBC 2013 Open L3 y L4. Reserva Campeón Mundial AQHA en reining Junior (2012) y Senior (2013). Ganancias de por vida superiores a 280,000 USD. Sus hijos destacan en reining, ranch y como caballos de lazo: en 2026 se colocó entre los padres líderes del Riata Buckle.",
-    "en": "2013 NRBC Open L3 and L4 Champion. AQHA Reserve World Champion in Junior (2012) and Senior (2013) Reining. Lifetime earnings over $280,000. His offspring excel in reining, ranch and roping: in 2026 he ranked among the Riata Buckle leading sires."
+    "es": "Campeón NRBC 2013 Open L3 y L4 y dos veces Reserva Campeón Mundial AQHA en reining. Como padre: 457 crías AQHA, 147 hijos ganadores, más de 1 millón de dólares en ganancias y un hijo campeón mundial AQHA (QStallions, nov 2026).",
+    "en": "2013 NRBC Open L3 and L4 Champion and two-time AQHA Reserve World Champion in reining. As a sire: 457 AQHA foals, 147 money earners, over $1 million in offspring earnings and an AQHA world champion son (QStallions, Nov 2026)."
    },
    "fuentes": [
     "https://www.silverspursequine.com/wimpyneedsacocktail",
@@ -57,10 +57,12 @@
     "Nu Chex To Cash"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa nCr",
-   "probado": true
+   "probado": true,
+   "modalidades": [
+    "congelado"
+   ]
   },
   {
    "id": "chics-loaded-gun",
@@ -114,10 +116,13 @@
     "Smart Chic Olena"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "ee Aa",
-   "probado": true
+   "probado": true,
+   "modalidades": [
+    "fresco",
+    "congelado"
+   ]
   },
   {
    "id": "ha-calico-joe",
@@ -171,7 +176,6 @@
     "Spooks Gotta Whiz"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa nCr",
    "probado": false
@@ -228,10 +232,13 @@
     "Spooks Gotta Whiz"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa",
-   "probado": false
+   "probado": false,
+   "modalidades": [
+    "fresco",
+    "congelado"
+   ]
   },
   {
    "id": "good-times-n-guns",
@@ -286,7 +293,6 @@
     "Hollywood Dun It"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "ee Aa nCr",
    "probado": false
@@ -304,8 +310,8 @@
    },
    "pedigri": "Colonels Smokingun x Sunny Spotacular (Mark This Spot)",
    "texto": {
-    "es": "Hijo directo de Gunner, con color y pinta Paint.",
-    "en": "A direct son of Gunner, with Paint color and pattern."
+    "es": "Hijo directo de Gunner. Gran Campeón Caladero APHA (Morelia, 2022) y Campeón Reservado Caladero Amateur (Gran Premio Internacional Vallarta, 2022).",
+    "en": "A direct son of Gunner. APHA Caladero Grand Champion (Morelia, 2022) and Amateur Caladero Reserve Champion (Vallarta International Grand Prix, 2022)."
    },
    "fuentes": [
     "https://equusmagazine.com/news/gunner-nrha-all-time-sire"
@@ -345,10 +351,14 @@
     "Gunner"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "ee Aa CrCr",
-   "probado": false
+   "probado": false,
+   "modalidades": [
+    "monta",
+    "fresco",
+    "congelado"
+   ]
   },
   {
    "id": "blazin-guns-in-town",
@@ -400,7 +410,6 @@
     "Hollywood Dun It"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa",
    "probado": false
@@ -458,7 +467,6 @@
     "Nu Chex To Cash"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "ee Aa nCr",
    "probado": false
@@ -516,7 +524,6 @@
     "Nu Chex To Cash"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "ee Aa",
    "probado": false
@@ -576,7 +583,6 @@
     "Nu Chex To Cash"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa CrCr",
    "probado": false
@@ -632,7 +638,6 @@
     "Smart Chic Olena"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa",
    "probado": false
@@ -650,8 +655,8 @@
    },
    "pedigri": "Letit Happen Hancock x CRF Guns N Lace (No Guns Please)",
    "texto": {
-    "es": "Color blue roan con ojos azules, línea Hancock y línea Gunner. Panel genético de 5 pruebas negativo (N/N).",
-    "en": "Blue roan with blue eyes, combining Hancock and Gunner bloodlines. 5-panel genetic test negative (N/N)."
+    "es": "Blue roan homocigoto (Rn/Rn): todos sus hijos salen roan. Une la línea Hancock con la línea Gunner.",
+    "en": "Homozygous blue roan (Rn/Rn): every foal will be roan. Combines Hancock and Gunner bloodlines."
    },
    "fuentes": [],
    "fotos": [
@@ -688,10 +693,15 @@
     "Hancock"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee aa RnRn",
-   "probado": false
+   "probado": false,
+   "modalidades": [
+    "monta",
+    "fresco",
+    "congelado"
+   ],
+   "nacimiento": "2022-04-03"
   },
   {
    "id": "mezcal-voodoo-gunner",
@@ -749,7 +759,6 @@
     "Smart Chic Olena"
    ],
    "video": "",
-   "precio_maquila_mxn": 13000,
    "disponible": true,
    "genotipo": "ee Aa CrCr",
    "probado": false
@@ -806,7 +815,6 @@
     "Hollywood Dun It"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa",
    "probado": false
@@ -824,8 +832,8 @@
    },
    "pedigri": "Shiners Voodoo Dr x HF A Winforthechics (HF Mobster)",
    "texto": {
-    "es": "Nacido en México; medio hermano de Mezcalero 66 por la madre.",
-    "en": "Foaled in Mexico; maternal half-brother to Mezcalero 66."
+    "es": "Hijo de Shiners Voodoo Dr. En entrenamiento de rienda con Cuco Raya.",
+    "en": "By Shiners Voodoo Dr. In reining training with Cuco Raya."
    },
    "fuentes": [],
    "fotos": [
@@ -863,10 +871,14 @@
     "Smart Chic Olena"
    ],
    "video": "",
-   "precio_maquila_mxn": null,
    "disponible": true,
    "genotipo": "Ee Aa nCr",
-   "probado": false
+   "probado": false,
+   "modalidades": [
+    "monta",
+    "fresco",
+    "congelado"
+   ]
   }
  ],
  "sitio": {
@@ -874,7 +886,7 @@
    "nav_rancho": "Nosotros",
    "nav_sementales": "Sementales",
    "nav_cruza": "¿Cómo saldría mi potrillo?",
-   "nav_apartar": "Apartar maquila",
+   "nav_apartar": "Cotizar maquila",
    "nav_contacto": "Contacto",
    "hero_eyebrow": "Zapopan, Jalisco",
    "hero_titulo": "Sementales probados, potrillos de campeonato",
@@ -896,9 +908,9 @@
    "rancho_titulo": "Un rancho familiar con caballos de primera",
    "rancho_p1": "Mezcal Quarter Horses está en Zapopan, Jalisco. Trajimos a México sementales de las mejores familias de Estados Unidos para que aquí nazcan potrillos de primer nivel.",
    "rancho_p2": "Aquí ya nacen potrillos como El Catrín y Calexo. Trabajamos con criadores grandes y pequeños, con o sin experiencia: te explicamos todo paso a paso.",
-   "rancho_nota": "Texto en borrador: falta la historia real del rancho.",
-   "ubicacion_titulo": "Dónde estamos",
-   "ubicacion_texto": "Zapopan, Jalisco. Visítanos con cita.",
+   "rancho_nota": "",
+   "ubicacion_titulo": "Visítanos",
+   "ubicacion_texto": "Lunes a sábado, 11 a. m. a 4 p. m., con cita.",
    "ubicacion_mapa": "Cómo llegar",
    "sementales_titulo": "Nuestros sementales",
    "sementales_sub": "Toca un caballo para ver su ficha.",
@@ -959,18 +971,18 @@
    "cruza_cta": "Apartar esta cruza",
    "cruza_wa": "Preguntar por WhatsApp",
    "apartar_eyebrow": "Temporada 2027",
-   "apartar_titulo": "Aparta tu maquila",
-   "apartar_texto": "En tres pasos, o te llamamos.",
+   "apartar_titulo": "Cotiza tu maquila",
+   "apartar_texto": "En tres pasos te mandamos tu cotización por WhatsApp.",
    "paso1": "Semental",
    "paso2": "Tus datos",
-   "paso3": "Pago",
+   "paso3": "Cotización",
    "modalidad": "¿Cómo la quieres?",
    "mod_fresco": "Te lo mandamos a tu rancho",
-   "mod_fresco_t": "Semen refrigerado, llega en 24 horas.",
+   "mod_fresco_t": "Semen refrigerado, se envía a tu rancho.",
    "mod_congelado": "Semen congelado",
    "mod_congelado_t": "Para guardarlo o mandarlo lejos.",
    "mod_monta": "Traes tu yegua al rancho",
-   "mod_monta_t": "Nosotros nos encargamos de todo aquí.",
+   "mod_monta_t": "Tu yegua viene al rancho.",
    "elige_semental": "Escoge tu semental",
    "temporada": "Temporada",
    "tu_nombre": "Tu nombre",
@@ -994,10 +1006,10 @@
    "demo_banner": "Vista previa: los pagos están en modo demostración.",
    "llamada_t": "Listo. Te llamamos pronto.",
    "contacto_titulo": "¿Tienes dudas?",
-   "contacto_texto": "Escríbenos por WhatsApp.",
+   "contacto_texto": "Escríbenos por WhatsApp, correo o redes.",
    "whatsapp": "WhatsApp",
    "instagram": "Instagram",
-   "pie": "Zapopan, Jalisco, México",
+   "pie": "Zapopan e Ixtlahuacán del Río, Jalisco, México",
    "c_retinto": "Retinto",
    "q1_nota": "Colores oficiales AQHA.",
    "hero_tag": "Toca un semental",
@@ -1028,8 +1040,8 @@
    "cl_4": "100% registrados",
    "tl_titulo": "Cómo funciona",
    "tl_1": "Escoges tu semental",
-   "tl_2": "Apartas tu lugar",
-   "tl_3": "Inseminamos o te mandamos el semen",
+   "tl_2": "Te cotizamos por WhatsApp",
+   "tl_3": "Firmas contrato e inseminamos",
    "tl_4": "Confirmamos la preñez",
    "tl_5": "Nace tu potrillo",
    "tl_5s": "unos 11 meses después",
@@ -1045,17 +1057,17 @@
    "precio": "Precio",
    "panza_eyebrow": "Financiamiento",
    "panza_titulo": "Compra tu potrillo antes de que nazca",
-   "panza_texto": "Aparta con enganche y paga en mensualidades hasta el nacimiento.",
+   "panza_texto": "Apártalo antes de que nazca y págalo en mensualidades.",
    "panza_elige": "Escoge el potrillo",
    "panza_enganche": "Enganche",
    "panza_mensual": "Mensualidad",
    "panza_meses": "mensualidades hasta que nazca",
    "panza_cta": "Apartar este potrillo",
-   "panza_wa": "Preguntar por WhatsApp",
-   "panza_nota": "Precios y plazos sujetos a disponibilidad.",
+   "panza_wa": "Pedir precio y plan de pagos",
+   "panza_nota": "Condiciones completas en el contrato.",
    "panza_contado": "Precio de contado",
-   "nos_titulo": "Rancho familiar en Zapopan",
-   "nos_p": "Desde 2014 criamos Quarter Horse de las mejores líneas de Estados Unidos. Sementales probados, yeguas de registro y potrillos nacidos aquí.",
+   "nos_titulo": "Desde 2010, orgullo mexicano",
+   "nos_p": "Eduardo Gómez fundó Mezcal Quarter Horses en 2010 para criar Quarter Horse que trasciendan generaciones. El nombre honra una de las tradiciones más mexicanas. Hoy reunimos líneas como Gunner, Wimpys Little Step, Spooks Gotta Whiz y Shiners Voodoo Dr, con inseminación, transferencia de embriones y manejo reproductivo.",
    "ver_venta": "Ver potrillo",
    "toca_potrillo": "Toca un potrillo",
    "nav_rifa": "Rifa",
@@ -1078,7 +1090,7 @@
    "rifa_total": "Total",
    "rifa_toca": "Toca uno o varios boletos",
    "rifa_apartar": "Apartar y pagar",
-   "rifa_paga_t": "Haz tu transferencia",
+   "rifa_paga_t": "Aparta tus boletos",
    "rifa_banco": "Banco",
    "rifa_clabe": "CLABE",
    "rifa_titular": "A nombre de",
@@ -1127,18 +1139,29 @@
    "m_rifa": "Rifa",
    "m_conf": "Gente que ya confió",
    "m_conf_s": "Sus potrillos",
-   "m_book": "Apartar maquila",
+   "m_book": "Cotizar maquila",
    "m_book_s": "En 3 pasos",
    "m_nos": "Nosotros",
    "m_nos_s": "El rancho y dónde estamos",
    "m_wa": "Escríbenos por WhatsApp",
-   "tk_sangre": "Sangre Mezcal"
+   "tk_sangre": "Sangre Mezcal",
+   "cotiza_wa": "Solicitar cotización por WhatsApp",
+   "cotiza_t": "La maquila se paga completa al contratar y se firma contrato. La garantía de preñez va según el contrato.",
+   "costos_t": "Costos adicionales",
+   "variable": "Según destino",
+   "modalidad_l": "Disponible",
+   "rifa_wa_t": "Mándanos tus números por WhatsApp y te pasamos los datos para pagar. Al confirmar tu pago te enviamos tu boleto.",
+   "rifa_wa": "Apartar por WhatsApp",
+   "correo": "Correo",
+   "mm_monta": "monta directa",
+   "mm_fresco": "semen fresco",
+   "mm_congelado": "semen congelado"
   },
   "en": {
    "nav_rancho": "About",
    "nav_sementales": "Stallions",
    "nav_cruza": "What will my foal look like?",
-   "nav_apartar": "Book a breeding",
+   "nav_apartar": "Get a breeding quote",
    "nav_contacto": "Contact",
    "hero_eyebrow": "Zapopan, Jalisco",
    "hero_titulo": "Proven stallions, champion foals",
@@ -1160,9 +1183,9 @@
    "rancho_titulo": "A family ranch with first-class horses",
    "rancho_p1": "Mezcal Quarter Horses is in Zapopan, Jalisco. We brought stallions from the best U.S. families to Mexico so top-level foals can be born here.",
    "rancho_p2": "Foals like El Catrín and Calexo are already born here. We work with big and small breeders, experienced or not: we explain everything step by step.",
-   "rancho_nota": "Draft copy: the ranch's real story is still missing.",
-   "ubicacion_titulo": "Where we are",
-   "ubicacion_texto": "Zapopan, Jalisco. Visits by appointment.",
+   "rancho_nota": "",
+   "ubicacion_titulo": "Visit us",
+   "ubicacion_texto": "Monday to Saturday, 11 a.m. to 4 p.m., by appointment.",
    "ubicacion_mapa": "Directions",
    "sementales_titulo": "Our stallions",
    "sementales_sub": "Tap a horse to see its profile.",
@@ -1223,18 +1246,18 @@
    "cruza_cta": "Book this cross",
    "cruza_wa": "Ask on WhatsApp",
    "apartar_eyebrow": "2027 season",
-   "apartar_titulo": "Book your breeding",
-   "apartar_texto": "In three steps, or we call you.",
+   "apartar_titulo": "Get your breeding quote",
+   "apartar_texto": "In three steps we send your quote on WhatsApp.",
    "paso1": "Stallion",
    "paso2": "Your details",
-   "paso3": "Payment",
+   "paso3": "Quote",
    "modalidad": "How would you like it?",
    "mod_fresco": "Shipped to your ranch",
-   "mod_fresco_t": "Cooled semen, arrives in 24 hours.",
+   "mod_fresco_t": "Chilled semen shipped to your ranch.",
    "mod_congelado": "Frozen semen",
    "mod_congelado_t": "To store or ship far away.",
    "mod_monta": "Bring your mare to the ranch",
-   "mod_monta_t": "We take care of everything here.",
+   "mod_monta_t": "Your mare comes to the ranch.",
    "elige_semental": "Pick your stallion",
    "temporada": "Season",
    "tu_nombre": "Your name",
@@ -1258,10 +1281,10 @@
    "demo_banner": "Preview: payments are in demo mode.",
    "llamada_t": "Done. We will call you soon.",
    "contacto_titulo": "Questions?",
-   "contacto_texto": "Message us on WhatsApp.",
+   "contacto_texto": "Message us on WhatsApp, email or social media.",
    "whatsapp": "WhatsApp",
    "instagram": "Instagram",
-   "pie": "Zapopan, Jalisco, Mexico",
+   "pie": "Zapopan and Ixtlahuacán del Río, Jalisco, Mexico",
    "c_retinto": "Brown",
    "q1_nota": "Official AQHA colors.",
    "hero_tag": "Tap a stallion",
@@ -1292,8 +1315,8 @@
    "cl_4": "100% registered",
    "tl_titulo": "How it works",
    "tl_1": "Pick your stallion",
-   "tl_2": "Save your spot",
-   "tl_3": "We inseminate or ship the semen",
+   "tl_2": "We quote you on WhatsApp",
+   "tl_3": "Sign the contract and we breed",
    "tl_4": "We confirm pregnancy",
    "tl_5": "Your foal is born",
    "tl_5s": "about 11 months later",
@@ -1309,17 +1332,17 @@
    "precio": "Price",
    "panza_eyebrow": "Financing",
    "panza_titulo": "Buy your foal before it is born",
-   "panza_texto": "Reserve with a down payment and pay monthly until birth.",
+   "panza_texto": "Reserve it before it is born and pay monthly.",
    "panza_elige": "Pick the foal",
    "panza_enganche": "Down payment",
    "panza_mensual": "Monthly payment",
    "panza_meses": "monthly payments until birth",
    "panza_cta": "Reserve this foal",
-   "panza_wa": "Ask on WhatsApp",
-   "panza_nota": "Prices and terms subject to availability.",
+   "panza_wa": "Ask for price and payment plan",
+   "panza_nota": "Full terms in the contract.",
    "panza_contado": "Cash price",
-   "nos_titulo": "Family ranch in Zapopan",
-   "nos_p": "Since 2014 we have bred Quarter Horses from top US bloodlines. Proven stallions, registered mares and foals born here.",
+   "nos_titulo": "Since 2010, Mexican pride",
+   "nos_p": "Eduardo Gómez founded Mezcal Quarter Horses in 2010 to breed Quarter Horses that last for generations. The name honors one of Mexico's most iconic traditions. Today we bring together bloodlines like Gunner, Wimpys Little Step, Spooks Gotta Whiz and Shiners Voodoo Dr, with artificial insemination, embryo transfer and reproductive management.",
    "ver_venta": "See foal",
    "toca_potrillo": "Tap a foal",
    "nav_rifa": "Raffle",
@@ -1342,7 +1365,7 @@
    "rifa_total": "Total",
    "rifa_toca": "Tap one or more tickets",
    "rifa_apartar": "Reserve and pay",
-   "rifa_paga_t": "Make your transfer",
+   "rifa_paga_t": "Reserve your tickets",
    "rifa_banco": "Bank",
    "rifa_clabe": "CLABE",
    "rifa_titular": "Account holder",
@@ -1391,14 +1414,25 @@
    "m_rifa": "Raffle",
    "m_conf": "Happy clients",
    "m_conf_s": "Their foals",
-   "m_book": "Book a breeding",
+   "m_book": "Breeding quote",
    "m_book_s": "In 3 steps",
    "m_nos": "About us",
    "m_nos_s": "The ranch and where we are",
    "m_wa": "Message us on WhatsApp",
-   "tk_sangre": "Mezcal blood"
+   "tk_sangre": "Mezcal blood",
+   "cotiza_wa": "Request a quote on WhatsApp",
+   "cotiza_t": "The stud fee is paid in full when booking, under a signed contract. Pregnancy guarantee per contract.",
+   "costos_t": "Additional costs",
+   "variable": "Depends on destination",
+   "modalidad_l": "Available",
+   "rifa_wa_t": "Send us your numbers on WhatsApp and we will share the payment details. Once confirmed, we send your ticket.",
+   "rifa_wa": "Reserve on WhatsApp",
+   "correo": "Email",
+   "mm_monta": "live cover",
+   "mm_fresco": "fresh semen",
+   "mm_congelado": "frozen semen"
   },
-  "whatsapp": "",
+  "whatsapp": "523325483880",
   "instagram": "mezcal_quarter_horses",
   "leyendas": {
    "Colonels Smoking Gun": {
@@ -1447,23 +1481,92 @@
     "en": "$4 million reining sire."
    }
   },
-  "apartado_mxn": 5000,
   "temporadas": [
    "2027"
   ],
-  "mapa": "https://www.google.com/maps/search/?api=1&query=Zapopan%2C%20Jalisco",
-  "pagos_demo": true,
+  "mapa": "https://maps.app.goo.gl/pVc7jK8tkdXxTJuC9",
+  "pagos_demo": false,
   "financiamiento": {
-   "enganches": [
-    0.3,
-    0.4,
-    0.5
+   "es": [
+    "Apártalo desde la gestación.",
+    "Enganche y mensualidades a tu medida, con contrato.",
+    "Si se pierde la gestación, eliges otra o se repite con la misma yegua.",
+    "Lo recibes en Zapopan después del destete, ya liquidado."
+   ],
+   "en": [
+    "Reserve it during gestation.",
+    "Down payment and monthly payments tailored to you, under contract.",
+    "If the pregnancy is lost, choose another one or repeat with the same mare.",
+    "Pick it up in Zapopan after weaning, once paid in full."
    ]
   },
   "presentacion": true,
-  "banco_demo": true
+  "banco_demo": false,
+  "facebook": "https://www.facebook.com/share/1CnuahKpp6/",
+  "tiktok": "https://www.tiktok.com/@mezcal.qh.oficial",
+  "correo": "mezcalquarterhorses@gmail.com",
+  "sedes": [
+   {
+    "es": "Zapopan, Jalisco",
+    "en": "Zapopan, Jalisco",
+    "s_es": "Sede principal",
+    "s_en": "Main ranch",
+    "mapa": "https://maps.app.goo.gl/pVc7jK8tkdXxTJuC9"
+   },
+   {
+    "es": "Ixtlahuacán del Río, Jalisco",
+    "en": "Ixtlahuacán del Río, Jalisco",
+    "s_es": "Segunda sede",
+    "s_en": "Second ranch",
+    "mapa": "https://maps.app.goo.gl/5LizfK4835hUTMXFA"
+   }
+  ],
+  "costos": [
+   {
+    "m": "fresco",
+    "es": "Colecta de semen fresco",
+    "en": "Fresh semen collection",
+    "mxn": 3500
+   },
+   {
+    "m": "fresco",
+    "es": "Renta de termo",
+    "en": "Shipping tank rental",
+    "mxn": 1500
+   },
+   {
+    "m": "fresco",
+    "es": "Depósito de termo (se regresa)",
+    "en": "Tank deposit (refundable)",
+    "mxn": 4000
+   },
+   {
+    "m": "fresco",
+    "es": "Envío",
+    "en": "Shipping",
+    "mxn": null
+   },
+   {
+    "m": "congelado",
+    "es": "Servicio, yegua sin registro",
+    "en": "Service, unregistered mare",
+    "mxn": 2000
+   },
+   {
+    "m": "congelado",
+    "es": "Servicio, yegua con registro",
+    "en": "Service, registered mare",
+    "mxn": 3000
+   }
+  ]
  },
  "noticias": [
+  {
+   "fecha": "Oct 2026",
+   "es": "Llega al rancho Wimpyneedsacocktail, hijo de Wimpys Little Step",
+   "en": "Wimpyneedsacocktail, by Wimpys Little Step, joins the ranch",
+   "s": "wimpyneedsacocktail"
+  },
   {
    "fecha": "2026",
    "es": "Wimpyneedsacocktail, entre los padres líderes del Riata Buckle 2026",
@@ -1840,12 +1943,9 @@
   "ultimos": 10,
   "fecha_sorteo": "",
   "como": {
-   "es": "Cada boleto participa con 5 números. Gana el que coincida con la Lotería Nacional.",
-   "en": "Each ticket plays 5 numbers. The winner matches the Lotería Nacional draw."
+   "es": "Cada boleto participa con 5 números. Se aparta y se paga por WhatsApp.",
+   "en": "Each ticket plays 5 numbers. Reserve and pay on WhatsApp."
   },
-  "banco": "BBVA",
-  "clabe": "012320011548836271",
-  "titular": "Mezcal Quarter Horses",
   "apartado_horas": 24,
   "numero": 7,
   "vendidos_ejemplo": true,
