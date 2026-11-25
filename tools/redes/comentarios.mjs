@@ -30,6 +30,7 @@ async function cuentas(token) {
 const linea = s => String(s || '').replace(/\s+/g, ' ').trim();
 
 async function leer(soloSlug) {
+  if (soloSlug && soloSlug.startsWith('listado')) return listado(Number(soloSlug.split(':')[1]) || 200);
   if (soloSlug && soloSlug.startsWith('recientes')) return recientes(Number(soloSlug.split(':')[1]) || 50);
   const token = process.env.META_TOKEN;
   if (!token) throw new Error('Falta META_TOKEN.');
@@ -62,6 +63,20 @@ async function leer(soloSlug) {
 }
 
 // Últimas N publicaciones de IG y FB: solo comentarios que la cuenta aún no ha contestado.
+// Lista las últimas n publicaciones (fecha + primer renglón del texto) de IG y FB, para saber qué autos ya se publicaron.
+async function listado(n = 200) {
+  const token = process.env.META_TOKEN;
+  if (!token) throw new Error('Falta META_TOKEN.');
+  const { pagina, ig } = await cuentas(token);
+  const todo = async (url, params, campo) => { const out = []; while (out.length < n) { const r = await graph(url, params); out.push(...r.data); if (!r.paging?.cursors?.after || !r.data.length) break; params = { ...params, after: r.paging.cursors.after }; } return out.slice(0, n); };
+  const media = await todo(`/${ig.id}/media`, { fields: 'id,caption,permalink,timestamp,media_type', limit: 50, access_token: token });
+  console.log(`===== INSTAGRAM: ${media.length}`);
+  for (const m of media) console.log(`${m.timestamp.slice(0, 10)} ${m.media_type} ${m.permalink} | ${linea(m.caption).slice(0, 90)}`);
+  const posts = await todo(`/${pagina.id}/posts`, { fields: 'id,message,permalink_url,created_time', limit: 50, access_token: pagina.access_token });
+  console.log(`\n===== FACEBOOK: ${posts.length}`);
+  for (const p of posts) console.log(`${p.created_time.slice(0, 10)} ${p.permalink_url} | ${linea(p.message).slice(0, 90)}`);
+}
+
 async function recientes(n = 50) {
   const token = process.env.META_TOKEN;
   if (!token) throw new Error('Falta META_TOKEN.');
