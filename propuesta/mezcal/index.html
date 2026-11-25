@@ -88,7 +88,7 @@ nav .cta:hover{background:var(--gold2);color:#0b0b0c}
 .note{display:inline-block;margin-top:16px;font-size:13px;color:var(--gold);border:1px dashed #d6aa4e88;padding:6px 12px;border-radius:999px}
 .hist{padding-top:clamp(56px,8vw,96px);padding-bottom:clamp(56px,8vw,96px)}
 .hgrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:center}
-.himg{border-radius:28px;overflow:hidden;aspect-ratio:4/3;border:1px solid var(--line)}.himg img{width:100%;height:100%;object-fit:cover}
+.himg{position:relative;border-radius:28px;overflow:hidden;aspect-ratio:3/2;border:1px solid var(--line);background:#000}.himg img{position:relative;width:100%;height:100%;object-fit:contain}
 .hist h2{font-size:clamp(32px,4vw,52px);line-height:1.05}.hist .lead{max-width:560px}
 .hstats{display:flex;gap:clamp(18px,4vw,40px);margin:26px 0 28px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .hstats b{display:block;font:700 clamp(30px,3.4vw,42px)/1 "Barlow Semi Condensed",Inter,sans-serif;color:var(--gold2)}.hstats span{font-size:14px;color:var(--muted)}
@@ -230,7 +230,7 @@ dialog .f{border-radius:inherit}
 .wtabs button:not(.on):hover{border-color:var(--gold)}
 .st .bdg.pn{background:#1f5f7a}
 .nos{display:grid;grid-template-columns:1.1fr 1fr;gap:8px;border-radius:20px;overflow:hidden;background:var(--panel)}
-.nos .nimg img{width:100%;height:100%;object-fit:cover}
+.nos .nimg{position:relative;overflow:hidden;background:#000}.nos .nimg img{position:relative;width:100%;height:100%;object-fit:contain}
 .nos .ntx{padding:clamp(20px,3vw,40px);overflow:auto;align-self:center}
 .nos h2{font-size:clamp(30px,3.4vw,48px);font-weight:700;line-height:1.05}
 .nos p{color:#ddd5c9;margin-top:14px;font-size:18px}
@@ -403,12 +403,23 @@ body.v-sec{padding-top:98px}
 .faqc{margin-top:34px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}.faqc p{margin:0;color:var(--muted)}
 .prg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:28px}
 .pc{background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
-.pc .pi{position:relative;aspect-ratio:4/3;background:#000}.pc .pi img{width:100%;height:100%;object-fit:cover}
+.pc .pi{position:relative;aspect-ratio:4/3;background:#000;overflow:hidden}.pc .pi img{position:relative;width:100%;height:100%;object-fit:contain}
 .pc .pi em{position:absolute;top:12px;left:12px;font-style:normal;background:var(--wine);color:#fff;font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px}
 .pc .pb{padding:16px 18px 18px}.pc .pb small{color:var(--gold);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
 .pc .pb b{display:block;font:700 22px/1.15 "Barlow Semi Condensed",Inter,sans-serif;margin:6px 0 6px}.pc .pb span{color:var(--muted);font-size:14px}
 .pc .pb .who{display:inline-flex;margin-top:10px;font-size:13px;color:var(--text);border:1px solid var(--line);padding:4px 10px;border-radius:99px;cursor:pointer;background:none}
-body.pres .pc .pi em.ej{display:none}
+body.pres .pc .pi em.ej,body.pres .sp em.ej{display:none}
+.shg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:28px}
+.sp{background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.sp .si{position:relative;aspect-ratio:1}.sp .si img{width:100%;height:100%;object-fit:contain;display:block}
+.sp .si em{position:absolute;top:12px;left:12px;font-style:normal;background:var(--wine);color:#fff;font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px}
+.sp .sb{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.st1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.st1 b{font:700 22px/1.1 "Barlow Semi Condensed",Inter,sans-serif}.st1 span{color:var(--gold2);font-weight:600;white-space:nowrap}
+.sp p{margin:0;color:var(--muted);font-size:15px}
+.sz{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.sz small{color:var(--muted);margin-right:4px}
+.sz button{min-width:40px;height:36px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--text);font-weight:600;cursor:pointer}.sz button.on{border-color:var(--gold);color:var(--gold)}
+.sp .btn{margin-top:auto}
+.fit{position:absolute;inset:-24px;background:center/cover no-repeat;filter:blur(22px) brightness(.42);transform:scale(1.1)}
 body.v-sec section{padding-top:clamp(28px,4vw,48px)}
 body.v-sec .sim>section{padding-top:clamp(28px,4vw,48px)}
 body.v-sec .sim{margin-top:8px}
@@ -433,7 +444,7 @@ body.v-sec .sim{margin-top:clamp(16px,3vw,32px)}
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 @media(max-width:900px){.mgrid{grid-template-columns:1fr 1fr;gap:10px}}
 .mt-i{position:relative;display:block;border-radius:22px;overflow:hidden;aspect-ratio:4/3;background:var(--panel);border:1px solid var(--line);color:#fff;text-align:left;cursor:pointer;padding:0}
-.mt-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.mt-i img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:transform .5s}
 .mt-i:hover img{transform:scale(1.06)}
 .mt-i:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#000d 0%,#0006 45%,#0000 75%)}
 .mt-i div{position:absolute;left:14px;right:14px;bottom:12px;z-index:1}
@@ -541,7 +552,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
     <div class="pane on" data-pane="sem" id="sementales"><div class="panels" id="panels"></div></div>
     <div class="pane" data-pane="pot" id="potrillos"><div class="panels" id="fpanels"></div></div>
     <div class="pane nos" data-pane="nos" id="rancho">
-      <div class="nimg"><img src="fotos/mezcalero-voodoo-gun-2.jpg" alt=""></div>
+      <div class="nimg"><i class="fit" style="background-image:url('fotos/mezcalero-voodoo-gun-2.jpg')"></i><img src="fotos/mezcalero-voodoo-gun-2.jpg" alt=""></div>
       <div class="ntx"><h2 class="serif" data-t="nos_titulo"></h2><p data-t="nos_p"></p><span class="note" data-t="rancho_nota"></span>
         <div class="locs"><h4 data-t="ubicacion_titulo"></h4><div class="hor" id="hor"></div><div id="sedes"></div></div></div>
     </div>
@@ -551,7 +562,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
 <a class="rbar" id="rbar" href="#/rifa" data-go-v="rifa" data-v="inicio" hidden></a>
 <div class="claims" id="claims" data-v="inicio"></div>
 <section class="hist" data-v="inicio"><div class="wrap hgrid">
-  <div class="himg"><img src="fotos/lh-wimpys-gotta-gun-4.jpg" alt="" loading="lazy"></div>
+  <div class="himg"><i class="fit" style="background-image:url('fotos/lh-wimpys-gotta-gun-4.jpg')"></i><img src="fotos/lh-wimpys-gotta-gun-4.jpg" alt="" loading="lazy"></div>
   <div><div class="eyebrow" data-t="hist_eyebrow"></div><h2 class="serif" data-t="hist_titulo"></h2>
     <p class="lead" data-t="hist_p1"></p><p class="lead" data-t="hist_p2"></p>
     <div class="hstats"><div><b>2010</b><span data-t="hs_1"></span></div><div><b id="hsN"></b><span data-t="hs_2"></span></div><div><b>2</b><span data-t="hs_3"></span></div></div>
@@ -618,6 +629,12 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
   <h2 class="big serif" data-t="pr_titulo"></h2>
   <p class="lead" data-t="pr_sub"></p>
   <div class="prg" id="prg"></div>
+</div></section>
+<section class="shop" id="tienda" data-v="tienda"><div class="wrap">
+  <div class="eyebrow" data-t="tienda_eyebrow"></div>
+  <h2 class="big serif" data-t="tienda_titulo"></h2>
+  <p class="lead" data-t="tienda_sub"></p>
+  <div class="shg" id="shg"></div>
 </div></section>
 
 <section id="apartar" data-v="apartar"><div class="wrap book">
@@ -727,7 +744,7 @@ function render() {
   const fabMsg = L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses';
   $('#fab').innerHTML = WA_ICON + t('whatsapp'); $('#fab').href = waLink(fabMsg);
   $('#dClose').innerHTML = '&times; ' + t('cerrar');
-  renderFaq(); renderPrem(); buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
+  renderFaq(); renderPrem(); renderShop(); buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
   if (cur && $('#dlg').open) fill(cur);
 }
 
@@ -742,11 +759,12 @@ function renderMenu() {
     r && r.activa ? ['rifa', 'm_rifa', '', r.mini || r.foto, `${t('rifa_tag').replace('{n}', r.numero || '')}`, left <= r.ultimos ? tf('rifa_ultimos', { n: left }) : tf('rifa_quedan', { n: left, t: r.total })] : null,
     ['confianza', 'm_conf', 'm_conf_s', 'fotos/entrega-rifa2.jpg', '', ''],
     ['apartar', 'm_book', 'm_book_s', 'fotos/chics-loaded-gun-1.jpg', '', ''],
+    ['tienda', 'm_tienda', 'm_tienda_s', 'fotos/tienda-gorra.jpg', '', ''],
     ['premios', 'm_pr', 'm_pr_s', 'fotos/gunner-missed-my-spot-1.jpg', '', ''],
     ['preguntas', 'm_faq', 'm_faq_s', 'fotos/mezcal-blue-roan-gun-3.jpg', '', ''],
     ['nosotros', 'm_nos', 'm_nos_s', 'fotos/lh-wimpys-gotta-gun-4.jpg', '', '']
   ].filter(Boolean);
-  $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><img src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
+  $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><i class="fit" style="background-image:url('${esc(img)}')"></i><img src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
   $('#mWa').innerHTML = WA_ICON + t('m_wa'); $('#mWa').href = waLink(L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses');
 }
 function menu(open) {
@@ -754,7 +772,7 @@ function menu(open) {
   $('#hdr').classList.toggle('solid', open || scrollY > 60);
 }
 $('#logo').onclick = e => { e.preventDefault(); if (!$('#menu').hidden) menu(false); if ($('#dlg').open) $('#dlg').close(); go('inicio'); };
-const VIEWS = ['inicio', 'potrillos', 'nosotros', 'color', 'rifa', 'confianza', 'apartar', 'preguntas', 'premios'];
+const VIEWS = ['inicio', 'potrillos', 'nosotros', 'color', 'rifa', 'confianza', 'apartar', 'preguntas', 'premios', 'tienda'];
 let view = '';
 function show(v, anchor) {
   if (!VIEWS.includes(v)) v = 'inicio';
@@ -1051,10 +1069,21 @@ function renderFaq() {
 function renderPrem() {
   const sort = [...(D.premios || [])].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
   $('#prg').innerHTML = sort.map(x => { const s = S.find(y => y.id === x.semental);
-    return `<div class="pc"><div class="pi"><img src="${esc(x.foto || (s ? s.fotos[0] : ''))}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
+    const ph = x.foto || (s ? s.fotos[0] : '');
+    return `<div class="pc"><div class="pi"><i class="fit" style="background-image:url('${esc(ph)}')"></i><img src="${esc(ph)}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
     <div class="pb"><small>${esc(x['f_' + L] || x.fecha)}</small><b>${esc(x['t_' + L])}</b><span>${esc(x['e_' + L])}</span>${s ? `<br><button class="who" data-s="${s.id}">${esc(s.apodo || s.nombre)} &rarr;</button>` : ''}</div></div>`; }).join('');
 }
 $('#prg').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) openF(S.find(x => x.id === b.dataset.s)); });
+const shopSel = {};
+function renderShop() {
+  $('#shg').innerHTML = (D.tienda || []).map(x => { const sz = shopSel[x.id] || (x.tallas ? x.tallas[1] : '');
+    const msg = L === 'es' ? `Hola, quiero ${x.n_es}${sz ? ' talla ' + sz : ''} (${money(x.mxn)}). ¿Tienen disponible?` : `Hi, I'd like the ${x.n_en}${sz ? ' size ' + sz : ''} (${money(x.mxn)}). Is it available?`;
+    return `<div class="sp"><div class="si"><img src="${esc(x.foto)}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
+    <div class="sb"><div class="st1"><b>${esc(x['n_' + L])}</b><span>${money(x.mxn)}</span></div><p>${esc(x['d_' + L])}</p>
+    ${x.tallas ? `<div class="sz"><small>${t('talla')}</small>${x.tallas.map(s => `<button data-p="${x.id}" data-z="${s}" class="${s === sz ? 'on' : ''}">${s}</button>`).join('')}</div>` : ''}
+    <a class="btn wa solid" target="_blank" rel="noopener" href="${waLink(msg)}">${WA_ICON}${t('tienda_wa')}</a></div></div>`; }).join('');
+}
+$('#shg').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b) { shopSel[b.dataset.p] = b.dataset.z; renderShop(); } });
 function renderLinks() {
   const s = D.sitio, l = [];
   l.push(`<a class="btn wa" target="_blank" rel="noopener" href="${waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question')}">${WA_ICON}${t('whatsapp')}</a>`);

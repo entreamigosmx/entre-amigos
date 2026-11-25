@@ -1174,7 +1174,14 @@
    "m_pr": "Premios",
    "m_pr_s": "Campeonatos y logros",
    "m_faq": "Preguntas frecuentes",
-   "m_faq_s": "Resuelve tus dudas"
+   "m_faq_s": "Resuelve tus dudas",
+   "tienda_eyebrow": "Tienda Mezcal",
+   "tienda_titulo": "Lleva el rancho contigo",
+   "tienda_sub": "Escoge tu producto y pídelo por WhatsApp. Te confirmamos existencia y envío.",
+   "tienda_wa": "Pedir por WhatsApp",
+   "talla": "Talla",
+   "m_tienda": "Tienda",
+   "m_tienda_s": "Gorras, chamarras y más"
   },
   "en": {
    "nav_rancho": "About",
@@ -1468,7 +1475,14 @@
    "m_pr": "Awards",
    "m_pr_s": "Championships and titles",
    "m_faq": "FAQ",
-   "m_faq_s": "Get your answers"
+   "m_faq_s": "Get your answers",
+   "tienda_eyebrow": "Mezcal Store",
+   "tienda_titulo": "Take the ranch with you",
+   "tienda_sub": "Pick your item and order on WhatsApp. We confirm stock and shipping.",
+   "tienda_wa": "Order on WhatsApp",
+   "talla": "Size",
+   "m_tienda": "Store",
+   "m_tienda_s": "Caps, jackets and more"
   },
   "whatsapp": "523325483880",
   "instagram": "mezcal_quarter_horses",
@@ -2276,6 +2290,89 @@
    "e_en": "Ixtlahuacán del Río Livestock Expo",
    "ejemplo": true,
    "foto": "fotos/mezcalero-inferno-66-2.jpg"
+  }
+ ],
+ "tienda": [
+  {
+   "id": "gorra",
+   "n_es": "Gorra Mezcal",
+   "n_en": "Mezcal Cap",
+   "d_es": "Negra, bordado dorado, ajustable.",
+   "d_en": "Black, gold embroidery, adjustable.",
+   "mxn": 450,
+   "tallas": null,
+   "foto": "fotos/tienda-gorra.jpg",
+   "ejemplo": true
+  },
+  {
+   "id": "playera",
+   "n_es": "Playera Mezcal",
+   "n_en": "Mezcal T-shirt",
+   "d_es": "Algodón, color hueso.",
+   "d_en": "Cotton, bone white.",
+   "mxn": 390,
+   "tallas": [
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "foto": "fotos/tienda-playera.jpg",
+   "ejemplo": true
+  },
+  {
+   "id": "chamarra",
+   "n_es": "Chamarra de trabajo",
+   "n_en": "Work Jacket",
+   "d_es": "Lona café con cuello de pana.",
+   "d_en": "Brown canvas, corduroy collar.",
+   "mxn": 1850,
+   "tallas": [
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "foto": "fotos/tienda-chamarra.jpg",
+   "ejemplo": true
+  },
+  {
+   "id": "chaleco",
+   "n_es": "Chaleco acolchado",
+   "n_en": "Quilted Vest",
+   "d_es": "Negro, ligero y abrigador.",
+   "d_en": "Black, light and warm.",
+   "mxn": 1250,
+   "tallas": [
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "foto": "fotos/tienda-chaleco.jpg",
+   "ejemplo": true
+  },
+  {
+   "id": "termo",
+   "n_es": "Termo Mezcal",
+   "n_en": "Mezcal Tumbler",
+   "d_es": "Acero inoxidable, 590 ml.",
+   "d_en": "Stainless steel, 20 oz.",
+   "mxn": 490,
+   "tallas": null,
+   "foto": "fotos/tienda-termo.jpg",
+   "ejemplo": true
+  },
+  {
+   "id": "hebilla",
+   "n_es": "Hebilla Mezcal",
+   "n_en": "Mezcal Buckle",
+   "d_es": "Plata y dorado, edición rancho.",
+   "d_en": "Silver and gold, ranch edition.",
+   "mxn": 1200,
+   "tallas": null,
+   "foto": "fotos/tienda-hebilla.jpg",
+   "ejemplo": true
   }
  ]
 }
