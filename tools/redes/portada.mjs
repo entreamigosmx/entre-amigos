@@ -21,7 +21,7 @@ export function html(auto, foto, conPrecio = true) {
   const chips = datos.map(d => `<span>${d}</span>`).join('');
   let precio = '';
   if (conPrecio && auto.precio) precio = `<div class="precio">${auto.precioAnterior ? `<s>${mx(auto.precioAnterior)}</s>` : ''}<b>${mx(auto.precio)}</b></div>`;
-  const etiqueta = auto.apartado ? 'APARTADO' : 'DISPONIBLE';
+  const etiqueta = auto.apartado ? 'APARTADO' : auto.arrendamiento === 'solo' ? 'SOLO ARRENDAMIENTO' : 'DISPONIBLE';
   const logo = b64(resolve(RAIZ, 'assets/img/logo-mark.png'));
   return `<!doctype html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
