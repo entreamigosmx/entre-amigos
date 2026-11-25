@@ -61,7 +61,7 @@ function render(a, list) {
     else { try { await navigator.clipboard.writeText(url); t.textContent = "Enlace copiado. Pégalo donde quieras compartirlo."; } catch (e) { t.textContent = url; } }
   };
   const ld = { "@context": "https://schema.org", "@type": "Car", name, brand: { "@type": "Brand", name: a.marca }, model: a.modelo, vehicleModelDate: String(a.anio), url, image: ph.slice(0, 5).map((x) => new URL(src(x), location.href).href),
-    offers: { "@type": "Offer", price: a.precio, priceCurrency: "MXN", availability: a.apartado ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock", seller: { "@type": "AutoDealer", name: "Entre Amigos" } } };
+    offers: { "@type": "Offer", ...(so ? {} : { price: a.precio }), priceCurrency: "MXN", availability: a.apartado ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock", seller: { "@type": "AutoDealer", name: "Entre Amigos" } } };
   if (a.kilometraje) ld.mileageFromOdometer = { "@type": "QuantitativeValue", value: a.kilometraje, unitCode: "KMT" };
   const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
   if (p.length > 1) {
