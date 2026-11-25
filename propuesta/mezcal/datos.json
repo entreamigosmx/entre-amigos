@@ -889,7 +889,7 @@
    "nav_apartar": "Cotizar maquila",
    "nav_contacto": "Contacto",
    "hero_eyebrow": "Zapopan, Jalisco",
-   "hero_titulo": "Sementales probados, potrillos de campeonato",
+   "hero_titulo": "Linajes que|dejan huella",
    "hero_texto": "Quarter Horse de líneas de reining, ranch y lazo.",
    "hero_cta": "Ver sementales",
    "hero_cta2": "¿Cómo saldría mi potrillo?",
@@ -1063,7 +1063,7 @@
    "panza_mensual": "Mensualidad",
    "panza_meses": "mensualidades hasta que nazca",
    "panza_cta": "Apartar este potrillo",
-   "panza_wa": "Pedir precio y plan de pagos",
+   "panza_wa": "Consultar precio",
    "panza_nota": "Condiciones completas en el contrato.",
    "panza_contado": "Precio de contado",
    "nos_titulo": "Desde 2010, orgullo mexicano",
@@ -1145,7 +1145,7 @@
    "m_nos_s": "El rancho y dónde estamos",
    "m_wa": "Escríbenos por WhatsApp",
    "tk_sangre": "Sangre Mezcal",
-   "cotiza_wa": "Solicitar cotización por WhatsApp",
+   "cotiza_wa": "Cotizar por WhatsApp",
    "cotiza_t": "La maquila se paga completa al contratar y se firma contrato. La garantía de preñez va según el contrato.",
    "costos_t": "Costos adicionales",
    "variable": "Según destino",
@@ -1163,7 +1163,18 @@
    "hs_1": "Fundado",
    "hs_2": "Sementales",
    "hs_3": "Sedes en Jalisco",
-   "hist_cta": "Conoce el rancho"
+   "hist_cta": "Conoce el rancho",
+   "faq_eyebrow": "Preguntas frecuentes",
+   "faq_titulo": "Lo que más nos preguntan",
+   "faq_mas": "¿No encontraste tu respuesta?",
+   "faq_wa": "Pregúntanos por WhatsApp",
+   "pr_eyebrow": "Premios y reconocimientos",
+   "pr_titulo": "Nuestros logros",
+   "pr_sub": "Campeonatos y reconocimientos de nuestros sementales y sus hijos.",
+   "m_pr": "Premios",
+   "m_pr_s": "Campeonatos y logros",
+   "m_faq": "Preguntas frecuentes",
+   "m_faq_s": "Resuelve tus dudas"
   },
   "en": {
    "nav_rancho": "About",
@@ -1172,7 +1183,7 @@
    "nav_apartar": "Get a breeding quote",
    "nav_contacto": "Contact",
    "hero_eyebrow": "Zapopan, Jalisco",
-   "hero_titulo": "Proven stallions, champion foals",
+   "hero_titulo": "Bloodlines That|Leave a Mark",
    "hero_texto": "Quarter Horses from reining, ranch and roping lines.",
    "hero_cta": "See the stallions",
    "hero_cta2": "What will my foal look like?",
@@ -1346,7 +1357,7 @@
    "panza_mensual": "Monthly payment",
    "panza_meses": "monthly payments until birth",
    "panza_cta": "Reserve this foal",
-   "panza_wa": "Ask for price and payment plan",
+   "panza_wa": "Check price",
    "panza_nota": "Full terms in the contract.",
    "panza_contado": "Cash price",
    "nos_titulo": "Since 2010, Mexican pride",
@@ -1428,7 +1439,7 @@
    "m_nos_s": "The ranch and where we are",
    "m_wa": "Message us on WhatsApp",
    "tk_sangre": "Mezcal blood",
-   "cotiza_wa": "Request a quote on WhatsApp",
+   "cotiza_wa": "Get a quote on WhatsApp",
    "cotiza_t": "The stud fee is paid in full when booking, under a signed contract. Pregnancy guarantee per contract.",
    "costos_t": "Additional costs",
    "variable": "Depends on destination",
@@ -1446,7 +1457,18 @@
    "hs_1": "Founded",
    "hs_2": "Stallions",
    "hs_3": "Ranches in Jalisco",
-   "hist_cta": "Meet the ranch"
+   "hist_cta": "Meet the ranch",
+   "faq_eyebrow": "FAQ",
+   "faq_titulo": "What people ask us most",
+   "faq_mas": "Didn't find your answer?",
+   "faq_wa": "Ask us on WhatsApp",
+   "pr_eyebrow": "Awards and titles",
+   "pr_titulo": "Our achievements",
+   "pr_sub": "Championships and titles earned by our stallions and their offspring.",
+   "m_pr": "Awards",
+   "m_pr_s": "Championships and titles",
+   "m_faq": "FAQ",
+   "m_faq_s": "Get your answers"
   },
   "whatsapp": "523325483880",
   "instagram": "mezcal_quarter_horses",
@@ -1573,6 +1595,27 @@
     "es": "Servicio, yegua con registro",
     "en": "Service, registered mare",
     "mxn": 3000
+   }
+  ],
+  "horario": [
+   {
+    "d_es": "Lunes a sábado",
+    "d_en": "Monday to Saturday",
+    "h_es": "11 a. m. a 4 p. m.",
+    "h_en": "11 a.m. to 4 p.m."
+   },
+   {
+    "d_es": "Domingo",
+    "d_en": "Sunday",
+    "h_es": "Cerrado",
+    "h_en": "Closed",
+    "off": true
+   },
+   {
+    "d_es": "Visitas",
+    "d_en": "Visits",
+    "h_es": "Solo con cita previa",
+    "h_en": "By appointment only"
    }
   ]
  },
@@ -2091,6 +2134,148 @@
    "s": "mezcalero-voodoo-gun",
    "es": "Calexo, hijo de Shiners Voodoo Dr y nieto de Shining Spark",
    "en": "Calexo, by Shiners Voodoo Dr, grandson of Shining Spark"
+  }
+ ],
+ "faq": [
+  {
+   "p_es": "¿Mi yegua necesita registro?",
+   "p_en": "Does my mare need to be registered?",
+   "r_es": "No. Damos servicio a yeguas con o sin registro. En semen congelado, el servicio cuesta $2,000 para yegua sin registro y $3,000 con registro.",
+   "r_en": "No. We breed registered and unregistered mares. For frozen semen, the service is $2,000 MXN for an unregistered mare and $3,000 MXN for a registered one."
+  },
+  {
+   "p_es": "¿Cómo aparto una maquila?",
+   "p_en": "How do I book a breeding?",
+   "r_es": "Escoge tu semental y pide tu cotización por WhatsApp. La maquila se paga completa al contratar y se firma un contrato.",
+   "r_en": "Choose your stallion and request a quote on WhatsApp. The stud fee is paid in full when booking, under a signed contract."
+  },
+  {
+   "p_es": "¿Qué modalidades manejan?",
+   "p_en": "What breeding options do you offer?",
+   "r_es": "Monta directa, semen fresco y semen congelado. Cada semental tiene sus propias modalidades; las ves en su ficha.",
+   "r_en": "Live cover, fresh semen and frozen semen. Each stallion has its own options, shown on his profile."
+  },
+  {
+   "p_es": "¿Mandan semen fuera de Jalisco?",
+   "p_en": "Do you ship semen outside Jalisco?",
+   "r_es": "Sí. El semen fresco se manda en termo; el envío cuesta según el destino. La renta del termo es de $1,500 más un depósito de $4,000 que se regresa.",
+   "r_en": "Yes. Fresh semen ships in a tank; shipping depends on the destination. Tank rental is $1,500 MXN plus a $4,000 MXN refundable deposit."
+  },
+  {
+   "p_es": "¿Hay garantía de preñez?",
+   "p_en": "Is there a pregnancy guarantee?",
+   "r_es": "Sí, según los términos de tu contrato.",
+   "r_en": "Yes, according to the terms of your contract."
+  },
+  {
+   "p_es": "¿Puedo comprar un potrillo antes de que nazca?",
+   "p_en": "Can I buy a foal before it is born?",
+   "r_es": "Sí. Lo apartas desde la gestación con enganche y mensualidades acordadas contigo, todo por contrato. Lo recibes en Zapopan después del destete, ya liquidado.",
+   "r_en": "Yes. Reserve it during gestation with a down payment and monthly payments agreed with you, under contract. You pick it up in Zapopan after weaning, once paid in full."
+  },
+  {
+   "p_es": "¿Se garantiza si sale macho o hembra?",
+   "p_en": "Is the foal's sex guaranteed?",
+   "r_es": "No. El sexo del potrillo no está garantizado. Con el simulador de color sí puedes ver qué colores son más probables.",
+   "r_en": "No. The foal's sex is not guaranteed. The color simulator does show which colors are most likely."
+  },
+  {
+   "p_es": "¿Qué pasa si se pierde la gestación?",
+   "p_en": "What if the pregnancy is lost?",
+   "r_es": "Puedes elegir otra gestación disponible o repetir con la misma yegua si es posible. Los detalles están en el contrato.",
+   "r_en": "You can choose another available pregnancy or repeat with the same mare if possible. Details are in the contract."
+  },
+  {
+   "p_es": "¿Puedo visitar el rancho?",
+   "p_en": "Can I visit the ranch?",
+   "r_es": "Claro. De lunes a sábado de 11 a. m. a 4 p. m., con cita. Tenemos sede en Zapopan y en Ixtlahuacán del Río.",
+   "r_en": "Of course. Monday to Saturday, 11 a.m. to 4 p.m., by appointment. We have ranches in Zapopan and Ixtlahuacán del Río."
+  },
+  {
+   "p_es": "¿Cómo funciona la rifa?",
+   "p_en": "How does the raffle work?",
+   "r_es": "Cada boleto juega con 5 números. Escoges tus números en la página y los apartas por WhatsApp; ahí te pasamos los datos para pagar.",
+   "r_en": "Each ticket plays 5 numbers. Pick your numbers on the site and reserve them on WhatsApp, where we share the payment details."
+  }
+ ],
+ "premios": [
+  {
+   "semental": "gunner-missed-my-spot",
+   "fecha": "2022-06",
+   "f_es": "Junio 2022",
+   "f_en": "June 2022",
+   "t_es": "Gran Campeón Caladero APHA",
+   "t_en": "APHA Caladero Grand Champion",
+   "e_es": "Morelia, Michoacán",
+   "e_en": "Morelia, Michoacán"
+  },
+  {
+   "semental": "gunner-missed-my-spot",
+   "fecha": "2022-02",
+   "f_es": "Febrero 2022",
+   "f_en": "February 2022",
+   "t_es": "Campeón Reservado Caladero Amateur",
+   "t_en": "Amateur Caladero Reserve Champion",
+   "e_es": "Gran Premio Internacional Vallarta",
+   "e_en": "Vallarta International Grand Prix",
+   "foto": "fotos/gunner-missed-my-spot-3.jpg"
+  },
+  {
+   "semental": "wimpyneedsacocktail",
+   "fecha": "2013",
+   "f_es": "2013",
+   "f_en": "2013",
+   "t_es": "Campeón NRBC Open L3 y L4",
+   "t_en": "NRBC Open L3 and L4 Champion",
+   "e_es": "National Reining Breeders Classic, EUA",
+   "e_en": "National Reining Breeders Classic, USA"
+  },
+  {
+   "semental": "blazin-guns-in-town",
+   "fecha": "2026-05",
+   "f_es": "2026",
+   "f_en": "2026",
+   "t_es": "Primer lugar",
+   "t_en": "First place",
+   "e_es": "Expo Ganadera Ixtlahuacán del Río",
+   "e_en": "Ixtlahuacán del Río Livestock Expo",
+   "ejemplo": true
+  },
+  {
+   "semental": "mezcal-gunner-black",
+   "fecha": "2026-05",
+   "f_es": "2026",
+   "f_en": "2026",
+   "t_es": "Campeón de su categoría",
+   "t_en": "Class champion",
+   "e_es": "Expo Ganadera Ixtlahuacán del Río",
+   "e_en": "Ixtlahuacán del Río Livestock Expo",
+   "ejemplo": true,
+   "foto": "fotos/mezcal-gunner-black-1.jpg"
+  },
+  {
+   "semental": "mezcalero-voodoo-gun",
+   "fecha": "2026-05",
+   "f_es": "2026",
+   "f_en": "2026",
+   "t_es": "Segundo lugar",
+   "t_en": "Second place",
+   "e_es": "Expo Ganadera Ixtlahuacán del Río",
+   "e_en": "Ixtlahuacán del Río Livestock Expo",
+   "ejemplo": true,
+   "foto": "fotos/mezcalero-voodoo-gun-1.jpg"
+  },
+  {
+   "semental": "mezcalero-inferno-66",
+   "fecha": "2026-05",
+   "f_es": "2026",
+   "f_en": "2026",
+   "t_es": "Primer lugar",
+   "t_en": "First place",
+   "e_es": "Expo Ganadera Ixtlahuacán del Río",
+   "e_en": "Ixtlahuacán del Río Livestock Expo",
+   "ejemplo": true,
+   "foto": "fotos/mezcalero-inferno-66-2.jpg"
   }
  ]
 }

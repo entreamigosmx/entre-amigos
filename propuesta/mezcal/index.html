@@ -27,6 +27,8 @@ button,input,select{font:inherit;color:inherit}
 .btn.wa:hover{background:#25915a}
 .btn[disabled]{opacity:.35;pointer-events:none}
 .btn svg{width:22px;height:22px;flex:none}
+.btn{white-space:nowrap}#bk .lines2 div>span:last-child,.lines2 div>b{white-space:nowrap}.hor span{white-space:nowrap}.rfg>*{min-width:0}
+@media(max-width:560px){.btn{padding:13px 18px;font-size:15px}.hor div{font-size:14px}.sede b{font-size:15px}}
 section{padding:clamp(64px,10vw,120px) clamp(16px,5vw,56px)}
 .wrap{max-width:1200px;margin:0 auto}
 h2.big{font-size:clamp(36px,5.4vw,60px);font-weight:700;line-height:1.05}
@@ -93,6 +95,7 @@ nav .cta:hover{background:var(--gold2);color:#0b0b0c}
 @media(max-width:760px){.hgrid{grid-template-columns:1fr}}
 .locs{margin-top:24px;padding:18px 20px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line)}.locs h4{font-size:20px;font-weight:600}.locs>p{margin:2px 0 8px;font-size:15px;color:var(--muted)}
 .loc{margin-top:10px;padding:20px 22px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.hor{margin:10px 0 6px;border-radius:14px;background:var(--panel2);padding:4px 14px}.hor div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;font-size:15px}.hor div+div{border-top:1px solid var(--line)}.hor span{color:var(--muted)}.hor b{white-space:nowrap;font-weight:600}.hor b.off{color:var(--muted);font-weight:500}
 .sede{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.sede b{display:block;font-size:16px}.sede small{color:var(--muted);font-size:13px}.sede .btn{padding:9px 14px;font-size:14px}
 .loc h4{font-size:20px;font-weight:600}
 .loc p{margin:0;font-size:15px;color:var(--muted)}
@@ -390,6 +393,22 @@ footer{padding:28px 16px 90px;text-align:center;color:var(--muted);font-size:14p
 /* vistas */
 body:not(.v-all) [data-v]:not(.vis){display:none!important}
 body.v-sec{padding-top:98px}
+.faql{margin-top:26px;max-width:860px}
+.faql details{border-bottom:1px solid var(--line)}
+.faql summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 2px;font:600 clamp(17px,1.7vw,20px)/1.3 Inter,sans-serif}
+.faql summary::-webkit-details-marker{display:none}
+.faql summary:after{content:"+";flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--gold);font-size:20px;font-weight:500;transition:transform .3s}
+.faql details[open] summary:after{transform:rotate(45deg);border-color:var(--gold)}
+.faql details p{margin:0 0 20px;color:var(--muted);font-size:16px;line-height:1.6;max-width:720px}
+.faqc{margin-top:34px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}.faqc p{margin:0;color:var(--muted)}
+.prg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:28px}
+.pc{background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.pc .pi{position:relative;aspect-ratio:4/3;background:#000}.pc .pi img{width:100%;height:100%;object-fit:cover}
+.pc .pi em{position:absolute;top:12px;left:12px;font-style:normal;background:var(--wine);color:#fff;font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px}
+.pc .pb{padding:16px 18px 18px}.pc .pb small{color:var(--gold);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.pc .pb b{display:block;font:700 22px/1.15 "Barlow Semi Condensed",Inter,sans-serif;margin:6px 0 6px}.pc .pb span{color:var(--muted);font-size:14px}
+.pc .pb .who{display:inline-flex;margin-top:10px;font-size:13px;color:var(--text);border:1px solid var(--line);padding:4px 10px;border-radius:99px;cursor:pointer;background:none}
+body.pres .pc .pi em.ej{display:none}
 body.v-sec section{padding-top:clamp(28px,4vw,48px)}
 body.v-sec .sim>section{padding-top:clamp(28px,4vw,48px)}
 body.v-sec .sim{margin-top:8px}
@@ -524,7 +543,7 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
     <div class="pane nos" data-pane="nos" id="rancho">
       <div class="nimg"><img src="fotos/mezcalero-voodoo-gun-2.jpg" alt=""></div>
       <div class="ntx"><h2 class="serif" data-t="nos_titulo"></h2><p data-t="nos_p"></p><span class="note" data-t="rancho_nota"></span>
-        <div class="locs"><h4 data-t="ubicacion_titulo"></h4><p data-t="ubicacion_texto"></p><div id="sedes"></div></div></div>
+        <div class="locs"><h4 data-t="ubicacion_titulo"></h4><div class="hor" id="hor"></div><div id="sedes"></div></div></div>
     </div>
   </div>
 </div>
@@ -587,6 +606,18 @@ body.pres [data-t=rancho_nota],body.pres [data-t=conf_ejemplo],body.pres #demoNo
       <p class="small" data-t="sube_demo"></p>
     </form>
   </div>
+</div></section>
+<section class="faq" id="preguntas" data-v="preguntas"><div class="wrap">
+  <div class="eyebrow" data-t="faq_eyebrow"></div>
+  <h2 class="big serif" data-t="faq_titulo"></h2>
+  <div class="faql" id="faql"></div>
+  <div class="faqc"><p data-t="faq_mas"></p><a class="btn wa solid" id="faqWa" target="_blank" rel="noopener"></a></div>
+</div></section>
+<section class="prem" id="premios" data-v="premios"><div class="wrap">
+  <div class="eyebrow" data-t="pr_eyebrow"></div>
+  <h2 class="big serif" data-t="pr_titulo"></h2>
+  <p class="lead" data-t="pr_sub"></p>
+  <div class="prg" id="prg"></div>
 </div></section>
 
 <section id="apartar" data-v="apartar"><div class="wrap book">
@@ -684,8 +715,9 @@ function render() {
   document.querySelectorAll('[data-t]').forEach(e => e.textContent = t(e.dataset.t));
   document.querySelectorAll('[data-ph]').forEach(e => e.placeholder = t(e.dataset.ph));
   $('#demoNote').style.display = D.sitio.pagos_demo ? '' : 'none';
-  const ht = t('hero_titulo').split(',');
-  $('#heroT').innerHTML = ht.length > 1 ? `${esc(ht[0])},<br><em>${esc(ht.slice(1).join(',').trim())}</em>` : esc(ht[0]);
+  const ht = t('hero_titulo').split('|');
+  $('#heroT').innerHTML = ht.length > 1 ? `${esc(ht[0])}<br><em>${esc(ht[1].trim())}</em>` : esc(ht[0]);
+  $('#hor').innerHTML = (D.sitio.horario || []).map(x => `<div><span>${esc(x['d_' + L])}</span><b class="${x.off ? 'off' : ''}">${esc(x['h_' + L])}</b></div>`).join('');
   $('#sedes').innerHTML = (D.sitio.sedes || []).map(x => `<div class="sede"><div><b>${esc(x[L])}</b><small>${esc(x['s_' + L])}</small></div><a class="btn" target="_blank" rel="noopener" href="${esc(x.mapa)}">${t('ubicacion_mapa')}</a></div>`).join('');
   const CK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>';
   $('#hsN').textContent = S.length;
@@ -695,7 +727,7 @@ function render() {
   const fabMsg = L === 'es' ? 'Hola, quiero información de Mezcal Quarter Horses' : 'Hi, I would like information about Mezcal Quarter Horses';
   $('#fab').innerHTML = WA_ICON + t('whatsapp'); $('#fab').href = waLink(fabMsg);
   $('#dClose').innerHTML = '&times; ' + t('cerrar');
-  buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
+  renderFaq(); renderPrem(); buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
   if (cur && $('#dlg').open) fill(cur);
 }
 
@@ -710,6 +742,8 @@ function renderMenu() {
     r && r.activa ? ['rifa', 'm_rifa', '', r.mini || r.foto, `${t('rifa_tag').replace('{n}', r.numero || '')}`, left <= r.ultimos ? tf('rifa_ultimos', { n: left }) : tf('rifa_quedan', { n: left, t: r.total })] : null,
     ['confianza', 'm_conf', 'm_conf_s', 'fotos/entrega-rifa2.jpg', '', ''],
     ['apartar', 'm_book', 'm_book_s', 'fotos/chics-loaded-gun-1.jpg', '', ''],
+    ['premios', 'm_pr', 'm_pr_s', 'fotos/gunner-missed-my-spot-1.jpg', '', ''],
+    ['preguntas', 'm_faq', 'm_faq_s', 'fotos/mezcal-blue-roan-gun-3.jpg', '', ''],
     ['nosotros', 'm_nos', 'm_nos_s', 'fotos/lh-wimpys-gotta-gun-4.jpg', '', '']
   ].filter(Boolean);
   $('#mgrid').innerHTML = it.map(([go, l, s, img, badge, sub2]) => `<button class="mt-i ${badge ? 'hot' : ''}" data-go="${go}"><img src="${esc(img)}" alt="" loading="lazy">${badge ? `<em>${esc(badge)}</em>` : ''}<div><b>${t(l)}</b><small>${esc(sub2 || t(s))}</small></div></button>`).join('');
@@ -720,7 +754,7 @@ function menu(open) {
   $('#hdr').classList.toggle('solid', open || scrollY > 60);
 }
 $('#logo').onclick = e => { e.preventDefault(); if (!$('#menu').hidden) menu(false); if ($('#dlg').open) $('#dlg').close(); go('inicio'); };
-const VIEWS = ['inicio', 'potrillos', 'nosotros', 'color', 'rifa', 'confianza', 'apartar'];
+const VIEWS = ['inicio', 'potrillos', 'nosotros', 'color', 'rifa', 'confianza', 'apartar', 'preguntas', 'premios'];
 let view = '';
 function show(v, anchor) {
   if (!VIEWS.includes(v)) v = 'inicio';
@@ -1010,6 +1044,17 @@ $('#bk').addEventListener('click', e => {
   if (g) { if (bk.step === 2) { bk.nombre = $('#bN').value.trim(); bk.wa = $('#bW').value.trim(); bk.ciudad = $('#bC').value.trim(); bk.yegua = $('#bY').value.trim(); } bk.step = +g.dataset.go; renderBook(); return; }
 });
 
+function renderFaq() {
+  $('#faql').innerHTML = (D.faq || []).map(q => `<details><summary>${esc(q['p_' + L])}</summary><p>${esc(q['r_' + L])}</p></details>`).join('');
+  $('#faqWa').innerHTML = WA_ICON + t('faq_wa'); $('#faqWa').href = waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question');
+}
+function renderPrem() {
+  const sort = [...(D.premios || [])].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  $('#prg').innerHTML = sort.map(x => { const s = S.find(y => y.id === x.semental);
+    return `<div class="pc"><div class="pi"><img src="${esc(x.foto || (s ? s.fotos[0] : ''))}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
+    <div class="pb"><small>${esc(x['f_' + L] || x.fecha)}</small><b>${esc(x['t_' + L])}</b><span>${esc(x['e_' + L])}</span>${s ? `<br><button class="who" data-s="${s.id}">${esc(s.apodo || s.nombre)} &rarr;</button>` : ''}</div></div>`; }).join('');
+}
+$('#prg').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) openF(S.find(x => x.id === b.dataset.s)); });
 function renderLinks() {
   const s = D.sitio, l = [];
   l.push(`<a class="btn wa" target="_blank" rel="noopener" href="${waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question')}">${WA_ICON}${t('whatsapp')}</a>`);
