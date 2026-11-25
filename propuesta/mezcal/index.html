@@ -185,15 +185,16 @@ dialog .f{border-radius:inherit}
   .st .lab{opacity:1;transform:none}
   .st .v{display:none}.st .bdg{opacity:1}
   body.v-potrillos .stable,body.v-nosotros .stable{padding-top:82px}
-  #panels{flex-direction:column;overflow:visible;scroll-snap-type:none;gap:4px;height:min(680px,calc(100svh - 190px));min-height:520px}
-  #panels .st{flex:1 1 0;min-height:0;aspect-ratio:auto;border-radius:12px}
-  #panels .st.on{flex:14 1 0}
-  #panels .st img{filter:grayscale(.75) brightness(.5);object-position:center 35%}
+  #panels{flex-direction:row;overflow-x:auto;scroll-snap-type:none;gap:4px;padding:0 18px 18px;height:min(600px,calc(100svh - 230px));min-height:440px;scrollbar-width:none}
+  #panels::-webkit-scrollbar{display:none}
+  #panels .st{flex:0 0 30px;min-width:0;aspect-ratio:auto;border-radius:12px;transition:flex-basis .7s cubic-bezier(.2,.8,.2,1)}
+  #panels .st.on{flex:0 0 66%}
+  #panels .st img{filter:grayscale(.75) brightness(.5)}
   #panels .st.on img{filter:none}
   #panels .st .lab{opacity:0;transform:translateY(10px);padding:18px}
   #panels .st.on .lab{opacity:1;transform:none}
-  #panels .st .lab b{font-size:32px}
-  #panels .st .v{display:block;writing-mode:horizontal-tb;transform:translateY(-50%);top:50%;bottom:auto;left:14px;font-size:10px;letter-spacing:.18em}
+  #panels .st .lab b{font-size:30px}#panels .st .lab b.long{font-size:21px}
+  #panels .st .v{display:block;font-size:10px;letter-spacing:.16em;bottom:14px}
 }
 .ticker{display:flex;align-items:stretch;background:linear-gradient(90deg,var(--gold),var(--gold2));color:#0b0b0c;font-weight:600;overflow:hidden;font-size:16px}
 .tk-l{background:var(--wine);color:#fff;padding:13px 20px;text-transform:uppercase;font-size:13px;letter-spacing:.14em;flex:none;display:flex;align-items:center}
@@ -649,7 +650,8 @@ function buildStable() {
   $('#tk').innerHTML = items + items; $('#tk').style.animationDuration = Math.max(60, mix.length * 7) + 's';
 }
 $('#tk').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) { const s = S.find(x => x.id === b.dataset.s); if (s) openF(s); } });
-function setSt(i) { stI = i; [...$('#panels').children].forEach((b, k) => b.classList.toggle('on', k === i)); }
+function setSt(i) { stI = i; const P = $('#panels'); [...P.children].forEach((b, k) => b.classList.toggle('on', k === i));
+  if (!wide()) { const x = Math.max(0, i * 34 - 40); P.scrollTo({ left: x, behavior: 'smooth' }); } }
 const wide = () => matchMedia('(min-width:761px)').matches;
 $('#panels').addEventListener('mouseover', e => { const b = e.target.closest('.st'); if (b && wide()) { stHold = true; setSt(+b.dataset.i); } });
 $('#panels').addEventListener('mouseleave', () => { stHold = false; });
