@@ -1,0 +1,45 @@
+{
+"texto": "Así recibimos cada auto que llega entre amigos",
+"palabras": [
+{
+"w": " Así",
+"s": 0.0,
+"e": 1.18
+},
+{
+"w": " recibimos",
+"s": 1.18,
+"e": 2.0
+},
+{
+"w": " cada",
+"s": 2.0,
+"e": 2.3
+},
+{
+"w": " auto",
+"s": 2.3,
+"e": 2.62
+},
+{
+"w": " que",
+"s": 2.62,
+"e": 2.82
+},
+{
+"w": " llega",
+"s": 2.82,
+"e": 3.06
+},
+{
+"w": " entre",
+"s": 3.06,
+"e": 3.26
+},
+{
+"w": " amigos",
+"s": 3.26,
+"e": 3.56
+}
+]
+}
