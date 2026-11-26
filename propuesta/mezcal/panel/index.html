@@ -147,8 +147,8 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:24px 0 40px}
 
 <section class="grid">
   <div class="card"><h2>De dónde llegan</h2><p class="sub">Por dónde entró cada visita</p><ul class="tipos" id="origen"></ul></div>
-  <div class="card up"><span class="badge">Mejora disponible</span><h2>WhatsApp automático</h2><p class="sub">Hoy los folios se marcan a mano. Con la conexión oficial de WhatsApp:</p>
-    <ul><li>Cada mensaje y cada respuesta se anotan solos, con su hora</li><li>Tiempo real de respuesta por persona</li><li>Aviso si un cliente lleva más de 2 horas sin respuesta</li><li>El celular del rancho sigue igual, con su app</li></ul>
+  <div class="card up"><span class="badge">Mejora disponible</span><h2>Asistente de WhatsApp</h2><p class="sub">Responde, filtra y le deja al rancho solo lo importante.</p>
+    <ul><li>Contesta solo y al momento, de día y de noche</li><li>Filtra las conversaciones y manda la ficha del semental que piden</li><li>Le pasa al rancho solo las que necesitan a una persona</li><li>Avisa si un mensaje lleva rato sin respuesta</li><li>Anota todo en este panel, con su tiempo de respuesta</li><li>Manda recordatorios de pagos, citas y rifa</li></ul>
     <div class="lock">Tiempo de respuesta de hoy <b>38 min</b></div>
     <p class="precio"><b>$4,000</b> instalación <span>+</span> <b>$500</b> al mes</p>
     <p class="sub" style="margin:-8px 0 14px;font-size:13px">Precios en pesos. Los cargos de Meta, si hay, los paga el rancho.</p>
@@ -263,7 +263,7 @@ $("#periodo").addEventListener("click", (e) => { const b = e.target.closest("but
 $("#fil").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; FILTRO = b.dataset.f; $("#fil").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
 $("#entrar").addEventListener("click", () => { $("#login").style.display = "none"; scrollTo(0, 0); });
 $("#salir").addEventListener("click", () => { $("#login").style.display = "flex"; });
-$("#upBtn").addEventListener("click", () => { location.href = "https://wa.me/523333063319?text=" + encodeURIComponent("Hola Jesús, me interesa el WhatsApp automático para el panel del rancho"); });
+$("#upBtn").addEventListener("click", () => { location.href = "https://wa.me/523333063319?text=" + encodeURIComponent("Hola Jesús, me interesa el asistente de WhatsApp para el rancho"); });
 $("#rankMore").addEventListener("click", () => { TODOS = !TODOS; draw(); });
 $("#folios").addEventListener("click", (e) => { const b = e.target.closest("button[data-e]"); if (!b) return; const o = FOL.find((x) => x.id === b.closest(".acts").dataset.id);
   o.est = b.dataset.e; o.resp = o.est === "p" ? null : (o.resp ?? Math.max(5, Math.round(o.hrs * 60))); draw(); });
