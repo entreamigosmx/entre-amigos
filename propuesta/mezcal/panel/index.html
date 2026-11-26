@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel del rancho | Mezcal Quarter Horses</title>
+<link rel="icon" href="../fotos/icono.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0c;--panel:#151517;--panel2:#1d1d20;--line:#2c2c30;--text:#f7f5f2;--muted:#a9a6a2;--gold:#d6aa4e;--gold2:#efcd7e;--wine:#b3202a;--ok:#3fae6a;--warn:#e0a53a;--r:18px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+.serif{font-family:"Barlow Semi Condensed",Inter,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+.demo{background:#d6aa4e18;border-bottom:1px solid #d6aa4e55;color:var(--gold2);font-size:14px;text-align:center;padding:8px 16px}
+header{display:flex;align-items:center;gap:14px;padding:18px 0}
+header img{width:46px;height:46px;object-fit:contain}
+header h1{font-size:26px;line-height:1.1}
+header small{display:block;color:var(--muted);font-size:14px;font-family:Inter,sans-serif;font-weight:500}
+.who{margin-left:auto;text-align:right;font-size:14px;color:var(--muted)}
+.who b{display:block;color:var(--text);font-weight:600}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--muted);margin-top:3px}
+.views{display:flex;gap:8px;margin:4px 0 16px;flex-wrap:wrap}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{border:0;background:none;padding:9px 16px;border-radius:999px;font-size:15px;font-weight:600;color:var(--muted);min-height:42px}
+.seg button.on{background:var(--gold);color:#0b0b0c}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.kpi .n{font-family:"Barlow Semi Condensed",sans-serif;font-size:44px;font-weight:700;line-height:1}
+.kpi .l{color:var(--muted);font-size:15px;margin-top:6px}
+.kpi .d{font-size:13px;margin-top:6px;color:var(--muted)}
+.kpi .d b{color:var(--ok);font-weight:600}
+.kpi.alert{border-color:#e0a53a88}
+.kpi.alert .n{color:var(--warn)}
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px}
+h2{font-family:"Barlow Semi Condensed",sans-serif;font-size:22px;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+/* barras por dia */
+.chart{position:relative}
+.chart svg{width:100%;height:190px;display:block;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:#000;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;white-space:nowrap;transform:translate(-50%,-110%);display:none}
+/* rankings */
+.rank{list-style:none;display:grid;gap:10px}
+.rank li{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center}
+.rank img{width:44px;height:44px;border-radius:12px;object-fit:cover}
+.rank .nm{font-weight:600;font-size:16px;line-height:1.2}
+.rank .nm span{color:var(--muted);font-weight:400;font-size:14px}
+.bar{height:8px;background:var(--panel2);border-radius:4px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:4px}
+.rank .v{text-align:right;font-size:14px;color:var(--muted);line-height:1.3}
+.rank .v b{display:block;color:var(--text);font-size:17px}
+.tipos{list-style:none;display:grid;gap:12px}
+.tipos li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:16px}
+.tipos .bar{grid-column:1/-1;margin-top:0}
+/* folios */
+.fil{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fil button{border:1px solid var(--line);background:none;border-radius:999px;padding:7px 14px;font-size:14px;color:var(--muted);min-height:38px}
+.fil button.on{border-color:var(--gold);color:var(--gold)}
+.folios{display:grid;gap:10px}
+.fo{display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:center;background:var(--panel2);border-radius:14px;padding:14px 16px}
+.fo .id{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:18px;color:var(--gold)}
+.fo .q{font-weight:600}
+.fo .m{grid-column:2/3;color:var(--muted);font-size:14px}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;border-radius:999px;padding:5px 12px;white-space:nowrap}
+.st:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.st.p{color:var(--warn);background:#e0a53a1c}
+.st.c{color:var(--ok);background:#3fae6a1c}
+.st.x{color:var(--gold2);background:#d6aa4e1c}
+.acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.acts button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 14px;font-size:14px;min-height:40px}
+.acts button:hover{border-color:var(--gold)}
+.cli{grid-column:2/-1;font-size:14px;color:var(--text)}
+.admin-only{display:none}
+body.admin .admin-only{display:block}
+body.admin .acts.admin-only{display:flex}
+.rifa .big{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.rifa .big .n{font-family:"Barlow Semi Condensed",sans-serif;font-size:40px;font-weight:700;line-height:1}
+.rifa .bar{height:12px;border-radius:6px}
+.legend{display:flex;gap:16px;font-size:14px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.week{font-size:16px}
+.week p{margin-bottom:8px}
+.week .from{color:var(--muted);font-size:13px;margin-bottom:10px}
+.more{display:block;width:100%;margin-top:12px;border:1px solid var(--line);background:none;border-radius:999px;padding:10px;font-size:15px;color:var(--muted)}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:24px 0 40px}
+@media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.who{display:none}.kpi .n{font-size:38px}}
+@media(max-width:420px){.seg button{padding:8px 12px;font-size:14px}.fo{grid-template-columns:1fr auto}.fo .id{grid-row:1}.fo .q{grid-column:1/-1;grid-row:2}.fo .m{grid-column:1/-1}.fo .st{grid-column:2;grid-row:1;justify-self:end}.cli{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="demo">Vista previa con datos de ejemplo</div>
+<div class="wrap">
+<header>
+  <img src="../fotos/emblema.png" alt="">
+  <h1 class="serif">Panel del rancho<small>Mezcal Quarter Horses</small></h1>
+  <div class="who"><b id="whoName">Rancho</b><span class="tag" id="whoTag">Solo consulta</span></div>
+</header>
+
+<div class="views">
+  <div class="seg" id="vista"><button data-v="rancho" class="on">Así lo ve el rancho</button><button data-v="admin">Así lo ves tú</button></div>
+  <div class="seg" id="periodo"><button data-p="1">Hoy</button><button data-p="7" class="on">7 días</button><button data-p="30">30 días</button></div>
+</div>
+
+<section class="kpis" id="kpis"></section>
+
+<section class="grid">
+  <div class="card"><h2>Visitas por día</h2><p class="sub" id="visSub">Personas que entraron a mezcalqh.com</p><div class="chart" id="chart"><svg id="svg" role="img" aria-label="Visitas por día"></svg><div class="tip" id="tip"></div></div></div>
+  <div class="card"><h2>Qué piden</h2><p class="sub">Solicitudes por WhatsApp según la sección</p><ul class="tipos" id="tipos"></ul></div>
+</section>
+
+<section class="grid">
+  <div class="card"><h2>Sementales más vistos</h2><p class="sub">Veces que abrieron su ficha y cuántos pidieron informes</p><ul class="rank" id="rank"></ul><button class="more" id="rankMore">Ver los 15</button></div>
+  <div style="display:grid;gap:12px;align-content:start">
+    <div class="card rifa"><h2>Rifa #7</h2><p class="sub">Potro Mezcal Frozen Rufgun</p><div id="rifa"></div></div>
+    <div class="card week"><h2>Resumen del lunes</h2><p class="sub">Le llega por correo cada semana</p><div id="week"></div></div>
+  </div>
+</section>
+
+<section class="card" style="margin-bottom:12px">
+  <h2>Solicitudes</h2>
+  <p class="sub" id="folSub">Cada mensaje de WhatsApp lleva su folio</p>
+  <div class="fil" id="fil"><button data-f="todas" class="on">Todas</button><button data-f="p">Sin contestar</button><button data-f="c">Contestadas</button><button data-f="x">Cerradas</button></div>
+  <div class="folios" id="folios"></div>
+</section>
+
+<footer>Sin datos personales de los visitantes. El rancho solo consulta; los cambios los hace Jesús.</footer>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const STAL = [
+  ["wimpyneedsacocktail","Wimpyneedsacocktail",""],["chics-loaded-gun","Chics Loaded Gun",""],["ha-calico-joe","HA Calico Joe","Cálico"],
+  ["ruf-lil-twhizter","Ruf Lil Twhizter","Cascabel"],["good-times-n-guns","Good Times N Guns","Charrasqueado"],["gunner-missed-my-spot","Gunner Missed My Spot","Charol"],
+  ["blazin-guns-in-town","Blazin Guns In Town","Cardenal"],["slidin-for-trash","Slidin For Trash","Coronel"],["lh-wimpys-gotta-gun","LH Wimpys Gotta Gun","Cantador"],
+  ["mezcal-step-face","Mezcal Step Face","Centenario"],["mezcalero-inferno-66","Mezcalero Inferno 66","Mezcalero 66"],["mezcal-blue-roan-gun","Mezcal Blue Roan Gun","Curandero"],
+  ["mezcal-voodoo-gunner","Mezcal Voodoo Gunner","Capricho"],["mezcal-gunner-black","Mezcal Gunner Black","El Catrín"],["mezcalero-voodoo-gun","Mezcalero Voodoo Gun","Calexo"]];
+// Datos de ejemplo (fijos para que la vista previa siempre se vea igual)
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const hoy = new Date(); hoy.setHours(12,0,0,0);
+const DIAS = Array.from({length:30}, (_, i) => { const d = new Date(hoy); d.setDate(d.getDate() - (29 - i)); const fin = d.getDay() === 0 || d.getDay() === 6; return { d, v: Math.round(38 + i * 1.1 + rnd() * 26 + (fin ? 18 : 0)), en: 0 }; });
+DIAS.forEach((x) => x.en = Math.round(x.v * (0.12 + rnd() * 0.1)));
+const PESO = [1.0,.95,.5,.62,.8,.45,.4,.55,.7,.48,.35,.66,.85,.42,.38];
+const TIPOS = [["maquila","Maquila"],["potrillos","Potrillos en venta"],["rifa","Rifa"],["tienda","Tienda"],["cruza","Simulador de cruza"],["pregunta","Preguntas"]];
+const NOMBRES = ["Luis Ramírez","Carlos Méndez","José Ángel Ruiz","Ricardo Flores","Mike Turner","Alejandro Soto","Jorge Navarro","Daniel Ortega","Rubén Castillo","Héctor Lara","Fernando Gil","Pedro Íñiguez","Tom Becker","Raúl Medina","Sergio Paredes","Iván Cortés","Manuel Robles","Óscar Vega"];
+const FOL = []; let num = 342;
+for (let i = 0; i < 130; i++) {
+  const t = rnd(), tipo = t < .38 ? "maquila" : t < .55 ? "potrillos" : t < .72 ? "rifa" : t < .82 ? "tienda" : t < .92 ? "cruza" : "pregunta";
+  const hrs = Math.round(i * 5.4 + rnd() * 4), f = new Date(Date.now() - hrs * 36e5);
+  const s = STAL[Math.floor(Math.pow(rnd(), 1.6) * 15)];
+  const det = tipo === "maquila" ? "Maquila con " + (s[2] || s[1]) : tipo === "potrillos" ? ["Potranca alazana de Capricho","Potro bayo de Charrasqueado","Potrillo desde la panza, Curandero"][i % 3]
+    : tipo === "rifa" ? (1 + Math.floor(rnd() * 4)) + " boletos" : tipo === "tienda" ? ["Gorra y playera","Hebilla","Sombrero","Termo y gorra"][i % 4]
+    : tipo === "cruza" ? "Yegua " + ["alazana","colorada","palomina","retinta"][i % 4] + " con " + (s[2] || s[1]) : "Pregunta de visitas al rancho";
+  const est = hrs < 5 ? (rnd() < .55 ? "p" : "c") : hrs < 30 ? (rnd() < .18 ? "p" : "c") : rnd() < .3 ? "x" : "c";
+  const resp = est === "p" ? null : Math.round(8 + rnd() * (rnd() < .2 ? 400 : 90));
+  FOL.push({ id: "M-" + String(num--).padStart(4, "0"), tipo, det, f, hrs, est, resp, nom: NOMBRES[i % NOMBRES.length], tel: "33 " + (1000 + Math.floor(rnd() * 8999)) + " " + (1000 + Math.floor(rnd() * 8999)) });
+}
+let P = 7, VISTA = "rancho", FILTRO = "todas", TODOS = false;
+const fmt = (n) => n.toLocaleString("es-MX");
+const fDia = (d) => d.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" });
+const hace = (h) => h < 1 ? "hace unos minutos" : h < 24 ? "hace " + h + " h" : h < 48 ? "ayer" : "hace " + Math.floor(h / 24) + " días";
+const tiempo = (m) => m < 60 ? m + " min" : (Math.round(m / 6) / 10) + " h";
+
+function draw() {
+  document.body.classList.toggle("admin", VISTA === "admin");
+  $("#whoName").textContent = VISTA === "admin" ? "Jesús" : "Rancho";
+  $("#whoTag").textContent = VISTA === "admin" ? "Administrador" : "Solo consulta";
+  const dias = DIAS.slice(-P), prev = DIAS.slice(-2 * P, -P);
+  const vis = dias.reduce((a, x) => a + x.v, 0), visPrev = prev.length ? prev.reduce((a, x) => a + x.v, 0) : 0;
+  const en = dias.reduce((a, x) => a + x.en, 0);
+  const fol = FOL.filter((x) => x.hrs < P * 24), pend = fol.filter((x) => x.est === "p"), cont = fol.filter((x) => x.resp != null);
+  const prom = cont.length ? Math.round(cont.reduce((a, x) => a + x.resp, 0) / cont.length) : 0;
+  const crec = visPrev ? Math.round((vis / visPrev - 1) * 100) : 0;
+  $("#kpis").innerHTML = `
+    <div class="card kpi"><div class="n">${fmt(vis)}</div><div class="l">Visitas</div><div class="d">${crec > 0 ? "<b>+" + crec + "%</b> que el periodo anterior" : fmt(en) + " en inglés"}</div></div>
+    <div class="card kpi"><div class="n">${fol.length}</div><div class="l">Solicitudes</div><div class="d">${fol.filter((x) => x.est === "x").length} cerradas</div></div>
+    <div class="card kpi"><div class="n">${fol.length ? Math.round(cont.length / fol.length * 100) : 0}%</div><div class="l">Contestadas</div><div class="d">Promedio ${tiempo(prom)}</div></div>
+    <div class="card kpi${pend.length ? " alert" : ""}"><div class="n">${pend.length}</div><div class="l">Sin contestar</div><div class="d">${pend.length ? "La más vieja " + hace(Math.max(...pend.map((x) => x.hrs))) : "Todo al día"}</div></div>`;
+  // grafica
+  const ser = P === 1 ? DIAS.slice(-7) : dias, W = Math.max(280, $("#chart").clientWidth), H = 190, pad = 22, max = Math.max(...ser.map((x) => x.v)) * 1.1;
+  const bw = (W - 8) / ser.length, g = Math.min(6, bw * .3);
+  let s = `<line x1="0" x2="${W}" y1="${H - pad}" y2="${H - pad}" stroke="#2c2c30"/>`;
+  [0.5, 1].forEach((k) => { const y = (H - pad) - (H - pad - 8) * k; s += `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="#2c2c30" stroke-dasharray="2 4"/>`; });
+  ser.forEach((x, i) => { const h = (H - pad - 8) * x.v / max, X = 4 + i * bw + g / 2, w = bw - g, y = H - pad - h, last = i === ser.length - 1;
+    s += `<rect x="${X}" y="${y}" width="${w}" height="${h}" rx="4" fill="${last ? "#efcd7e" : "#d6aa4e"}" opacity="${P === 1 && !last ? .35 : 1}"/><rect class="hit" data-i="${i}" x="${X - g / 2}" y="0" width="${bw}" height="${H - pad}" fill="transparent"/>`;
+    if (ser.length <= 7 || last) s += `<text x="${X + w / 2}" y="${y - 6}" fill="#f7f5f2" font-size="12" font-weight="600" text-anchor="middle">${x.v}</text>`;
+    if (ser.length <= 7 || i % 5 === 4 || last) s += `<text x="${X + w / 2}" y="${H - 6}" fill="#a9a6a2" font-size="11" text-anchor="middle">${ser.length <= 7 ? x.d.toLocaleDateString("es-MX", { weekday: "short" }) : x.d.getDate()}</text>`; });
+  const svg = $("#svg"); svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = s;
+  $("#visSub").textContent = P === 1 ? "Hoy contra los 6 días anteriores" : "Personas que entraron a mezcalqh.com";
+  svg.querySelectorAll(".hit").forEach((r) => { const x = ser[+r.dataset.i];
+    const show = () => { const tip = $("#tip"), b = svg.getBoundingClientRect(), rb = r.getBoundingClientRect(); tip.innerHTML = `<b>${fmt(x.v)}</b> visitas · ${fDia(x.d)}`; tip.style.left = (rb.left - b.left + rb.width / 2) + "px"; tip.style.top = "30px"; tip.style.display = "block"; };
+    r.addEventListener("mouseenter", show); r.addEventListener("click", show); r.addEventListener("mouseleave", () => $("#tip").style.display = "none"); });
+  // tipos
+  const cnt = TIPOS.map(([k, l]) => [l, fol.filter((x) => x.tipo === k).length]).sort((a, b) => b[1] - a[1]), cmax = Math.max(1, ...cnt.map((x) => x[1]));
+  $("#tipos").innerHTML = cnt.map(([l, n]) => `<li><span>${l}</span><b>${n}</b><div class="bar"><i style="width:${n / cmax * 100}%"></i></div></li>`).join("");
+  // ranking
+  const f = vis * .6 / PESO.reduce((a, b) => a + b, 0), rk = STAL.map((x, i) => ({ x, v: Math.round(PESO[i] * f * (.9 + ((i * 37) % 10) / 50)), inf: fol.filter((o) => o.det.includes(x[2] || x[1])).length })).sort((a, b) => b.v - a.v);
+  const rmax = rk[0].v, list = TODOS ? rk : rk.slice(0, 5);
+  $("#rank").innerHTML = list.map(({ x, v, inf }) => `<li><img src="../fotos/${x[0]}-0.jpg" alt="" loading="lazy"><div><div class="nm">${x[2] || x[1]}${x[2] ? " <span>" + x[1] + "</span>" : ""}</div><div class="bar"><i style="width:${v / rmax * 100}%"></i></div></div><div class="v"><b>${fmt(v)}</b>${inf} ${inf === 1 ? "informe" : "informes"}</div></li>`).join("");
+  $("#rankMore").textContent = TODOS ? "Ver solo los 5 primeros" : "Ver los 15";
+  // rifa
+  const vend = 128, pag = 104, tot = 200;
+  $("#rifa").innerHTML = `<div class="big"><span class="n">${vend}</span><span class="sub" style="margin:0">de ${tot} boletos apartados</span></div>
+    <div class="bar" style="display:flex;gap:2px;background:var(--panel2)"><i style="width:${pag / tot * 100}%;background:var(--gold);border-radius:6px 0 0 6px"></i><i style="width:${(vend - pag) / tot * 100}%;background:#d6aa4e66;border-radius:0 6px 6px 0"></i></div>
+    <div class="legend"><span><i style="background:var(--gold)"></i>${pag} pagados</span><span><i style="background:#d6aa4e66"></i>${vend - pag} por pagar</span><span>${tot - vend} libres</span></div>`;
+  // resumen semanal
+  const w7 = DIAS.slice(-7).reduce((a, x) => a + x.v, 0), f7 = FOL.filter((x) => x.hrs < 168), top = rk[0].x;
+  $("#week").innerHTML = `<p class="from">Para: rancho · Lunes 7:00 am</p><p>Esta semana entraron <b>${fmt(w7)}</b> personas y llegaron <b>${f7.length}</b> solicitudes.</p><p>El más visto fue <b>${top[2] || top[1]}</b>. Se contestó el <b>${Math.round(f7.filter((x) => x.resp != null).length / f7.length * 100)}%</b> de los mensajes.</p>`;
+  // folios
+  $("#folSub").textContent = VISTA === "admin" ? "Marca cada folio cuando lo contestes o se cierre" : "Cada mensaje de WhatsApp lleva su folio";
+  const lst = FOL.filter((x) => x.hrs < Math.max(P, 7) * 24 && (FILTRO === "todas" || x.est === FILTRO)).slice(0, 12);
+  const lbl = { p: "Sin contestar", c: "Contestada", x: "Cerrada" };
+  $("#folios").innerHTML = lst.length ? lst.map((o) => `<div class="fo"><span class="id">${o.id}</span><span class="q">${o.det}</span><span class="st ${o.est}">${lbl[o.est]}</span>
+    <span class="m">${TIPOS.find((t) => t[0] === o.tipo)[1]} · ${hace(o.hrs)}${o.resp != null ? " · contestada en " + tiempo(o.resp) : ""}</span>
+    <span class="cli admin-only">${o.nom} · ${o.tel}</span>
+    <div class="acts admin-only" data-id="${o.id}">${o.est !== "c" ? '<button data-e="c">Contestada</button>' : ""}${o.est !== "x" ? '<button data-e="x">Cerrada</button>' : ""}${o.est !== "p" ? '<button data-e="p">Deshacer</button>' : ""}</div></div>`).join("")
+    : '<p class="sub">No hay solicitudes con este filtro.</p>';
+}
+$("#vista").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; VISTA = b.dataset.v; $("#vista").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
+$("#periodo").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; P = +b.dataset.p; $("#periodo").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
+$("#fil").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; FILTRO = b.dataset.f; $("#fil").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
+$("#rankMore").addEventListener("click", () => { TODOS = !TODOS; draw(); });
+$("#folios").addEventListener("click", (e) => { const b = e.target.closest("button[data-e]"); if (!b) return; const o = FOL.find((x) => x.id === b.closest(".acts").dataset.id);
+  o.est = b.dataset.e; o.resp = o.est === "p" ? null : (o.resp ?? Math.max(5, Math.round(o.hrs * 60))); draw(); });
+draw();
+addEventListener("resize", () => draw());
+</script>
+</body>
+</html>
