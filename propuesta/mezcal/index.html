@@ -717,7 +717,9 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 const t = k => (D.sitio[L][k] || '');
 const money = n => '$' + Number(n).toLocaleString('es-MX') + ' MXN';
 const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-const waLink = msg => D.sitio.whatsapp ? `https://wa.me/${D.sitio.whatsapp}?text=${encodeURIComponent(msg)}` : '#contacto';
+// Folio en cada mensaje: en la versión real lo da el panel del rancho (consecutivo) al tocar el botón.
+const folio = () => 'M-' + String(343 + Math.floor((Date.now() / 6e4) % 600)).padStart(4, '0');
+const waLink = msg => D.sitio.whatsapp ? `https://wa.me/${D.sitio.whatsapp}?text=${encodeURIComponent(msg + '\n\n' + (L === 'es' ? 'Folio ' : 'Ref. ') + folio())}` : '#contacto';
 
 fetch('datos.json').then(r => r.json()).then(d => {
   D = d; S = D.sementales.sort((a, b) => a.orden - b.orden);

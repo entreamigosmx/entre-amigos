@@ -86,18 +86,42 @@ body.admin .acts.admin-only{display:flex}
 .week p{margin-bottom:8px}
 .week .from{color:var(--muted);font-size:13px;margin-bottom:10px}
 .more{display:block;width:100%;margin-top:12px;border:1px solid var(--line);background:none;border-radius:999px;padding:10px;font-size:15px;color:var(--muted)}
+#login{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 50% 30%,#1d1a12,#0b0b0c 70%);display:flex;align-items:center;justify-content:center;padding:24px}
+#login .box{text-align:center;max-width:360px;width:100%}
+#login img{width:84px;height:84px;margin:0 auto 18px;object-fit:contain}
+#login h1{font-size:34px;line-height:1.1}
+#login p{color:var(--muted);margin:8px 0 26px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;background:#fff;color:#1f1f1f;border:0;border-radius:999px;padding:15px 20px;font-size:17px;font-weight:600;min-height:56px}
+.gbtn svg{width:22px;height:22px}
+#login small{display:block;color:var(--muted);font-size:13px;margin-top:16px}
+.up{border-color:#d6aa4e66;background:linear-gradient(160deg,#1d1a12,#151517 60%)}
+.up .badge{display:inline-block;background:var(--gold);color:#0b0b0c;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 10px;margin-bottom:10px}
+.up ul{list-style:none;display:grid;gap:8px;margin:4px 0 16px}
+.up li{padding-left:20px;position:relative;font-size:16px}
+.up li:before{content:"";position:absolute;left:2px;top:9px;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.up .gbtn2{display:inline-flex;border:2px solid var(--gold);color:var(--gold);background:none;border-radius:999px;padding:11px 20px;font-weight:600;font-size:15px;min-height:48px;align-items:center}
+.lock{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:12px;padding:10px 12px;color:var(--muted);font-size:14px;margin-bottom:14px}
+.lock b{color:var(--text);font-family:"Barlow Semi Condensed",sans-serif;font-size:22px;filter:blur(5px)}
+.salir{border:1px solid var(--line);background:none;border-radius:999px;padding:4px 12px;font-size:13px;color:var(--muted);margin-left:10px}
 footer{color:var(--muted);font-size:13px;text-align:center;padding:24px 0 40px}
 @media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.who{display:none}.kpi .n{font-size:38px}}
 @media(max-width:420px){.seg button{padding:8px 12px;font-size:14px}.fo{grid-template-columns:1fr auto}.fo .id{grid-row:1}.fo .q{grid-column:1/-1;grid-row:2}.fo .m{grid-column:1/-1}.fo .st{grid-column:2;grid-row:1;justify-self:end}.cli{grid-column:1/-1}}
 </style>
 </head>
 <body>
+<div id="login"><div class="box">
+  <img src="../fotos/emblema.png" alt="">
+  <h1 class="serif">Panel del rancho</h1>
+  <p>Mezcal Quarter Horses</p>
+  <button class="gbtn" id="entrar"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Entrar con Google</button>
+  <small>Solo entran las cuentas que autoriza Jesús.</small>
+</div></div>
 <div class="demo">Vista previa con datos de ejemplo</div>
 <div class="wrap">
 <header>
   <img src="../fotos/emblema.png" alt="">
   <h1 class="serif">Panel del rancho<small>Mezcal Quarter Horses</small></h1>
-  <div class="who"><b id="whoName">Rancho</b><span class="tag" id="whoTag">Solo consulta</span></div>
+  <div class="who"><b id="whoName">Rancho</b><span class="tag" id="whoTag">Solo consulta</span><button class="salir" id="salir">Salir</button></div>
 </header>
 
 <div class="views">
@@ -118,6 +142,14 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:24px 0 40px}
     <div class="card rifa"><h2>Rifa #7</h2><p class="sub">Potro Mezcal Frozen Rufgun</p><div id="rifa"></div></div>
     <div class="card week"><h2>Resumen del lunes</h2><p class="sub">Le llega por correo cada semana</p><div id="week"></div></div>
   </div>
+</section>
+
+<section class="grid">
+  <div class="card"><h2>De dónde llegan</h2><p class="sub">Por dónde entró cada visita</p><ul class="tipos" id="origen"></ul></div>
+  <div class="card up"><span class="badge">Mejora disponible</span><h2>WhatsApp automático</h2><p class="sub">Hoy los folios se marcan a mano. Con la conexión oficial de WhatsApp:</p>
+    <ul><li>Cada mensaje y cada respuesta se anotan solos, con su hora</li><li>Tiempo real de respuesta por persona</li><li>Aviso si un cliente lleva más de 2 horas sin respuesta</li><li>El celular del rancho sigue igual, con su app</li></ul>
+    <div class="lock">Tiempo de respuesta de hoy <b>38 min</b></div>
+    <button class="gbtn2" id="upBtn">Pedir informes a Jesús</button></div>
 </section>
 
 <section class="card" style="margin-bottom:12px">
@@ -209,6 +241,10 @@ function draw() {
   // resumen semanal
   const w7 = DIAS.slice(-7).reduce((a, x) => a + x.v, 0), f7 = FOL.filter((x) => x.hrs < 168), top = rk[0].x;
   $("#week").innerHTML = `<p class="from">Para: rancho · Lunes 7:00 am</p><p>Esta semana entraron <b>${fmt(w7)}</b> personas y llegaron <b>${f7.length}</b> solicitudes.</p><p>El más visto fue <b>${top[2] || top[1]}</b>. Se contestó el <b>${Math.round(f7.filter((x) => x.resp != null).length / f7.length * 100)}%</b> de los mensajes.</p>`;
+  // origen
+  const OR = [["Instagram", .34], ["Facebook", .22], ["Google", .19], ["Liga compartida por WhatsApp", .15], ["Directo", .1]];
+  $("#origen").innerHTML = OR.map(([l, k]) => `<li><span>${l}</span><b>${fmt(Math.round(vis * k))}</b><div class="bar"><i style="width:${k / OR[0][1] * 100}%"></i></div></li>`).join("");
+  $("#upBtn").textContent = VISTA === "admin" ? "Ver cotización de la mejora" : "Pedir informes a Jesús";
   // folios
   $("#folSub").textContent = VISTA === "admin" ? "Marca cada folio cuando lo contestes o se cierre" : "Cada mensaje de WhatsApp lleva su folio";
   const lst = FOL.filter((x) => x.hrs < Math.max(P, 7) * 24 && (FILTRO === "todas" || x.est === FILTRO)).slice(0, 12);
@@ -222,6 +258,9 @@ function draw() {
 $("#vista").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; VISTA = b.dataset.v; $("#vista").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
 $("#periodo").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; P = +b.dataset.p; $("#periodo").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
 $("#fil").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; FILTRO = b.dataset.f; $("#fil").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
+$("#entrar").addEventListener("click", () => { $("#login").style.display = "none"; scrollTo(0, 0); });
+$("#salir").addEventListener("click", () => { $("#login").style.display = "flex"; });
+$("#upBtn").addEventListener("click", () => { location.href = "https://wa.me/523333063319?text=" + encodeURIComponent("Hola Jesús, me interesa el WhatsApp automático para el panel del rancho"); });
 $("#rankMore").addEventListener("click", () => { TODOS = !TODOS; draw(); });
 $("#folios").addEventListener("click", (e) => { const b = e.target.closest("button[data-e]"); if (!b) return; const o = FOL.find((x) => x.id === b.closest(".acts").dataset.id);
   o.est = b.dataset.e; o.resp = o.est === "p" ? null : (o.resp ?? Math.max(5, Math.round(o.hrs * 60))); draw(); });
