@@ -269,20 +269,26 @@ function drawTabs() {
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-t]"); if (b) go(b.dataset.t); });
 function go(t) { TAB = t; drawTabs(); draw(); window.scrollTo(0, 0); }
 let NOTICE = null;
-function notice(nombre, tel, msg, titulo, mail) {
-  NOTICE = { nombre, tel: tel10(tel).length === 10 ? tel : "", msg, titulo, mail: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail || "") ? mail : "" };
+function notice(nombre, tel, msg, titulo, mail, op) {
+  NOTICE = { nombre, tel: tel10(tel).length === 10 ? tel : "", msg, titulo, mail: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail || "") ? mail : "", ...(op || {}) };
   drawNotice(); window.scrollTo(0, 0);
 }
 function drawNotice() {
   const n = NOTICE, box = $("notice"); if (!box) return;
   if (!n) { box.innerHTML = ""; return; }
   box.innerHTML = `<div class="card notice"><h3>${esc(n.titulo)}</h3>
-    <p class="muted">${n.tel ? "Avísale a " + esc(n.nombre) + (n.mail ? " por WhatsApp o por correo:" : " por WhatsApp con un toque:") : n.mail ? "Avísale a " + esc(n.nombre) + " por correo:" : esc(n.nombre) + " no tiene WhatsApp registrado. Copia el mensaje y mándaselo:"}</p>
-    <pre>${esc(n.msg)}</pre>
-    <div class="actions">${n.tel ? `<a class="btn primary" href="${waTo(n.tel, n.msg)}" target="_blank" rel="noopener" id="n-wa">Avisar por WhatsApp</a>` : ""}${n.mail ? `<a class="btn" href="mailto:${encodeURIComponent(n.mail)}?subject=${encodeURIComponent("Tu préstamo con Entre Amigos")}&body=${encodeURIComponent(n.msg)}">Mandar por correo</a>` : ""}<button class="btn" type="button" id="n-copy">Copiar</button><button class="link" type="button" id="n-x">Cerrar</button></div></div>`;
+    <p class="muted">${!n.tel && n.waAny ? (n.mail ? "Mándaselo a " + esc(n.nombre) + " por WhatsApp (eliges su contacto) o por correo:" : esc(n.nombre) + " no tiene WhatsApp guardado. Al tocar el botón eliges su contacto en WhatsApp:") : n.tel ? "Avísale a " + esc(n.nombre) + (n.mail ? " por WhatsApp o por correo:" : " por WhatsApp con un toque:") : n.mail ? "Avísale a " + esc(n.nombre) + " por correo:" : esc(n.nombre) + " no tiene WhatsApp registrado. Copia el mensaje y mándaselo:"}</p>
+    ${n.edit ? `<label class="note" for="n-msg">Puedes cambiar el mensaje antes de mandarlo</label><textarea id="n-msg" rows="14">${esc(n.msg)}</textarea>` : `<pre>${esc(n.msg)}</pre>`}
+    ${n.nota ? `<p class="note">${esc(n.nota)}</p>` : ""}
+    <div class="actions">${n.tel || n.waAny ? `<a class="btn primary" href="${waTo(n.tel, n.msg)}" target="_blank" rel="noopener" id="n-wa">${n.tel ? "Avisar por WhatsApp" : "Mandar por WhatsApp"}</a>` : ""}${n.mail ? `<a class="btn" id="n-mail" href="mailto:${encodeURIComponent(n.mail)}?subject=${encodeURIComponent(n.asunto || "Tu préstamo con Entre Amigos")}&body=${encodeURIComponent(n.msg)}">Mandar por correo</a>` : ""}<button class="btn" type="button" id="n-copy">Copiar</button><button class="link" type="button" id="n-x">Cerrar</button></div></div>`;
+  $("n-msg") && $("n-msg").addEventListener("input", (ev) => {
+    n.msg = ev.target.value;
+    if ($("n-wa")) $("n-wa").href = waTo(n.tel, n.msg);
+    if ($("n-mail")) $("n-mail").href = `mailto:${encodeURIComponent(n.mail)}?subject=${encodeURIComponent(n.asunto || "Tu préstamo con Entre Amigos")}&body=${encodeURIComponent(n.msg)}`;
+  });
   $("n-x").onclick = () => { NOTICE = null; drawNotice(); };
   $("n-wa") && $("n-wa").addEventListener("click", () => setTimeout(() => { NOTICE = null; drawNotice(); }, 800));
-  $("n-copy").onclick = () => navigator.clipboard?.writeText(n.msg).catch(() => {});
+  $("n-copy").onclick = () => navigator.clipboard?.writeText(n.msg).then(() => ($("n-copy").textContent = "Copiado")).catch(() => {});
 }
 const PORTAL = () => location.origin + location.pathname;
 function draw() { if (isAdmin()) { syncSoon(); drawInvAlert(); } const f = { emp: vEmp, empresas: vEmpresas, inv: vInv, agenda: vAgenda, cotizar: vCotizar, cotizaciones: vCotizaciones, prestamos: vPrestamos, autos: vAutos, cuentas: vCuentas, personas: vPersonas, tasas: vTasas, mis: vMis }[TAB]; f && f(); }
@@ -2019,7 +2025,7 @@ function personaInvView(e, formPago) {
     </div>
     ${prox ? `<p class="muted" style="margin:0">Próximo pago: <b>${mxn2(prox.monto)}</b> el ${fdate(prox.fecha)}${prox.limite !== prox.fecha ? " (a más tardar el " + fdate(prox.limite) + ")" : ""}.</p>` : ""}
     ${(() => { const g = deudaPorPersona({ [e.k]: e })[0]; return g ? `<p class="lbl">Pagos por hacer</p><div class="list">${grupoPagHTML(g, formPago)}</div>` : ""; })()}
-    <div class="actions">${debe > 0.5 ? "" : `<button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Registrar un pago</button>`}${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-icfg="${esc(e.k)}">${apodoDe(e.k) ? "Apodo, app y plazos" : "Ponerle apodo, app y plazos"}</button><button class="btn sm" type="button" data-ivver="${esc(e.k)}">Ver como lo ve ${esc(nom1(e.nombre))}</button><button class="btn sm" type="button" data-inom="${esc(e.k)}">${INV_FORM === "nom:" + e.k ? "Cancelar" : "Corregir nombre"}</button><button class="btn sm" type="button" data-iunir="${esc(e.k)}">${INV_FORM === "unir:" + e.k ? "Cancelar" : "Es la misma persona que…"}</button></div>
+    <div class="actions">${debe > 0.5 ? "" : `<button class="btn sm primary" type="button" data-pag="${esc(e.k)}">Registrar un pago</button>`}${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-icfg="${esc(e.k)}">${apodoDe(e.k) ? "Apodo, app y plazos" : "Ponerle apodo, app y plazos"}</button><button class="btn sm" type="button" data-ivver="${esc(e.k)}">Ver como lo ve ${esc(nom1(e.nombre))}</button><button class="btn sm" type="button" data-iinv="${esc(e.k)}">Invitar a ver sus pagos</button><button class="btn sm" type="button" data-inom="${esc(e.k)}">${INV_FORM === "nom:" + e.k ? "Cancelar" : "Corregir nombre"}</button><button class="btn sm" type="button" data-iunir="${esc(e.k)}">${INV_FORM === "unir:" + e.k ? "Cancelar" : "Es la misma persona que…"}</button></div>
     ${INV_FORM === "nom:" + e.k ? `<form class="edit" data-inomf="${esc(e.k)}" novalidate><label>Nombre completo<input name="n" value="${esc(e.nombre)}"></label><p class="note">Se cambia en todas sus inversiones, pagos e historial${USERS.some((u) => u.uid === e.k) ? " y en su cuenta" : ""}. Si escribes el mismo nombre que otro registro (por ejemplo "Rubí Reynoso"), quedan juntos como una sola persona.</p><p class="err" hidden></p><button class="btn sm primary" type="submit">Guardar</button></form>` : ""}
     ${INV_FORM === "unir:" + e.k ? (() => { const O = Object.values(estadoPersonas()).filter((x) => x.k !== e.k && (x.inv || x.aportes > 0 || CONTRATOS().some((m) => persKey(m) === x.k))); return `<form class="edit" data-iunirf="${esc(e.k)}" novalidate><label>Juntar a ${esc(e.ver || e.nombre)} con<select name="a">${O.map((x) => `<option value="${esc(x.k)}">${esc(x.ver || x.nombre)}${USERS.some((u) => u.uid === x.k) ? "" : " · sin cuenta"}</option>`).join("")}</select></label><p class="note">Sus inversiones, pagos e historial quedan juntos en una sola persona. No se borra nada.</p><button class="btn sm primary" type="submit">Juntar</button></form>`; })() : ""}
     ${INV_FORM === "pag:" + e.k ? formPago(e, Math.min(debe, Math.max(0, e.neto)) || (prox ? prox.monto : 0), "a") : ""}
@@ -2083,7 +2089,7 @@ function vCuentas() {
         <div class="item-mid">${e.capPuesto ? `Te ha dado ${mxn(e.capPuesto)} · ` : ""}${e.prestamos.length ? `En ${e.prestamos.length} ${e.prestamos.length === 1 ? "préstamo" : "préstamos"} (${mxn(e.capPrestado)} prestado)` : "Sin préstamos activos"}${e.capPuesto ? ` · Sin prestar ${mxn(Math.max(0, e.capPuesto - e.capPrestado))}` : ""}</div>
         ${e.meDebe > 0.5 ? `<div class="item-mid">Por pagarle ${mxn2(e.debo - e.pagado)} − cobró por ti y te debe ${mxn2(e.meDebe - e.recibido)} = ${e.neto >= 0 ? "le debes " + mxn2(e.neto) : "te debe " + mxn2(-e.neto)}</div>` : ""}
         ${prox.length ? `<div class="item-mid">Próximos: ${prox.map((o) => `${mxn2(o.monto)} a más tardar el ${fcorta(new Date(o.limite + "T12:00:00"))}`).join(" · ")}</div>` : ""}
-        <div class="actions" style="margin-top:4px">${e.pend.length ? `<button class="btn sm primary" type="button" data-ivpf="${esc(e.k)}">Ver sus pagos</button>` : ""}${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-apo="${esc(e.k)}">Aportación o retiro</button><button class="btn sm" type="button" data-icfg="${esc(e.k)}">Su app y plazos</button><button class="link" type="button" data-invo="${esc(e.k)}">${open ? "Cerrar detalle" : "Ver detalle"}</button></div>
+        <div class="actions" style="margin-top:4px">${e.pend.length ? `<button class="btn sm primary" type="button" data-ivpf="${esc(e.k)}">Ver sus pagos</button>` : ""}${e.meDebe > 0.5 || e.neto < -0.5 ? `<button class="btn sm" type="button" data-rec="${esc(e.k)}">Me entregó</button>` : ""}<button class="btn sm" type="button" data-apo="${esc(e.k)}">Aportación o retiro</button><button class="btn sm" type="button" data-icfg="${esc(e.k)}">Su app y plazos</button><button class="btn sm" type="button" data-iinv="${esc(e.k)}">Invitar a ver sus pagos</button><button class="link" type="button" data-invo="${esc(e.k)}">${open ? "Cerrar detalle" : "Ver detalle"}</button></div>
         ${INV_FORM === "pag:" + e.k ? formPago(e, Math.min(e.pend.reduce((s, o) => s + o.falta, 0), Math.max(0, e.neto)), "a") : ""}
         ${INV_FORM === "rec:" + e.k ? formPago(e, -e.neto, "de") : ""}
         ${INV_FORM === "cfg:" + e.k ? cfgForm(e) : ""}
@@ -2139,6 +2145,7 @@ function vCuentas() {
     bindInvPage(ov); ov.querySelectorAll("a,[data-rcb],#inv-all").forEach((x) => { x.style.pointerEvents = "none"; x.setAttribute("tabindex", "-1"); });
     document.body.appendChild(ov);
   }));
+  $("panel").querySelectorAll("[data-iinv]").forEach((b) => (b.onclick = () => { const e = EP[b.dataset.iinv]; if (e) invitarInv(e); }));
   $("panel").querySelectorAll("[data-isel]").forEach((b) => (b.onclick = () => { INV_SEL = b.dataset.isel; INV_FORM = ""; IVF = ""; vCuentas(); window.scrollTo(0, 0); }));
   $("cu-prev") && ($("cu-prev").onclick = () => { CU_MONTH = new Date(y, m - 1, 1); vCuentas(); });
   $("cu-next") && ($("cu-next").onclick = () => { CU_MONTH = new Date(y, m + 1, 1); vCuentas(); });
@@ -2223,6 +2230,20 @@ function avisoInv(e, monto, fecha, metodo, conRecibo) {
     + (e.capPuesto ? `Tu inversión: ${mxn(e.capPuesto)}\n` : "") + `Has recibido en total: ${mxn2(e.pagado + monto)}\n` + (pend > 0.5 ? `Pendiente por recibir: ${mxn2(pend)}\n` : "") + (sig ? `Tu próximo pago: ${mxn2(sig.monto)} a más tardar el ${fcorta(new Date(sig.limite + "T12:00:00"))}\n` : "")
     + (uidDe(e) ? `\n${conRecibo ? "Tu comprobante y " : ""}todos tus movimientos están aquí:\n${PORTAL()}\n` : "") + `\nGracias por tu confianza.\nEntre Amigos`;
   notice(e.nombre, c.tel || u.telefono || "", msg, "Pago registrado. Avísale", c.mail || u.email || "");
+}
+// Invitación para que el inversionista revise sus pagos en su app (cuando el dueño quiera). Frases cortas y simples.
+function invitarInv(e) {
+  const c = INVCFG[cfgKey(e.k)] || {}, u = USERS.find((x) => x.uid === uidDe(e)) || {}, sig = e.futuro[0];
+  const nom = nom1(e.nombre), yo = nom1(USER?.nombre || "") || "Jesús", tiene = !!uidDe(e);
+  const msg = `Hola ${nom}.\n\nYa puedes revisar tus pagos en tu celular.\n\nEntra aquí:\n${PORTAL()}\n\n`
+    + (tiene ? (u.email ? `Entra con tu correo:\n${u.email}\n\n` : "") : `La primera vez crea tu cuenta con tu nombre: ${e.nombre}.\nLuego me avisas.\n\n`)
+    + `Ahí ves:\n- Cuánto has recibido.\n- Tus comprobantes.\n- Tu próximo pago.\n\n`
+    + (sig ? `Tu próximo pago: ${mxn2(sig.monto)}.\nEl ${fechaLarga(sig.fecha).replace(/^\w/, (x) => x.toLowerCase())}.\n\n` : "")
+    + `Cualquier duda, escríbeme.\n${yo}, Entre Amigos`;
+  notice(e.nombre, c.tel || u.telefono || "", msg, "Invitar a " + nom + " a ver sus pagos", c.mail || u.email || "", {
+    asunto: "Tus pagos en Entre Amigos", edit: true, waAny: true,
+    nota: tiene ? "" : nom + " todavía no tiene cuenta. Cuando la cree, márcala como Inversionista en Personas (o en \"Su app y plazos\") para que vea sus pagos.",
+  });
 }
 // Lo que ve cada inversionista en su app (se actualiza solo cuando el administrador abre la app).
 let SYNC_T = null; const SYNC_LAST = {};
@@ -2922,7 +2943,7 @@ function vPersonas() {
     <div class="item-bot"><select data-rol="${u.uid}" aria-label="Tipo de acceso">${Object.entries(ROL).map(([k, v]) => `<option value="${k}"${k === u.rol ? " selected" : ""}>${v}</option>`).join("")}</select>
     ${u.solicita === "empresa" && !u.convenioOk ? `<button class="btn sm primary" type="button" data-convok="${u.uid}">Aprobar convenio</button><button class="link" type="button" data-convno="${u.uid}">No aprobar</button>` : ""}
     ${u.rol === "cliente" && u.solicita === "equipo" ? `<span class="pill warn">Quiere ser colaborador</span><button class="btn sm primary" type="button" data-ok="${u.uid}">Aprobar</button><button class="link" type="button" data-no="${u.uid}">Dejar como cliente</button>` : isNew(u) ? `<span class="pill warn">Nuevo</span>` : ""}
-    <label class="chk" style="margin:0"><input type="checkbox" data-inv="${u.uid}"${u.inversionista ? " checked" : ""}> Inversionista</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-inv="${u.uid}"${u.inversionista ? " checked" : ""}> Inversionista</label>${u.inversionista ? `<button class="btn sm" type="button" data-pinv="${u.uid}">Invitar a ver sus pagos</button>` : ""}
     <input data-tel="${u.uid}" inputmode="tel" placeholder="WhatsApp" value="${esc(u.telefono || "")}" style="width:150px;font-size:14px;padding:6px 8px">
     <button class="link" type="button" data-docs="${u.uid}">Documentos ${docCount(u)}</button><button class="link del" type="button" data-udel="${u.uid}">Borrar registro</button></div>
     ${DOCS_OPEN === u.uid ? `<div id="docs-${u.uid}"></div>` : ""}</div>`).join("") : `<p class="muted">Todavía nadie ha creado cuenta. Manda el link de arriba.</p>`}</div>
@@ -2943,6 +2964,12 @@ function vPersonas() {
   $("panel").querySelectorAll("[data-docs]").forEach((b) => (b.onclick = () => { DOCS_OPEN = DOCS_OPEN === b.dataset.docs ? "" : b.dataset.docs; vPersonas(); }));
   if (DOCS_OPEN && $("docs-" + DOCS_OPEN)) docsCard($("docs-" + DOCS_OPEN), DOCS_OPEN, true, { extra: true });
   $("panel").querySelectorAll("input[data-inv]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.inv), { inversionista: i.checked })));
+  $("panel").querySelectorAll("[data-pinv]").forEach((b) => (b.onclick = () => {
+    const u = USERS.find((x) => x.uid === b.dataset.pinv); if (!u) return;
+    const EP = estadoPersonas(), e = EP[persKey({ uid: u.uid, nombre: u.nombre })] || Object.values(EP).find((x) => uidDe(x) === u.uid);
+    if (e) invitarInv(e);
+    else notice(u.nombre || "", u.telefono, `Hola ${nom1(u.nombre)}.\n\nYa puedes revisar tu inversión en tu celular.\n\nEntra aquí:\n${PORTAL()}\n\n${u.email ? "Entra con tu correo:\n" + u.email + "\n\n" : ""}Cualquier duda, escríbeme.\n${nom1(USER?.nombre || "") || "Jesús"}, Entre Amigos`, "Invitar a " + nom1(u.nombre) + " a ver sus pagos", u.email, { asunto: "Tus pagos en Entre Amigos", edit: true, waAny: true });
+  }));
   $("panel").querySelectorAll("input[data-tel]").forEach((i) => i.addEventListener("change", () => updateDoc(doc(db, "usuarios", i.dataset.tel), { telefono: tel10(i.value) })));
   // Borrar una cuenta por completo: acceso (usuario y contraseña), perfil y documentos. Sus préstamos y cotizaciones se conservan.
   $("panel").querySelectorAll("[data-udel]").forEach((b) => (b.onclick = () => {
