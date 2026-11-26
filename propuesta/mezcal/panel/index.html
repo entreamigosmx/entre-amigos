@@ -103,6 +103,14 @@ body.admin .acts.admin-only{display:flex}
 .lock{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:12px;padding:10px 12px;color:var(--muted);font-size:14px;margin-bottom:14px}
 .lock b{color:var(--text);font-family:"Barlow Semi Condensed",sans-serif;font-size:22px;filter:blur(5px)}
 .up .precio{font-size:16px;color:var(--muted);margin-bottom:12px}.up .precio b{font-family:"Barlow Semi Condensed",sans-serif;font-size:28px;color:var(--gold2);margin-right:4px}.up .precio span{margin:0 6px}
+.ups{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;align-items:start}
+.up.top{border-color:var(--gold)}
+.planes{width:100%;border-collapse:collapse;margin:0 0 16px;font-size:15px}
+.planes th{text-align:left;color:var(--muted);font-weight:500;font-size:13px;padding:0 0 6px}
+.planes th:last-child,.planes td:last-child{text-align:right}
+.planes td{padding:8px 0;border-top:1px solid var(--line)}
+.planes td:last-child{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:20px;color:var(--gold2)}
+@media(max-width:820px){.ups{grid-template-columns:1fr}}
 .salir{border:1px solid var(--line);background:none;border-radius:999px;padding:4px 12px;font-size:13px;color:var(--muted);margin-left:10px}
 footer{color:var(--muted);font-size:13px;text-align:center;padding:24px 0 40px}
 @media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.who{display:none}.kpi .n{font-size:38px}}
@@ -145,15 +153,23 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:24px 0 40px}
   </div>
 </section>
 
-<section class="grid">
-  <div class="card"><h2>De dónde llegan</h2><p class="sub">Por dónde entró cada visita</p><ul class="tipos" id="origen"></ul></div>
-  <div class="card up"><span class="badge">Mejora disponible</span><h2>Asistente de WhatsApp</h2><p class="sub">Responde, filtra y le deja al rancho solo lo importante.</p>
-    <ul><li>Contesta solo y al momento, de día y de noche</li><li>Filtra las conversaciones y manda la ficha del semental que piden</li><li>Le pasa al rancho solo las que necesitan a una persona</li><li>Avisa si un mensaje lleva rato sin respuesta</li><li>Anota todo en este panel, con su tiempo de respuesta</li><li>Manda recordatorios de pagos, citas y rifa</li></ul>
+<section class="card" style="margin-bottom:12px"><h2>De dónde llegan</h2><p class="sub">Por dónde entró cada visita</p><ul class="tipos" id="origen"></ul></section>
+
+<h2 class="serif" style="margin:22px 0 4px">Mejoras disponibles</h2>
+<p class="sub">Este panel ya va incluido. Estas se agregan cuando el rancho quiera.</p>
+<section class="ups">
+  <div class="card up"><span class="badge">Nivel 2</span><h2>WhatsApp conectado</h2><p class="sub">El panel lee el WhatsApp del rancho; ya no se marca nada a mano.</p>
+    <ul><li>Cada mensaje y respuesta se anotan solos, con su hora</li><li>Tiempo real de respuesta</li><li>Aviso si un cliente lleva rato sin respuesta</li><li>El celular sigue igual, con su app</li></ul>
     <div class="lock">Tiempo de respuesta de hoy <b>38 min</b></div>
-    <p class="precio"><b>$4,000</b> instalación <span>+</span> <b>$500</b> al mes</p>
-    <p class="sub" style="margin:-8px 0 14px;font-size:13px">Precios en pesos. Los cargos de Meta, si hay, los paga el rancho.</p>
-    <button class="gbtn2" id="upBtn">Pedir informes a Jesús</button></div>
+    <p class="precio"><b>$4,000</b> instalación <span>+</span> <b>$1,500</b> al mes</p>
+    <button class="gbtn2" data-up="WhatsApp conectado">Pedir informes a Jesús</button></div>
+  <div class="card up top"><span class="badge">Nivel 3</span><h2>Asistente de WhatsApp</h2><p class="sub">Contesta por el rancho y le deja solo lo importante.</p>
+    <ul><li>Contesta solo y al momento, de día y de noche</li><li>Manda la ficha y fotos del semental que piden</li><li>Le pasa al rancho solo lo que necesita a una persona</li><li>Confirma pedidos y boletos con su folio</li><li>Manda recordatorios de pagos, citas y rifa</li></ul>
+    <p class="precio"><b>$10,000</b> instalación</p>
+    <table class="planes"><tr><th>Conversaciones al mes</th><th>Mensualidad</th></tr><tr><td>Hasta 300</td><td>$2,500</td></tr><tr><td>Hasta 800</td><td>$4,000</td></tr><tr><td>Hasta 2,000</td><td>$6,500</td></tr></table>
+    <button class="gbtn2" data-up="Asistente de WhatsApp">Pedir informes a Jesús</button></div>
 </section>
+<p class="sub" style="margin:-2px 0 16px;font-size:13px">Precios en pesos. Los cargos de Meta, si hay, los paga el rancho.</p>
 
 <section class="card" style="margin-bottom:12px">
   <h2>Solicitudes</h2>
@@ -247,7 +263,7 @@ function draw() {
   // origen
   const OR = [["Instagram", .34], ["Facebook", .22], ["Google", .19], ["Liga compartida por WhatsApp", .15], ["Directo", .1]];
   $("#origen").innerHTML = OR.map(([l, k]) => `<li><span>${l}</span><b>${fmt(Math.round(vis * k))}</b><div class="bar"><i style="width:${k / OR[0][1] * 100}%"></i></div></li>`).join("");
-  $("#upBtn").textContent = VISTA === "admin" ? "Ver cotización de la mejora" : "Pedir informes a Jesús";
+  document.querySelectorAll("[data-up]").forEach((b) => b.textContent = VISTA === "admin" ? "Ver en la cotización" : "Pedir informes a Jesús");
   // folios
   $("#folSub").textContent = VISTA === "admin" ? "Marca cada folio cuando lo contestes o se cierre" : "Cada mensaje de WhatsApp lleva su folio";
   const lst = FOL.filter((x) => x.hrs < Math.max(P, 7) * 24 && (FILTRO === "todas" || x.est === FILTRO)).slice(0, 12);
@@ -263,7 +279,7 @@ $("#periodo").addEventListener("click", (e) => { const b = e.target.closest("but
 $("#fil").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; FILTRO = b.dataset.f; $("#fil").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); draw(); });
 $("#entrar").addEventListener("click", () => { $("#login").style.display = "none"; scrollTo(0, 0); });
 $("#salir").addEventListener("click", () => { $("#login").style.display = "flex"; });
-$("#upBtn").addEventListener("click", () => { location.href = "https://wa.me/523333063319?text=" + encodeURIComponent("Hola Jesús, me interesa el asistente de WhatsApp para el rancho"); });
+document.querySelectorAll("[data-up]").forEach((b) => b.addEventListener("click", () => { location.href = "https://wa.me/523333063319?text=" + encodeURIComponent("Hola Jesús, me interesa el " + b.dataset.up + " para el rancho"); }));
 $("#rankMore").addEventListener("click", () => { TODOS = !TODOS; draw(); });
 $("#folios").addEventListener("click", (e) => { const b = e.target.closest("button[data-e]"); if (!b) return; const o = FOL.find((x) => x.id === b.closest(".acts").dataset.id);
   o.est = b.dataset.e; o.resp = o.est === "p" ? null : (o.resp ?? Math.max(5, Math.round(o.hrs * 60))); draw(); });
