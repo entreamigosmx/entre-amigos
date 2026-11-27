@@ -1014,7 +1014,7 @@
    "q1_nota": "Colores oficiales AQHA.",
    "hero_tag": "Toca un semental",
    "hero_scroll": "Conoce el rancho",
-   "noticias": "Lo último",
+   "noticias": "Noticias recientes",
    "conf_eyebrow": "Clientes",
    "conf_titulo": "Lo que dicen nuestros clientes",
    "conf_ejemplo": "Ejemplo: aquí irán opiniones reales de clientes",
@@ -1599,15 +1599,15 @@
    {
     "es": "Zapopan, Jalisco",
     "en": "Zapopan, Jalisco",
-    "s_es": "Sede principal",
-    "s_en": "Main ranch",
+    "s_es": "Centro de reproducción equina",
+    "s_en": "Equine reproduction center",
     "mapa": "https://maps.app.goo.gl/pVc7jK8tkdXxTJuC9"
    },
    {
     "es": "Ixtlahuacán del Río, Jalisco",
     "en": "Ixtlahuacán del Río, Jalisco",
-    "s_es": "Segunda sede",
-    "s_en": "Second ranch",
+    "s_es": "Rancho de 230 acres y hospital equino",
+    "s_en": "230-acre ranch and equine hospital",
     "mapa": "https://maps.app.goo.gl/5LizfK4835hUTMXFA"
    }
   ],
@@ -2306,8 +2306,8 @@
   {
    "p_es": "¿Puedo visitar el rancho?",
    "p_en": "Can I visit the ranch?",
-   "r_es": "Claro. De lunes a sábado de 11 a. m. a 4 p. m., con cita. Tenemos sede en Zapopan y en Ixtlahuacán del Río.",
-   "r_en": "Of course. Monday to Saturday, 11 a.m. to 4 p.m., by appointment. We have ranches in Zapopan and Ixtlahuacán del Río."
+   "r_es": "Claro. De lunes a sábado de 11 a. m. a 4 p. m., con cita. Tenemos un centro de reproducción equina en Zapopan, y el rancho y el hospital equino en Ixtlahuacán del Río.",
+   "r_en": "Of course. Monday to Saturday, 11 a.m. to 4 p.m., by appointment. We have an equine reproduction center in Zapopan, and our ranch and equine hospital in Ixtlahuacán del Río."
   },
   {
    "p_es": "¿Cómo funciona la rifa?",
