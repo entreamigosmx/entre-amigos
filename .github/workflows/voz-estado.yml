@@ -1,0 +1,22 @@
+name: Revisar clon de voz (ElevenLabs)
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["tools/voz/revisar.txt"]
+permissions:
+  contents: write
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env: { KEY: "${{ secrets.ELEVENLABS_API_KEY }}" }
+        run: |
+          if [ -z "$KEY" ]; then echo '{"error":"sin clave"}' > tools/voz/estado.json; else
+          curl -s -H "xi-api-key: $KEY" "https://api.elevenlabs.io/v2/voices?category=professional" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          out=[{'nombre':v.get('name'),'id':v.get('voice_id'),'fine_tuning':(v.get('fine_tuning') or {}).get('state')} for v in d.get('voices',[])] if 'voices' in d else d
+          json.dump(out,open('tools/voz/estado.json','w'),ensure_ascii=False,indent=1)"; fi
+          git config user.name github-actions; git config user.email github-actions@users.noreply.github.com
+          git add tools/voz/estado.json && git commit -m "Estado del clon de voz" && git push || true
