@@ -1066,8 +1066,8 @@
    "panza_wa": "Consultar precio",
    "panza_nota": "Condiciones completas en el contrato.",
    "panza_contado": "Precio de contado",
-   "nos_titulo": "Desde 2010, orgullo mexicano",
-   "nos_p": "Eduardo Gómez fundó Mezcal Quarter Horses en 2010 para criar Quarter Horse que trasciendan generaciones. El nombre honra una de las tradiciones más mexicanas. Hoy reunimos líneas como Gunner, Wimpys Little Step, Spooks Gotta Whiz y Shiners Voodoo Dr, con inseminación, transferencia de embriones y manejo reproductivo.",
+   "nos_titulo": "Un legado que se cría desde 2010",
+   "nos_p": "Desde 2010, en Mezcal Quarter Horses nos dedicamos a la crianza del Caballo Cuarto de Milla de registro. A lo largo de casi 17 años, hemos construido nuestro programa de reproducción con una idea clara: cada cruza debe aportar algo a la siguiente generación. Por eso, al seleccionar un semental o una yegua, valoramos su historial deportivo y reproductivo, su conformación, su temperamento y las cualidades que puede transmitir a su descendencia.",
    "ver_venta": "Ver potrillo",
    "toca_potrillo": "Toca un potrillo",
    "nav_rifa": "Rifa",
@@ -1157,13 +1157,13 @@
    "mm_fresco": "semen fresco",
    "mm_congelado": "semen congelado",
    "hist_eyebrow": "Nuestra historia · Desde 2010",
-   "hist_titulo": "Orgullo mexicano. Genética de élite.",
-   "hist_p1": "Mezcal Quarter Horses nació en 2010 con la visión de Eduardo Gómez: criar caballos Cuarto de Milla que trasciendan generaciones. El nombre honra una de las tradiciones más mexicanas.",
-   "hist_p2": "Hoy reunimos sementales de líneas como Gunner, Wimpys Little Step, Spooks Gotta Whiz y Shiners Voodoo Dr, y ponemos esa genética al alcance de cada criador.",
+   "hist_titulo": "Un legado que se cría desde 2010",
+   "hist_p1": "Desde 2010, en Mezcal Quarter Horses nos dedicamos a la crianza del Caballo Cuarto de Milla de registro. A lo largo de casi 17 años, hemos construido nuestro programa de reproducción con una idea clara: cada cruza debe aportar algo a la siguiente generación.",
+   "hist_p2": "Hoy contamos con 80 yeguas de registro, sementales con trayectoria en reining y un programa que llega a Estados Unidos, Canadá, Europa y Latinoamérica.",
    "hs_1": "Fundado",
    "hs_2": "Sementales",
-   "hs_3": "Sedes en Jalisco",
-   "hist_cta": "Conoce el rancho",
+   "hs_3": "Yeguas de registro",
+   "hist_cta": "Leer la historia completa",
    "faq_eyebrow": "Preguntas frecuentes",
    "faq_titulo": "Lo que más nos preguntan",
    "faq_mas": "¿No encontraste tu respuesta?",
@@ -1196,7 +1196,11 @@
    "vaciar": "Vaciar pedido",
    "quitar": "Quitar",
    "en_pedido": "Ya en tu pedido:",
-   "preguntar_wa": "Preguntar por WhatsApp"
+   "preguntar_wa": "Preguntar por WhatsApp",
+   "hs_4": "Acres en Ixtlahuacán",
+   "hist_full_t": "Un legado que se cría desde 2010",
+   "hist_full_e": "Nuestra historia",
+   "nos_mas": "Leer la historia completa"
   },
   "en": {
    "nav_rancho": "About",
@@ -1382,8 +1386,8 @@
    "panza_wa": "Check price",
    "panza_nota": "Full terms in the contract.",
    "panza_contado": "Cash price",
-   "nos_titulo": "Since 2010, Mexican pride",
-   "nos_p": "Eduardo Gómez founded Mezcal Quarter Horses in 2010 to breed Quarter Horses that last for generations. The name honors one of Mexico's most iconic traditions. Today we bring together bloodlines like Gunner, Wimpys Little Step, Spooks Gotta Whiz and Shiners Voodoo Dr, with artificial insemination, embryo transfer and reproductive management.",
+   "nos_titulo": "A legacy bred since 2010",
+   "nos_p": "Since 2010, Mezcal Quarter Horses has been dedicated to breeding registered American Quarter Horses. Over nearly 17 years we have built our breeding program around one clear idea: every cross should add something to the next generation. That is why, when we select a stallion or a mare, we weigh their performance and breeding record, their conformation, their temperament and the qualities they can pass on to their offspring.",
    "ver_venta": "See foal",
    "toca_potrillo": "Tap a foal",
    "nav_rifa": "Raffle",
@@ -1473,13 +1477,13 @@
    "mm_fresco": "fresh semen",
    "mm_congelado": "frozen semen",
    "hist_eyebrow": "Our story · Since 2010",
-   "hist_titulo": "Mexican pride. Elite genetics.",
-   "hist_p1": "Mezcal Quarter Horses was born in 2010 from Eduardo Gómez's vision: breeding Quarter Horses that last for generations. The name honors one of Mexico's most iconic traditions.",
-   "hist_p2": "Today we stand stallions from lines like Gunner, Wimpys Little Step, Spooks Gotta Whiz and Shiners Voodoo Dr, and bring that genetics within reach of every breeder.",
+   "hist_titulo": "A legacy bred since 2010",
+   "hist_p1": "Since 2010, Mezcal Quarter Horses has been dedicated to breeding registered American Quarter Horses. Over nearly 17 years we have built our breeding program around one clear idea: every cross should add something to the next generation.",
+   "hist_p2": "Today we have 80 registered mares, stallions with a reining record and a program that reaches the United States, Canada, Europe and Latin America.",
    "hs_1": "Founded",
    "hs_2": "Stallions",
-   "hs_3": "Ranches in Jalisco",
-   "hist_cta": "Meet the ranch",
+   "hs_3": "Registered mares",
+   "hist_cta": "Read the full story",
    "faq_eyebrow": "FAQ",
    "faq_titulo": "What people ask us most",
    "faq_mas": "Didn't find your answer?",
@@ -1512,7 +1516,11 @@
    "vaciar": "Clear order",
    "quitar": "Remove",
    "en_pedido": "Already in your order:",
-   "preguntar_wa": "Ask on WhatsApp"
+   "preguntar_wa": "Ask on WhatsApp",
+   "hs_4": "Acres in Ixtlahuacán",
+   "hist_full_t": "A legacy bred since 2010",
+   "hist_full_e": "Our story",
+   "nos_mas": "Read the full story"
   },
   "whatsapp": "523325483880",
   "instagram": "mezcal_quarter_horses",
@@ -1661,7 +1669,73 @@
     "h_es": "Solo con cita previa",
     "h_en": "By appointment only"
    }
-  ]
+  ],
+  "historia": {
+   "es": [
+    {
+     "h": "",
+     "p": [
+      "Desde 2010, en Mezcal Quarter Horses nos dedicamos a la crianza del Caballo Cuarto de Milla de registro. A lo largo de casi 17 años, hemos construido nuestro programa de reproducción con una idea clara: cada cruza debe aportar algo a la siguiente generación. Por eso, al seleccionar un semental o una yegua, valoramos su historial deportivo y reproductivo, su conformación, su temperamento y las cualidades que puede transmitir a su descendencia."
+     ]
+    },
+    {
+     "h": "Sementales con trayectoria y producción",
+     "p": [
+      "Wimpyneedsacocktail es campeón del NRBC Open y productor de más de un millón de dólares en ganancias de su descendencia. Es hijo de Wimpys Little Step, cuya progenie ha superado los 15 millones de dólares. Su trayectoria en las pistas y los resultados de sus hijos respaldan el lugar que ocupa en nuestro programa.",
+      "Chics Loaded Gun, hijo directo de Colonels Smoking Gun, conocido como Gunner, ha ganado 62,500 dólares en reining y su descendencia suma más de 680,000 dólares en ganancias. Su padre, una de las grandes referencias de la raza, produjo descendientes con más de 16 millones de dólares en ganancias.",
+      "El desempeño de ambos sementales en reining y la versatilidad de sus líneas en disciplinas como el lazo por equipos, el trabajo de rancho y el reined cow horse forman parte de lo que buscamos en nuestra crianza: caballos que puedan responder tanto en la pista como en el trabajo con ganado."
+     ]
+    },
+    {
+     "h": "Ochenta yeguas que dan base al criadero",
+     "p": [
+      "Nuestro hato reproductor reúne 80 yeguas de registro, entre ellas campeonas, yeguas con producción probada e hijas directas de sementales multicampeones de algunos de los criaderos más reconocidos de Estados Unidos. En sus pedigríes confluyen líneas de reining, lazo y corte, con hijas de Gunner, Wimpys Little Step, Gunnatrashya, Topsail Whiz, Inferno 66, Spooks Gotta Whiz y Spooks Gotta Gun.",
+      "La selección de nuestras yeguas tiene el mismo peso que la de nuestros sementales. Estudiamos sus líneas maternas, sus cualidades individuales y, cuando ya tienen crías, lo que han demostrado como productoras. Con esa información decidimos qué semental complementa mejor a cada yegua y qué buscamos en el potro de esa cruza."
+     ]
+    },
+    {
+     "h": "Criados a campo abierto en Jalisco, con alcance internacional",
+     "p": [
+      "Contamos con un centro de reproducción equina en Zapopan y un hospital equino en Ixtlahuacán del Río, donde también disponemos de 230 acres. Ahí, las yeguas se mantienen a campo abierto y los potros crecen en las praderas, con espacio para moverse y fortalecerse de manera natural.",
+      "Nuestro programa se extiende a Estados Unidos, Canadá, Europa —incluida Alemania—, Centroamérica y Sudamérica, con presencia en Panamá, Costa Rica, Nicaragua, Colombia y Venezuela. Ofrecemos semen fresco y congelado según el mercado y la disponibilidad de cada semental.",
+      "Nuestra misión es criar Caballos Cuarto de Milla funcionales, con aptitud deportiva y valor reproductivo. Nuestra visión es que la crianza que hacemos en Jalisco se gane un lugar entre los criadores de México y del mundo por el desempeño de nuestros caballos y por lo que sus descendientes aporten a la raza.",
+      "Así se escribe la historia de Mezcal Quarter Horses desde 2010: con el cuidado que ponemos en cada cruza y con lo que cada generación deja para la siguiente."
+     ]
+    }
+   ],
+   "en": [
+    {
+     "h": "",
+     "p": [
+      "Since 2010, Mezcal Quarter Horses has been dedicated to breeding registered American Quarter Horses. Over nearly 17 years we have built our breeding program around one clear idea: every cross should add something to the next generation. That is why, when we select a stallion or a mare, we weigh their performance and breeding record, their conformation, their temperament and the qualities they can pass on to their offspring."
+     ]
+    },
+    {
+     "h": "Stallions with a record and proven production",
+     "p": [
+      "Wimpyneedsacocktail is an NRBC Open champion and the sire of offspring with more than one million dollars in earnings. He is a son of Wimpys Little Step, whose progeny have surpassed 15 million dollars. His record in the arena and the results of his foals back the place he holds in our program.",
+      "Chics Loaded Gun, a direct son of Colonels Smoking Gun, known as Gunner, has earned 62,500 dollars in reining, and his offspring have earned more than 680,000 dollars. His sire, one of the great references of the breed, produced offspring with more than 16 million dollars in earnings.",
+      "The performance of both stallions in reining and the versatility of their bloodlines in disciplines such as team roping, ranch work and reined cow horse are part of what we look for in our breeding: horses that perform both in the arena and when working cattle."
+     ]
+    },
+    {
+     "h": "Eighty mares at the core of our program",
+     "p": [
+      "Our broodmare band includes 80 registered mares, among them champions, mares with proven production and direct daughters of multi-champion stallions from some of the most recognized breeding programs in the United States. Their pedigrees bring together reining, roping and cutting lines, with daughters of Gunner, Wimpys Little Step, Gunnatrashya, Topsail Whiz, Inferno 66, Spooks Gotta Whiz and Spooks Gotta Gun.",
+      "Selecting our mares carries the same weight as selecting our stallions. We study their dam lines, their individual qualities and, once they have foals, what they have proven as producers. With that information we decide which stallion best complements each mare and what we are looking for in the foal from that cross."
+     ]
+    },
+    {
+     "h": "Raised in open pasture in Jalisco, with international reach",
+     "p": [
+      "We have an equine reproduction center in Zapopan and an equine hospital in Ixtlahuacán del Río, where we also have 230 acres. There, the mares are kept in open pasture and the foals grow up on the meadows, with room to move and grow strong naturally.",
+      "Our program reaches the United States, Canada, Europe (including Germany), Central America and South America, with a presence in Panama, Costa Rica, Nicaragua, Colombia and Venezuela. We offer fresh and frozen semen depending on the market and each stallion's availability.",
+      "Our mission is to breed functional American Quarter Horses with athletic ability and breeding value. Our vision is for the breeding we do in Jalisco to earn a place among breeders in Mexico and around the world, through the performance of our horses and what their offspring contribute to the breed.",
+      "This is how the story of Mezcal Quarter Horses has been written since 2010: with the care we put into every cross and with what each generation leaves for the next."
+     ]
+    }
+   ]
+  }
  },
  "noticias": [
   {

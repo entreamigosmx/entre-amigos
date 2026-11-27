@@ -616,6 +616,15 @@ html:has(body.eb){scroll-padding-top:152px}
 footer .firma{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--muted);opacity:.75;transition:opacity .2s}
 footer .firma:hover{opacity:1}
 footer .firma img{height:13px;width:auto}
+
+.story .wrap{max-width:820px}
+.stx{margin-top:22px}
+.stx h3{font:700 clamp(24px,3vw,32px)/1.15 "Barlow Semi Condensed",Inter,sans-serif;margin:34px 0 4px;color:var(--gold2)}
+[data-estilo] .stx h3{font-family:"Playfair Display",Georgia,serif}
+.stx p{font-size:clamp(17px,1.5vw,19px);line-height:1.75;margin-top:14px;color:var(--text);opacity:.92}
+.stx p.first{font-size:clamp(19px,1.8vw,22px);opacity:1}
+.hstats{flex-wrap:wrap}
+@media(max-width:560px){.hstats>div{flex:0 0 calc(50% - 20px)}}
 </style>
 </head>
 <body>
@@ -643,11 +652,12 @@ footer .firma img{height:13px;width:auto}
     <div class="pane" data-pane="pot" id="potrillos"><div class="panels" id="fpanels"></div></div>
     <div class="pane nos" data-pane="nos" id="rancho">
       <div class="nimg"><i class="fit" style="background-image:url('fotos/mezcalero-voodoo-gun-2.jpg')"></i><img src="fotos/mezcalero-voodoo-gun-2.jpg" alt=""></div>
-      <div class="ntx"><h2 class="serif" data-t="nos_titulo"></h2><p data-t="nos_p"></p><span class="note" data-t="rancho_nota"></span>
+      <div class="ntx"><h2 class="serif" data-t="nos_titulo"></h2><p data-t="nos_p"></p><a class="btn" href="#historia" id="nosMas" data-t="nos_mas" style="margin-top:16px"></a><span class="note" data-t="rancho_nota"></span>
         <div class="locs"><h4 data-t="ubicacion_titulo"></h4><div class="hor" id="hor"></div><div id="sedes"></div></div></div>
     </div>
   </div>
 </div>
+<section class="story" id="historia" data-v="nosotros"><div class="wrap"><div class="eyebrow" data-t="hist_full_e"></div><h2 class="big serif" data-t="hist_full_t"></h2><div class="stx" id="stx"></div></div></section>
 <div class="ticker" data-v="inicio"><span class="tk-l" data-t="noticias"></span><div class="tk"><div class="tk-in" id="tk"></div></div></div>
 <a class="rbar" id="rbar" href="#/rifa" data-go-v="rifa" data-v="inicio" hidden></a>
 <div class="claims" id="claims" data-v="inicio"></div>
@@ -655,8 +665,8 @@ footer .firma img{height:13px;width:auto}
   <div class="himg"><i class="fit" style="background-image:url('fotos/lh-wimpys-gotta-gun-4.jpg')"></i><img src="fotos/lh-wimpys-gotta-gun-4.jpg" alt="" loading="lazy"></div>
   <div><div class="eyebrow" data-t="hist_eyebrow"></div><h2 class="serif" data-t="hist_titulo"></h2>
     <p class="lead" data-t="hist_p1"></p><p class="lead" data-t="hist_p2"></p>
-    <div class="hstats"><div><b>2010</b><span data-t="hs_1"></span></div><div><b id="hsN"></b><span data-t="hs_2"></span></div><div><b>2</b><span data-t="hs_3"></span></div></div>
-    <a class="btn" href="#/nosotros" data-go-v="nosotros" data-t="hist_cta"></a></div>
+    <div class="hstats"><div><b>2010</b><span data-t="hs_1"></span></div><div><b id="hsN"></b><span data-t="hs_2"></span></div><div><b>80</b><span data-t="hs_3"></span></div><div><b>230</b><span data-t="hs_4"></span></div></div>
+    <a class="btn" href="#/nosotros" id="histMas" data-t="hist_cta"></a></div>
 </div></section>
 
 <section class="tlw" data-v="apartar"><div class="wrap">
@@ -847,7 +857,7 @@ function render() {
   $('#fab').innerHTML = WA_ICON + t('whatsapp'); updWa(); renderCart();
   $('#firma').lastChild.textContent = L === 'es' ? 'Sitio hecho por Entre Amigos' : 'Website by Entre Amigos';
   $('#dClose').innerHTML = '&times; ' + t('cerrar');
-  renderFaq(); renderPrem(); renderShop(); buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
+  renderStory(); renderFaq(); renderPrem(); renderShop(); buildStable(); buildFoals(); renderCalc(); renderSim(); renderBook(); renderLinks(); renderConf(); renderRifa(); renderMenu();
   if (cur && $('#dlg').open) fill(cur);
 }
 
@@ -1249,6 +1259,11 @@ $('#cart').addEventListener('click', e => {
   const m = e.target.closest('[data-more]'); if (m) { $('#cart').close(); if (m.dataset.more === 'apartar') { bk.step = 1; renderBook(); } go(m.dataset.more); }
 });
 
+function renderStory() {
+  const H = (D.sitio.historia || {})[L] || [];
+  $('#stx').innerHTML = H.map((b, i) => `${b.h ? `<h3>${esc(b.h)}</h3>` : ''}${b.p.map((p, j) => `<p class="${i === 0 && j === 0 ? 'first' : ''}">${esc(p)}</p>`).join('')}`).join('');
+}
+document.addEventListener('click', e => { const a = e.target.closest('#nosMas,#histMas'); if (!a) return; e.preventDefault(); go('nosotros', 'historia'); });
 function renderFaq() {
   $('#faql').innerHTML = (D.faq || []).map(q => `<details><summary>${esc(q['p_' + L])}</summary><p>${esc(q['r_' + L])}</p></details>`).join('');
   $('#faqWa').innerHTML = WA_ICON + t('faq_wa'); $('#faqWa').href = waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question');
