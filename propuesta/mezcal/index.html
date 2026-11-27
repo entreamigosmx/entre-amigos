@@ -625,6 +625,13 @@ footer .firma img{height:13px;width:auto}
 .stx p.first{font-size:clamp(19px,1.8vw,22px);opacity:1}
 .hstats{flex-wrap:wrap}
 @media(max-width:560px){.hstats>div{flex:0 0 calc(50% - 20px)}}
+
+/* noticias: encabezado propio arriba de la franja */
+.ticker{flex-direction:column}
+.tk-l{justify-content:center;gap:14px;padding:11px 16px;font-size:14px;font-weight:700;letter-spacing:.2em}
+.tk-l:before,.tk-l:after{content:"";height:1px;flex:0 1 90px;background:#ffffffa0}
+.tk{padding:13px 0}
+@media(max-width:560px){.tk-l{font-size:13px;letter-spacing:.16em}.tk-l:before,.tk-l:after{flex-basis:40px}}
 </style>
 </head>
 <body>
