@@ -1,0 +1,80 @@
+{
+ "jeep-grand-cherokee-summit-2024": {
+  "escenas": [
+   {
+    "grupo": "Por fuera",
+    "nombre": "Dale la vuelta",
+    "tipo": "giro",
+    "fotos": [
+     "fotos/jeep-grand-cherokee-summit-2024/03.jpg",
+     "fotos/jeep-grand-cherokee-summit-2024/01.jpg",
+     "fotos/jeep-grand-cherokee-summit-2024/05.jpg",
+     "fotos/jeep-grand-cherokee-summit-2024/06.jpg",
+     "fotos/jeep-grand-cherokee-summit-2024/07.jpg",
+     "fotos/jeep-grand-cherokee-summit-2024/04.jpg",
+     "fotos/jeep-grand-cherokee-summit-2024/02.jpg"
+    ]
+   },
+   {
+    "grupo": "Por fuera",
+    "nombre": "Rines",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/08.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Abrir la puerta",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/09.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Asiento del conductor",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/10.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Volante y tablero",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/11.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Asiento del copiloto",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/12.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Asientos traseros",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/13.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Espacio atrás",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/14.jpg"
+   },
+   {
+    "grupo": "Por dentro",
+    "nombre": "Desde el asiento trasero",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/15.jpg"
+   },
+   {
+    "grupo": "Cajuela y motor",
+    "nombre": "Cajuela",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/16.jpg"
+   },
+   {
+    "grupo": "Cajuela y motor",
+    "nombre": "Motor",
+    "tipo": "foto",
+    "src": "fotos/jeep-grand-cherokee-summit-2024/17.jpg"
+   }
+  ]
+ }
+}

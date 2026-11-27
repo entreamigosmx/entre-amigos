@@ -1,4 +1,4 @@
-import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE, soloArr, arrWa } from "./comun.js?v=p6";
+import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE, soloArr, arrWa, BASE } from "./comun.js?v=p6";
 
 const root = document.getElementById("car");
 const back = `<a class="back" href="inventario.html">← Ver todo el inventario</a>`;
@@ -64,6 +64,14 @@ function render(a, list) {
     offers: { "@type": "Offer", ...(so ? {} : { price: a.precio }), priceCurrency: "MXN", availability: a.apartado ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock", seller: { "@type": "AutoDealer", name: "Entre Amigos" } } };
   if (a.kilometraje) ld.mileageFromOdometer = { "@type": "QuantitativeValue", value: a.kilometraje, unitCode: "KMT" };
   const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
+  fetch(BASE + "data/recorridos.json", { cache: "no-cache" }).then((r) => r.json()).then((rec) => {
+    if (!rec[a.slug]?.escenas?.length) return;
+    const b = document.createElement("a");
+    b.className = "btn ghost"; b.style.cssText = "width:100%;margin-top:10px;justify-content:center";
+    b.href = `recorrido.html?a=${encodeURIComponent(a.slug)}`;
+    b.textContent = "Recorrido virtual: dale la vuelta y súbete";
+    (root.querySelector(".strip") || root.querySelector(".stage")).after(b);
+  }).catch(() => {});
   if (p.length > 1) {
     let i = 0;
     const st = document.getElementById("st"), cnt = document.getElementById("cnt"), bl = document.getElementById("bl");
