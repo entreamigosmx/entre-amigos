@@ -632,6 +632,21 @@ footer .firma img{height:13px;width:auto}
 .tk-l:before,.tk-l:after{content:"";height:1px;flex:0 1 90px;background:#ffffffa0}
 .tk{padding:13px 0}
 @media(max-width:560px){.tk-l{font-size:13px;letter-spacing:.16em}.tk-l:before,.tk-l:after{flex-basis:40px}}
+
+/* linea de cuidado */
+.cuid{margin-top:34px;padding:clamp(18px,3vw,34px);border:1px solid var(--line);border-radius:28px;background:linear-gradient(160deg,#00000026,#0000)}
+.cuid h3,.shh{font:700 clamp(26px,3.4vw,38px)/1.1 "Barlow Semi Condensed",Inter,sans-serif;margin:6px 0 0}
+[data-estilo] .cuid h3,[data-estilo] .shh{font-family:"Playfair Display",Georgia,serif}
+.cuid>p{color:var(--muted);margin:10px 0 0;max-width:640px}
+.shh{margin-top:48px}
+.cpos{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;margin:22px -4px 0;padding:0 4px 8px;scrollbar-width:thin}
+.cpos a{flex:0 0 clamp(230px,23.5%,300px);scroll-snap-align:start;position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;display:block;box-shadow:0 10px 28px #0005}
+.cpos img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.cpos a:hover img{transform:scale(1.04)}
+.cpos span{position:absolute;right:12px;bottom:12px;background:var(--gold);color:var(--on-gold);font-weight:700;font-size:13px;padding:7px 12px;border-radius:99px}
+@media(max-width:560px){.cpos a{flex-basis:76%}}
+.sp.flash{animation:flash 1.4s}
+@keyframes flash{0%,60%{box-shadow:0 0 0 3px var(--gold)}100%{box-shadow:0 0 0 0 transparent}}
 </style>
 </head>
 <body>
@@ -741,6 +756,9 @@ footer .firma img{height:13px;width:auto}
   <div class="eyebrow" data-t="tienda_eyebrow"></div>
   <h2 class="big serif" data-t="tienda_titulo"></h2>
   <p class="lead" data-t="tienda_sub"></p>
+  <div class="cuid" id="cuidado"><div class="eyebrow" data-t="cuid_e"></div><h3 class="serif" data-t="cuid_t"></h3><p data-t="cuid_p"></p>
+    <div class="cpos" id="cpos"></div><div class="shg" id="shc"></div></div>
+  <h3 class="serif shh" data-t="tienda_ropa"></h3>
   <div class="shg" id="shg"></div>
 </div></section>
 
@@ -1285,19 +1303,25 @@ function renderPrem() {
 $('#prg').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) openF(S.find(x => x.id === b.dataset.s)); });
 const shopSel = {};
 function renderShop() {
-  $('#shg').innerHTML = (D.tienda || []).map(x => { const sz = shopSel[x.id] || (x.tallas ? x.tallas[1] : '');
+  $('#cpos').innerHTML = (D.cuidado_posters || []).map(x => `<a href="#p-${x.p}" data-pp="${x.p}"><img src="${esc(x.foto)}" alt="" loading="lazy"><span>${t('cuid_ver')} &rarr;</span></a>`).join('');
+  const card = x => { const sz = shopSel[x.id] || (x.tallas ? x.tallas[1] : '');
     const msg = L === 'es' ? `Hola, quiero ${x.n_es}${sz ? ' talla ' + sz : ''} (${money(x.mxn)}). ¿Tienen disponible?` : `Hi, I'd like the ${x.n_en}${sz ? ' size ' + sz : ''} (${money(x.mxn)}). Is it available?`;
-    return `<div class="sp"><div class="si"><img src="${esc(x.foto)}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
+    return `<div class="sp" id="p-${x.id}"><div class="si"><img src="${esc(x.foto)}" alt="" loading="lazy">${x.ejemplo ? `<em class="ej">${t('ejemplo')}</em>` : ''}</div>
     <div class="sb"><div class="st1"><b>${esc(x['n_' + L])}</b><span>${money(x.mxn)}</span></div><p>${esc(x['d_' + L])}</p>
     ${x.tallas ? `<div class="sz"><small>${t('talla')}</small>${x.tallas.map(s => `<button data-p="${x.id}" data-z="${s}" class="${s === sz ? 'on' : ''}">${s}</button>`).join('')}</div>` : ''}
     <button class="btn solid add" data-add="${x.id}">${CART_ICON}${t('agregar_pedido')}</button>
-    <a class="solo" target="_blank" rel="noopener" href="${waLink(msg)}">${t('pedir_solo')}</a></div></div>`; }).join('');
+    <a class="solo" target="_blank" rel="noopener" href="${waLink(msg)}">${t('pedir_solo')}</a></div></div>`; };
+  const T = D.tienda || [];
+  $('#shc').innerHTML = T.filter(x => x.linea === 'cuidado').map(card).join('');
+  $('#shg').innerHTML = T.filter(x => x.linea !== 'cuidado').map(card).join('');
 }
-$('#shg').addEventListener('click', e => {
+$('#cpos').addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (!a) return; e.preventDefault(); const el = document.getElementById('p-' + a.dataset.pp); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); });
+const shopClick = e => {
   const b = e.target.closest('[data-z]'); if (b) { shopSel[b.dataset.p] = b.dataset.z; renderShop(); return; }
   const a = e.target.closest('[data-add]'); if (a) { const x = D.tienda.find(y => y.id === a.dataset.add); addProd(x.id, x.tallas ? (shopSel[x.id] || x.tallas[1]) : '');
     a.classList.add('ok'); a.innerHTML = '&#10003; ' + t('agregado'); setTimeout(() => { a.classList.remove('ok'); a.innerHTML = CART_ICON + t('agregar_pedido'); }, 1600); }
-});
+};
+$('#shg').addEventListener('click', shopClick); $('#shc').addEventListener('click', shopClick);
 function renderLinks() {
   const s = D.sitio, l = [];
   l.push(`<a class="btn wa" target="_blank" rel="noopener" href="${waLink(L === 'es' ? 'Hola, tengo una pregunta' : 'Hi, I have a question')}">${WA_ICON}${t('whatsapp')}</a>`);

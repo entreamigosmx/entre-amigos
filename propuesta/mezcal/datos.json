@@ -1200,7 +1200,12 @@
    "hs_4": "Acres en Ixtlahuacán",
    "hist_full_t": "Un legado que se cría desde 2010",
    "hist_full_e": "Nuestra historia",
-   "nos_mas": "Leer la historia completa"
+   "nos_mas": "Leer la historia completa",
+   "cuid_e": "Línea de cuidado Mezcal",
+   "cuid_t": "El cuidado que merece tu caballo",
+   "cuid_p": "Champús, acondicionador y accesorios con la marca del rancho, para el baño y el cuidado de todos los días.",
+   "cuid_ver": "Ver producto",
+   "tienda_ropa": "Ropa y accesorios"
   },
   "en": {
    "nav_rancho": "About",
@@ -1520,7 +1525,12 @@
    "hs_4": "Acres in Ixtlahuacán",
    "hist_full_t": "A legacy bred since 2010",
    "hist_full_e": "Our story",
-   "nos_mas": "Read the full story"
+   "nos_mas": "Read the full story",
+   "cuid_e": "Mezcal Care Line",
+   "cuid_t": "The care your horse deserves",
+   "cuid_p": "Shampoos, conditioner and accessories with the ranch brand, for bath time and everyday care.",
+   "cuid_ver": "See product",
+   "tienda_ropa": "Apparel and accessories"
   },
   "whatsapp": "523325483880",
   "instagram": "mezcal_quarter_horses",
@@ -1738,6 +1748,11 @@
   }
  },
  "noticias": [
+  {
+   "fecha": "Nov 2026",
+   "es": "Nueva línea de cuidado Mezcal: champús Charol, Cardenal y Centenario",
+   "en": "New Mezcal care line: Charol, Cardenal and Centenario shampoos"
+  },
   {
    "fecha": "Oct 2026",
    "es": "Llega al rancho Wimpyneedsacocktail, hijo de Wimpys Little Step",
@@ -2504,6 +2519,96 @@
    "tallas": null,
    "foto": "fotos/tienda-hebilla.jpg",
    "ejemplo": true
+  },
+  {
+   "id": "charol",
+   "n_es": "Champú Charol",
+   "n_en": "Charol Shampoo",
+   "d_es": "Champú equino para un brillo profundo.",
+   "d_en": "Equine shampoo for a deep shine.",
+   "mxn": 349,
+   "tallas": null,
+   "foto": "fotos/tienda-charol.jpg",
+   "ejemplo": true,
+   "linea": "cuidado"
+  },
+  {
+   "id": "cardenal",
+   "n_es": "Champú Cardenal",
+   "n_en": "Cardenal Shampoo",
+   "d_es": "Champú de uso diario, suave con el pelo y la piel.",
+   "d_en": "Daily-use shampoo, gentle on coat and skin.",
+   "mxn": 299,
+   "tallas": null,
+   "foto": "fotos/tienda-cardenal.jpg",
+   "ejemplo": true,
+   "linea": "cuidado"
+  },
+  {
+   "id": "centenario",
+   "n_es": "Champú Centenario",
+   "n_en": "Centenario Shampoo",
+   "d_es": "Para pelajes claros: palominos, tordillos y blancos.",
+   "d_en": "For light coats: palominos, grays and whites.",
+   "mxn": 329,
+   "tallas": null,
+   "foto": "fotos/tienda-centenario.jpg",
+   "ejemplo": true,
+   "linea": "cuidado"
+  },
+  {
+   "id": "capricho",
+   "n_es": "Acondicionador Capricho",
+   "n_en": "Capricho Conditioner",
+   "d_es": "Deja crin y cola suaves y fáciles de peinar.",
+   "d_en": "Leaves mane and tail soft and easy to comb.",
+   "mxn": 319,
+   "tallas": null,
+   "foto": "fotos/tienda-capricho.jpg",
+   "ejemplo": true,
+   "linea": "cuidado"
+  },
+  {
+   "id": "cascabel",
+   "n_es": "Spray Cascabel",
+   "n_en": "Cascabel Spray",
+   "d_es": "Desenredante para crin y cola.",
+   "d_en": "Detangler for mane and tail.",
+   "mxn": 279,
+   "tallas": null,
+   "foto": "fotos/tienda-cascabel.jpg",
+   "ejemplo": true,
+   "linea": "cuidado"
+  },
+  {
+   "id": "cepillo",
+   "n_es": "Cepillo de madera Mezcal",
+   "n_en": "Mezcal Wooden Brush",
+   "d_es": "Madera con cerda natural y logo grabado.",
+   "d_en": "Wood with natural bristles and engraved logo.",
+   "mxn": 390,
+   "tallas": null,
+   "foto": "fotos/tienda-cepillo.jpg",
+   "ejemplo": true,
+   "linea": "cuidado"
+  }
+ ],
+ "cuidado_posters": [
+  {
+   "foto": "fotos/cuidado-ritual.jpg",
+   "p": "charol"
+  },
+  {
+   "foto": "fotos/cuidado-diario.jpg",
+   "p": "cardenal"
+  },
+  {
+   "foto": "fotos/cuidado-crin.jpg",
+   "p": "centenario"
+  },
+  {
+   "foto": "fotos/cuidado-crin-cola.jpg",
+   "p": "cascabel"
   }
  ]
 }
