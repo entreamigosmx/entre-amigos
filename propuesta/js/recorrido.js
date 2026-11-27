@@ -1,132 +1,164 @@
-// Recorrido virtual de un auto con fotos reales.
-// Datos en data/recorridos.json: { "<slug>": { "escenas": [ ... ] } }
-// Tipos de escena:
-//   giro: { fotos: [...] }  fotos tomadas alrededor del auto; se arrastra para darle la vuelta.
-//   foto: { src }           una foto normal.
-//   360:  { src, yaw?, ir?: [{ a: "<nombre de escena>", yaw, pitch }] }  foto 360 (equirectangular) de cámara 360.
-import { autos, src, esc, wa, SITE, BASE } from "./comun.js?v=p6";
+// Recorrido virtual de un auto con sus fotos reales.
+// Datos en data/recorridos.json: { "<slug>": { tipo?: "moto", giro: [fotos alrededor], fh: { foto: [[x, y, destino]] }, s: { lugar: [foto, [[x, y, destino]]] } } }
+// x, y = posición del punto verde en % de la foto. "fuera" es la vuelta alrededor del auto.
+import { autos, src, wa, SITE, BASE } from "./comun.js?v=p6";
 
+const NOM = {
+  fuera: "Por fuera", puerta: "Puerta del conductor", asiento: "Asiento del conductor", volante: "Al volante", copiloto: "Asiento del copiloto",
+  atras: "Asientos de atrás", desdeatras: "Sentado atrás", espacio: "Espacio atrás", cajuela: "Cajuela", motor: "Motor", rin: "Rin y llanta",
+  tablero: "Tablero", medidores: "Medidores", reloj: "Reloj del tablero", tercera: "Tercera fila", techo: "Quemacocos", caja: "Caja",
+  carga: "Zona de carga", lateral: "Puerta lateral", suspension: "Suspensión", turbo: "Motor de cerca", puertadet: "Puerta", frunk: "Cajuela delantera",
+  cristal: "Cristal blindado", blindaje: "Placa del blindaje", delanteros: "Asientos delanteros", bocina: "Bocina Fender", estereo: "Estéreo",
+  debajo: "Por debajo", manejo: "En el manubrio", guantera: "Compartimento",
+};
+const IR = {
+  puerta: "Abrir la puerta", asiento: "Ver el asiento", volante: "Ponerte al volante", copiloto: "Ver el copiloto", atras: "Pasar atrás",
+  desdeatras: "Sentarte atrás", espacio: "Ver el espacio", cajuela: "Abrir la cajuela", motor: "Abrir el cofre", rin: "Ver el rin",
+  fuera: "Bajar del auto", tablero: "Ver el tablero", medidores: "Ver los medidores", reloj: "Ver el reloj", tercera: "Ver la tercera fila",
+  techo: "Ver el quemacocos", caja: "Ver la caja", carga: "Ver la zona de carga", lateral: "Ver la puerta lateral", suspension: "Ver la suspensión",
+  turbo: "Ver de cerca", puertadet: "Ver la puerta", frunk: "Abrir la cajuela delantera", cristal: "Ver el blindaje", blindaje: "Ver la placa del blindaje",
+  delanteros: "Ver los asientos", bocina: "Ver la bocina", estereo: "Ver el estéreo", debajo: "Ver por debajo", manejo: "Subirte", guantera: "Ver el compartimento",
+};
 const $ = (id) => document.getElementById(id);
+const stage = $("stage"), box = $("box"), img = $("img"), blur = $("blur"), hint = $("hint"), dock = $("dock"), where = $("rec-where"), cover = $("cover");
 const slug = new URLSearchParams(location.search).get("a") || "";
-const view = $("rec-view"), tabs = $("rec-tabs"), chips = $("rec-chips");
-let esc_ = [], cur = -1, pano = null, cleanup = null;
+let R = null, moto = false, entra = "asiento", cur = null, frame = null, busy = false, pan = 0, maxPan = 0;
+const ratio = {};
 
-const PN = "https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/";
-let pnLoad = null;
-function loadPannellum() {
-  if (pnLoad) return pnLoad;
-  pnLoad = new Promise((ok, no) => {
-    const l = document.createElement("link"); l.rel = "stylesheet"; l.href = PN + "pannellum.css"; document.head.appendChild(l);
-    const s = document.createElement("script"); s.src = PN + "pannellum.js"; s.onload = ok; s.onerror = no; document.head.appendChild(s);
+function etiqueta(to) {
+  if (cur === "fuera" && ["asiento", "puerta", "delanteros"].includes(to)) return "Abrir la puerta";
+  if (moto && to === "fuera") return "Bajarte";
+  if (moto && to === "asiento") return "Ver el asiento";
+  return IR[to] || "Ir";
+}
+function nombre(k) { return moto && k === "asiento" ? "Asiento" : NOM[k] || "Recorrido"; }
+const foto = () => (cur === "fuera" ? frame : R.s[cur][0]);
+const puntos = () => (cur === "fuera" ? R.fh[frame] || [] : R.s[cur][1] || []);
+
+function fit() {
+  const p = foto(), r = ratio[p] || 3 / 4, W = stage.clientWidth, H = stage.clientHeight;
+  let w = W, h = W / r; if (h > H) { h = H; w = H * r; }
+  // Foto horizontal en pantalla vertical: llena el alto y se desliza a los lados para mirar alrededor.
+  if (cur !== "fuera" && r > 1 && W / H < 1) { h = H; w = H * r; }
+  maxPan = Math.max(0, (w - W) / 2); pan = Math.max(-maxPan, Math.min(maxPan, pan));
+  box.style.width = w + "px"; box.style.height = h + "px"; box.style.left = `calc(50% + ${pan}px)`;
+}
+function paint() {
+  const p = foto();
+  img.src = src(p); img.alt = nombre(cur); blur.style.backgroundImage = `url('${src(p, "t")}')`;
+  fit();
+  box.querySelectorAll(".rec-hs").forEach((b) => b.remove());
+  puntos().forEach(([x, y, to]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "rec-hs"; b.style.left = x + "%"; b.style.top = y + "%";
+    b.innerHTML = `<span class="ring" aria-hidden="true">›</span><span class="lbl">${etiqueta(to)}</span>`;
+    b.addEventListener("pointerdown", (e) => e.stopPropagation());
+    b.onclick = (e) => { e.stopPropagation(); walk(to, x, y); };
+    box.appendChild(b);
   });
-  return pnLoad;
 }
-
-function fail(msg) { view.innerHTML = `<p class="empty" style="position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center">${msg}</p>`; }
-
-function grupos() { return [...new Set(esc_.map((e) => e.grupo))]; }
-
-function drawTabs() {
-  const g = esc_[cur].grupo;
-  tabs.innerHTML = grupos().map((x) => `<button type="button" role="tab" aria-selected="${x === g}" data-g="${esc(x)}">${esc(x)}</button>`).join("");
-  tabs.querySelectorAll("button").forEach((b) => (b.onclick = () => go(esc_.findIndex((e) => e.grupo === b.dataset.g))));
-  const lst = esc_.map((e, i) => [e, i]).filter(([e]) => e.grupo === g);
-  chips.innerHTML = lst.map(([e, i]) => `<button type="button" data-i="${i}" aria-current="${i === cur}"><img src="${src(e.tipo === "giro" ? e.fotos[0] : e.poster || e.src, e.tipo === "360" ? undefined : "t")}" alt="" loading="lazy"><span>${esc(e.nombre)}</span></button>`).join("");
-  chips.querySelectorAll("button").forEach((b) => (b.onclick = () => go(Number(b.dataset.i))));
-  chips.querySelector('[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
-}
-
-function nextBtn() {
-  // Botón para pasar a la siguiente parte del recorrido (por ejemplo, de "Por fuera" a "Por dentro").
-  const g = esc_[cur].grupo, gs = grupos(), k = gs.indexOf(g);
-  if (k < 0 || k === gs.length - 1) return "";
-  const lbl = gs[k + 1] === "Por dentro" ? "Súbete al auto" : `Ver ${gs[k + 1].toLowerCase()}`;
-  return `<button class="btn primary go" type="button" data-next="${esc(gs[k + 1])}">${lbl} ›</button>`;
-}
-
-function stepArrows() {
-  return `<button class="arw l" type="button" aria-label="Anterior">‹</button><button class="arw r" type="button" aria-label="Siguiente">›</button>`;
-}
-
-function bindCommon() {
-  view.querySelector(".go")?.addEventListener("click", (e) => { e.stopPropagation(); go(esc_.findIndex((x) => x.grupo === e.currentTarget.dataset.next)); });
-}
-
-function showFoto(e) {
-  view.innerHTML = `<div class="blur" style="background-image:url('${src(e.src, "t")}')"></div><img class="main" src="${src(e.src)}" alt="${esc(e.nombre)}"><span class="rtag">${esc(e.nombre)}</span>${stepArrows()}${nextBtn()}`;
-  view.querySelector(".arw.l").onclick = () => go(cur - 1);
-  view.querySelector(".arw.r").onclick = () => go(cur + 1);
-  let x0 = null;
-  const ts = (ev) => (x0 = ev.touches[0].clientX);
-  const te = (ev) => { if (x0 === null) return; const dx = ev.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1)); x0 = null; };
-  view.addEventListener("touchstart", ts, { passive: true }); view.addEventListener("touchend", te);
-  cleanup = () => { view.removeEventListener("touchstart", ts); view.removeEventListener("touchend", te); };
-  bindCommon();
-}
-
-function showGiro(e) {
-  const fr = e.fotos, n = fr.length;
-  let k = 0;
-  view.innerHTML = `<div class="blur" style="background-image:url('${src(fr[0], "t")}')"></div><div class="giro" style="position:absolute;inset:0"></div><img class="main" src="${src(fr[0])}" alt="${esc(e.nombre)}"><span class="rtag">${esc(e.nombre)}</span><div class="dots">${fr.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div><span class="hint">Desliza para darle la vuelta</span>${stepArrows()}${nextBtn()}`;
-  const img = view.querySelector("img.main"), bl = view.querySelector(".blur"), dots = [...view.querySelectorAll(".dots i")], hint = view.querySelector(".hint");
-  fr.forEach((f) => { const im = new Image(); im.src = src(f); });
-  const set = (v) => { k = ((v % n) + n) % n; img.src = src(fr[k]); bl.style.backgroundImage = `url('${src(fr[k], "t")}')`; dots.forEach((d, i) => d.classList.toggle("on", i === k)); };
-  view.querySelector(".arw.l").onclick = () => set(k - 1);
-  view.querySelector(".arw.r").onclick = () => set(k + 1);
-  // Arrastrar: cada tramo de pantalla cambia de ángulo, como si caminaras alrededor del auto.
-  const pad = view.querySelector(".giro");
-  let x0 = null, k0 = 0;
-  const step = () => Math.max(40, view.clientWidth / (n * 0.9));
-  pad.addEventListener("pointerdown", (ev) => { x0 = ev.clientX; k0 = k; pad.setPointerCapture(ev.pointerId); hint.classList.add("off"); });
-  pad.addEventListener("pointermove", (ev) => { if (x0 === null) return; const d = Math.round((x0 - ev.clientX) / step()); if (k0 + d !== k) set(k0 + d); });
-  const up = () => (x0 = null);
-  pad.addEventListener("pointerup", up); pad.addEventListener("pointercancel", up);
-  bindCommon();
-}
-
-async function show360(e) {
-  view.innerHTML = `<div class="pano" id="pano"></div><span class="rtag">${esc(e.nombre)}</span><span class="hint">Arrastra para mirar alrededor</span>${nextBtn()}`;
-  bindCommon();
-  try { await loadPannellum(); } catch (er) { fail("No se pudo cargar el recorrido. Revisa tu conexión y vuelve a intentar."); return; }
-  const hint = view.querySelector(".hint");
-  pano = window.pannellum.viewer("pano", {
-    type: "equirectangular", panorama: new URL(src(e.src), location.href).href, autoLoad: true,
-    yaw: e.yaw || 0, pitch: e.pitch || 0, hfov: 100, showFullscreenCtrl: true, showZoomCtrl: false, compass: false,
-    hotSpots: (e.ir || []).map((h) => ({ yaw: h.yaw, pitch: h.pitch || -10, type: "info", text: h.texto || h.a, clickHandlerFunc: () => go(esc_.findIndex((x) => x.nombre === h.a)) })),
+function medir(p) {
+  return new Promise((ok) => {
+    if (ratio[p]) return ok();
+    const im = new Image();
+    im.onload = () => { ratio[p] = im.naturalWidth / im.naturalHeight || 3 / 4; ok(); };
+    im.onerror = () => ok();
+    im.src = src(p);
   });
-  pano.on("mousedown", () => hint?.classList.add("off"));
-  pano.on("touchstart", () => hint?.classList.add("off"));
 }
+function dockList() {
+  const l = [["fuera", "Por fuera"], [entra, moto ? "Subirte" : "Subirte"]];
+  for (const [k, t] of [["volante", "Volante"], ["medidores", "Medidores"], ["atras", "Atrás"], ["cajuela", "Cajuela"], ["caja", "Caja"], ["carga", "Carga"], ["motor", "Motor"]])
+    if (R.s[k] && k !== entra && !(moto === false && k === "medidores")) l.push([k, t]);
+  return l;
+}
+function setDock() {
+  dock.innerHTML = dockList().map(([k, t]) => `<button type="button" data-k="${k}" aria-current="${k === cur}">${t}</button>`).join("");
+  dock.querySelectorAll("button").forEach((b) => (b.onclick = () => walk(b.dataset.k, 50, 50)));
+}
+function showHint() {
+  hint.textContent = maxPan ? "Desliza para mirar a los lados" : cur === "fuera" ? "Desliza para darle la vuelta" : "Toca un punto verde para moverte";
+  hint.classList.remove("off");
+  clearTimeout(showHint.t); showHint.t = setTimeout(() => hint.classList.add("off"), 3500);
+}
+async function enter(k) {
+  cur = k; pan = 0;
+  if (k === "fuera" && !R.giro.includes(frame)) frame = R.giro[0];
+  await medir(foto());
+  where.textContent = nombre(k); paint(); setDock(); showHint();
+}
+// Caminar: acercarse hacia el punto tocado y aparecer en el siguiente lugar.
+async function walk(to, x, y) {
+  if (busy || to === cur || (to !== "fuera" && !R.s[to])) return;
+  busy = true;
+  box.style.transformOrigin = `${x}% ${y}%`;
+  box.style.transform = "translate(-50%,-50%) scale(2.3)"; box.classList.add("out");
+  const nextP = to === "fuera" ? R.giro[0] : R.s[to][0];
+  await Promise.all([medir(nextP), new Promise((r) => setTimeout(r, 520))]);
+  if (to === "fuera") frame = R.giro[0];
+  box.style.transition = "none"; box.style.transformOrigin = "50% 50%";
+  box.style.transform = "translate(-50%,-50%) scale(.86)"; box.classList.remove("out"); box.classList.add("in");
+  await enter(to);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    box.style.transition = ""; box.style.transform = "translate(-50%,-50%) scale(1)"; box.classList.remove("in");
+    setTimeout(() => (busy = false), 500);
+  }));
+}
+// Deslizar: por fuera le da la vuelta; en fotos horizontales mira a los lados.
+let x0 = null, k0 = 0, p0 = 0;
+stage.addEventListener("pointerdown", (e) => {
+  if (!cur || (cur !== "fuera" && !maxPan)) return;
+  x0 = e.clientX; p0 = pan; k0 = cur === "fuera" ? R.giro.indexOf(frame) : 0; hint.classList.add("off");
+  try { stage.setPointerCapture(e.pointerId); } catch (er) {}
+});
+stage.addEventListener("pointermove", (e) => {
+  if (x0 === null) return;
+  if (cur !== "fuera") { pan = Math.max(-maxPan, Math.min(maxPan, p0 + e.clientX - x0)); box.style.left = `calc(50% + ${pan}px)`; return; }
+  const n = R.giro.length, step = Math.max(40, stage.clientWidth / (n * 0.9));
+  const k = (((k0 + Math.round((x0 - e.clientX) / step)) % n) + n) % n;
+  if (R.giro[k] !== frame) { frame = R.giro[k]; medir(frame).then(paint); }
+});
+const up = () => (x0 = null);
+stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+window.addEventListener("resize", () => cur && fit());
+document.addEventListener("keydown", (e) => {
+  if (cur !== "fuera" || cover && !cover.classList.contains("gone")) return;
+  const n = R.giro.length, k = R.giro.indexOf(frame);
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") { frame = R.giro[(k + (e.key === "ArrowRight" ? 1 : -1) + n) % n]; medir(frame).then(paint); }
+});
 
-function go(i) {
-  if (i < 0 || !esc_.length) return;
-  i = (i + esc_.length) % esc_.length;
-  if (i === cur) return;
-  if (cleanup) { cleanup(); cleanup = null; }
-  if (pano) { try { pano.destroy(); } catch (er) {} pano = null; }
-  cur = i;
-  const e = esc_[i];
-  if (e.tipo === "giro") showGiro(e); else if (e.tipo === "360") show360(e); else showFoto(e);
-  drawTabs();
-  history.replaceState(null, "", `?a=${encodeURIComponent(slug)}&e=${i}`);
-}
+function fail(msg) { stage.innerHTML = `<p class="rec-empty">${msg}</p>`; dock.innerHTML = ""; }
 
 async function init() {
   if (!slug) return fail("Falta elegir un auto. Regresa al inventario.");
   let rec, lista;
-  try {
-    [rec, lista] = await Promise.all([fetch(BASE + "data/recorridos.json", { cache: "no-cache" }).then((r) => r.json()), autos()]);
-  } catch (er) { return fail("No pudimos cargar el recorrido. Recarga la página o escríbenos por WhatsApp al 33 3306 3319."); }
-  const a = lista.find((x) => x.slug === slug), r = rec[slug];
+  try { [rec, lista] = await Promise.all([fetch(BASE + "data/recorridos.json", { cache: "no-cache" }).then((r) => r.json()), autos()]); }
+  catch (er) { return fail("No pudimos cargar el recorrido. Recarga la página o escríbenos por WhatsApp al 33 3306 3319."); }
+  const a = lista.find((x) => x.slug === slug);
+  R = rec[slug];
   $("rec-back").href = `auto.html?a=${encodeURIComponent(slug)}`;
-  if (!a || !r || !r.escenas?.length) return fail("Este auto todavía no tiene recorrido virtual. Escríbenos por WhatsApp y te mandamos fotos o video.");
+  if (!a || !R) return fail("Este auto todavía no tiene recorrido virtual. Escríbenos por WhatsApp y te mandamos fotos o video.");
+  moto = R.tipo === "moto";
+  entra = ["puerta", "asiento", "manejo", "delanteros"].find((k) => R.s[k]) || Object.keys(R.s)[0];
   const name = a.nombre || a.title;
   document.title = `Recorrido virtual: ${name} | Entre Amigos`;
-  $("rec-t").textContent = name;
+  $("cover-t").textContent = name;
+  $("cover-img").src = src(a.foto || R.giro[0]); $("cover-img").alt = name;
+  $("subir").textContent = moto ? "Súbete a la moto" : "Súbete al auto";
+  if (moto) $("cover-p").textContent = "Revísala como si estuvieras aquí: rodéala y súbete.";
   $("rec-wa").href = wa(`Hola, vi el recorrido virtual del ${name} en su página y me interesa: ${SITE}/auto.html?a=${encodeURIComponent(slug)}`);
-  esc_ = r.escenas;
-  const e0 = Number(new URLSearchParams(location.search).get("e")) || 0;
-  go(Math.min(Math.max(e0, 0), esc_.length - 1));
-  document.addEventListener("keydown", (ev) => { if (esc_[cur]?.tipo === "360") return; if (ev.key === "ArrowLeft") view.querySelector(".arw.l")?.click(); if (ev.key === "ArrowRight") view.querySelector(".arw.r")?.click(); });
+  R.giro.forEach((p) => { const im = new Image(); im.src = src(p); });
+  Object.values(R.s).forEach(([p]) => { const im = new Image(); im.src = src(p, "t"); });
+  const start = async (k) => {
+    cover.classList.add("gone");
+    frame = R.giro[0];
+    // Entrar caminando hacia el primer punto que lleva adentro, si lo hay.
+    const fhEntry = Object.entries(R.fh).find(([, l]) => l.some((h) => h[2] === entra));
+    if (k !== "fuera" && fhEntry) frame = fhEntry[0];
+    await enter("fuera");
+    if (k !== "fuera") { const h = (R.fh[frame] || []).find((t) => t[2] === entra) || [50, 50]; setTimeout(() => walk(k, h[0], h[1]), 350); }
+  };
+  $("subir").onclick = () => start(entra);
+  $("rodear").onclick = () => start("fuera");
 }
 init();

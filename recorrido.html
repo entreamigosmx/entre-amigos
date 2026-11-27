@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recorrido virtual | Entre Amigos</title>
+<meta name="description" content="Recorrido virtual con fotos reales: rodea el auto, súbete y revísalo por dentro. Entre Amigos, Guadalajara.">
+<meta name="theme-color" content="#0a0b0a">
+<link rel="icon" href="assets/img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/estilo.css?v=p17">
+<link rel="stylesheet" href="css/recorrido.css?v=4">
+</head>
+<body class="rec-body">
+<div class="rec-app">
+  <div class="rec-bar">
+    <a class="rec-x" id="rec-back" href="inventario.html" aria-label="Volver a la ficha">‹ Ficha</a>
+    <div class="rec-where" id="rec-where">Recorrido virtual</div>
+    <a class="rec-wa" id="rec-wa" href="https://wa.me/523333063319" target="_blank" rel="noopener">Me interesa</a>
+  </div>
+  <div class="rec-stage" id="stage">
+    <div class="rec-blur" id="blur"></div>
+    <div class="rec-box" id="box"><img id="img" alt=""></div>
+    <span class="rec-hint off" id="hint"></span>
+    <div class="rec-cover" id="cover">
+      <img id="cover-img" alt="">
+      <div class="shade"></div>
+      <div class="in">
+        <span class="ey">Recorrido con fotos reales</span>
+        <h1 id="cover-t">Recorrido virtual</h1>
+        <p id="cover-p">Revísalo como si estuvieras aquí: rodéalo, abre la puerta y súbete.</p>
+        <div class="btns">
+          <button class="cta" type="button" id="subir">Súbete al auto</button>
+          <button class="cta2" type="button" id="rodear">Darle la vuelta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rec-dock" id="dock"></div>
+</div>
+<script type="module" src="js/recorrido.js?v=2"></script>
+<script src="js/visitas.js?v=1" defer></script>
+</body>
+</html>

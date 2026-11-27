@@ -1,4 +1,4 @@
-import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE, soloArr, arrWa } from "./comun.js?v=p6";
+import { autos, src, fotos, mxn, km, esc, wa, WA_ICON, card, credito, SITE, soloArr, arrWa, BASE } from "./comun.js?v=p6";
 
 const root = document.getElementById("car");
 const back = `<a class="back" href="inventario.html">← Ver todo el inventario</a>`;
@@ -64,6 +64,14 @@ function render(a, list) {
     offers: { "@type": "Offer", ...(so ? {} : { price: a.precio }), priceCurrency: "MXN", availability: a.apartado ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock", seller: { "@type": "AutoDealer", name: "Entre Amigos" } } };
   if (a.kilometraje) ld.mileageFromOdometer = { "@type": "QuantitativeValue", value: a.kilometraje, unitCode: "KMT" };
   const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
+  fetch(BASE + "data/recorridos.json", { cache: "no-cache" }).then((r) => r.json()).then((rec) => {
+    if (!rec[a.slug]) return;
+    const b = document.createElement("a");
+    b.className = "rec-card"; b.href = `recorrido.html?a=${encodeURIComponent(a.slug)}`;
+    const moto = rec[a.slug].tipo === "moto";
+    b.innerHTML = `<img src="${src(rec[a.slug].giro[1] || rec[a.slug].giro[0], "t")}" alt="" loading="lazy"><span class="in"><span class="ey">Recorrido virtual con fotos reales</span><b>Revísal${moto ? "a" : "o"} como si estuvieras aquí</b><span class="go">${moto ? "Súbete a la moto" : "Súbete al auto"} ›</span></span>`;
+    (root.querySelector(".strip") || root.querySelector(".stage")).after(b);
+  }).catch(() => {});
   if (p.length > 1) {
     let i = 0;
     const st = document.getElementById("st"), cnt = document.getElementById("cnt"), bl = document.getElementById("bl");

@@ -65,11 +65,11 @@ function render(a, list) {
   if (a.kilometraje) ld.mileageFromOdometer = { "@type": "QuantitativeValue", value: a.kilometraje, unitCode: "KMT" };
   const sc = document.createElement("script"); sc.type = "application/ld+json"; sc.textContent = JSON.stringify(ld); document.head.appendChild(sc);
   fetch(BASE + "data/recorridos.json", { cache: "no-cache" }).then((r) => r.json()).then((rec) => {
-    if (!rec[a.slug]?.escenas?.length) return;
+    if (!rec[a.slug]) return;
     const b = document.createElement("a");
-    b.className = "btn ghost"; b.style.cssText = "width:100%;margin-top:10px;justify-content:center";
-    b.href = `recorrido.html?a=${encodeURIComponent(a.slug)}`;
-    b.textContent = "Recorrido virtual: dale la vuelta y súbete";
+    b.className = "rec-card"; b.href = `recorrido.html?a=${encodeURIComponent(a.slug)}`;
+    const moto = rec[a.slug].tipo === "moto";
+    b.innerHTML = `<img src="${src(rec[a.slug].giro[1] || rec[a.slug].giro[0], "t")}" alt="" loading="lazy"><span class="in"><span class="ey">Recorrido virtual con fotos reales</span><b>Revísal${moto ? "a" : "o"} como si estuvieras aquí</b><span class="go">${moto ? "Súbete a la moto" : "Súbete al auto"} ›</span></span>`;
     (root.querySelector(".strip") || root.querySelector(".stage")).after(b);
   }).catch(() => {});
   if (p.length > 1) {
