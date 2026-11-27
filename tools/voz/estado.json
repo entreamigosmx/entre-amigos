@@ -3,20 +3,20 @@
   "nombre": "Jesus Entre Amigos ",
   "id": "71Wro1HfgaWziywnWXPM",
   "fine_tuning": {
-   "eleven_turbo_v2_5": "fine_tuning",
-   "eleven_multilingual_v2_exp": "queued",
-   "eleven_v4_eval": "fine_tuning",
-   "eleven_v4_turbo_exp": "fine_tuning",
-   "eleven_v4_hq": "fine_tuning",
-   "eleven_v4_post_trained": "fine_tuning",
-   "eleven_flash_v2_5_exp": "fine_tuning",
-   "eleven_v4_turbo": "fine_tuning",
-   "eleven_v4_exp": "fine_tuning",
-   "eleven_v4": "fine_tuning",
-   "eleven_multilingual_v2": "queued",
-   "eleven_flash_v2_5": "fine_tuning",
-   "eleven_v2_5_flash": "fine_tuning",
-   "eleven_turbo_v2_5_exp": "fine_tuning"
+   "eleven_v4_turbo_exp": "fine_tuned",
+   "eleven_v4_exp": "fine_tuned",
+   "eleven_v2_5_flash": "fine_tuned",
+   "eleven_flash_v2_5": "fine_tuned",
+   "eleven_v4": "fine_tuned",
+   "eleven_v4_hq": "fine_tuned",
+   "eleven_turbo_v2_5_exp": "fine_tuned",
+   "eleven_v4_turbo": "fine_tuned",
+   "eleven_flash_v2_5_exp": "fine_tuned",
+   "eleven_multilingual_v2_exp": "fine_tuned",
+   "eleven_v4_eval": "fine_tuned",
+   "eleven_v4_post_trained": "fine_tuned",
+   "eleven_turbo_v2_5": "fine_tuned",
+   "eleven_multilingual_v2": "fine_tuned"
   }
  }
 ]
