@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mezcal QH: lo que falta</title>
+<link rel="icon" href="../fotos/icono.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0c;--card:#151517;--line:#2a2a2e;--text:#f4f4f2;--muted:#a3a3a0;--lime:#b6e21f;--r:18px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:16px/1.55 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.top{position:sticky;top:0;z-index:5;background:#0b0b0cf2;backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.top img{height:26px;width:auto}
+.top b{font-size:14px;letter-spacing:.02em}
+.top small{display:block;color:var(--muted);font-size:12px;font-weight:500}
+.prog{margin-left:auto;text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.prog strong{color:var(--lime);font-size:18px}
+.bar{height:3px;background:var(--line)}.bar i{display:block;height:100%;width:0;background:var(--lime);transition:width .3s}
+main{max-width:760px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:clamp(28px,7vw,40px);line-height:1.08;font-weight:800;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--lime)}
+.lead{color:var(--muted);margin-top:10px}
+.note{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--lime);background:var(--card);border-radius:12px;padding:12px 14px;font-size:14px;color:#d6d6d3}
+.note b{color:var(--text)}
+section{margin-top:28px}
+.sh{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.sh span{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--lime);color:#0b0b0c;font-weight:800;font-size:14px}
+.sh h2{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.sh em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0b0b0c;background:var(--lime);border-radius:99px;padding:3px 9px;margin-left:auto;white-space:nowrap}
+.sh em.opt{background:none;color:var(--muted);border:1px solid var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+label{display:flex;gap:12px;padding:14px 16px;border-top:1px solid var(--line);cursor:pointer;align-items:flex-start}
+label:first-child{border-top:0}
+input{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;border:2px solid #4a4a50;border-radius:7px;margin-top:1px;display:grid;place-items:center;cursor:pointer;transition:.15s}
+input:checked{background:var(--lime);border-color:var(--lime)}
+input:checked:after{content:"";width:6px;height:11px;border:solid #0b0b0c;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+label div{flex:1}
+label b{display:block;font-weight:600}
+label small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+label:has(input:checked) b{color:var(--muted);text-decoration:line-through}
+.opts{margin-top:8px;display:grid;gap:8px}
+.opts p{font-size:14px;color:#d6d6d3;background:#0f0f11;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.opts p strong{color:var(--lime)}
+.how{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.how h3{font-size:16px;margin-bottom:6px}
+.how p{color:#d6d6d3;font-size:15px}
+footer{margin-top:34px;text-align:center;color:var(--muted);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px}
+footer img{height:16px}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="top"><img src="../fotos/ea-mark.png" alt=""><div><b>Entre Amigos</b><small>Desarrollo web · mezcalqh.com</small></div><div class="prog"><strong id="pn">0</strong> de <span id="pt">0</span> listos</div></div>
+<div class="bar"><i id="pb"></i></div>
+<main>
+<h1>Lo que necesitamos para <em>terminar tu página</em></h1>
+<p class="lead">Con esto quitamos todo lo de ejemplo y la dejamos al 100 con información real del rancho. Van en orden de importancia.</p>
+<div class="note"><b>Nada se publica sin tu visto bueno.</b> Los datos bancarios, RFC y datos de dueños de los registros nunca van en la página.</div>
+
+<section><div class="sh"><span>1</span><h2>El dominio mezcalqh.com</h2><em>Primero</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>¿En qué empresa se compró?</b><small>Por ejemplo GoDaddy, Wix, Hostinger, Google o Squarespace, Akky, Neubox. Con eso te decimos los pasos exactos.</small></div></label>
+<label><input type="checkbox"><div><b>Darnos acceso para conectarlo</b><small>Elige una de estas dos formas:</small>
+<div class="opts"><p><strong>Recomendada:</strong> nos agregas como usuario o "delegado" en tu cuenta de esa empresa, o nos dejas cambiar los registros DNS. El dominio sigue a tu nombre.</p><p><strong>Otra opción:</strong> lo transferimos. Lo desbloqueas y nos mandas el código de autorización (también le dicen código EPP). Si se compró hace menos de 60 días todavía no se puede transferir.</p></div></div></label>
+<label><input type="checkbox"><div><b>A nombre de quién está y cuándo vence</b><small>Para que no se nos pase la renovación de cada año.</small></div></label>
+<label><input type="checkbox"><div><b>¿Tienen correos @mezcalqh.com?</b><small>Si sí, los cuidamos para no cortarlos al conectar la página.</small></div></label>
+<label><input type="checkbox"><div><b>¿Siguen teniendo mezcalquarterhorses.com?</b><small>Si sí, lo mandamos a la página nueva para no perder a quien lo tenga guardado.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>2</span><h2>Decisiones</h2><em>Hoy</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Diseño elegido</b><small>Pelaje y fierro, Paisaje, Cuero, Pergamino o Monte.</small></div></label>
+<label><input type="checkbox"><div><b>¿Va la rifa en la página?</b><small>Si no, la quitamos y se puede agregar después.</small></div></label>
+<label><input type="checkbox"><div><b>¿Va la tienda desde el inicio?</b><small>Si todavía no hay productos, puede abrirse más adelante.</small></div></label>
+<label><input type="checkbox"><div><b>WhatsApp que recibe los mensajes</b><small>Confirmar el 33 2548 3880 y quién contesta.</small></div></label>
+<label><input type="checkbox"><div><b>Instagram</b><small>Si tienen, el usuario para ponerlo junto a Facebook y TikTok.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>3</span><h2>Historia y rancho</h2><em>Importante</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Historia completa del rancho</b><small>La versión detallada: cómo empezó, Eduardo Gómez, logros importantes.</small></div></label>
+<label><input type="checkbox"><div><b>Fotos reales del rancho</b><small>Instalaciones, caballerizas, corrales y el equipo de trabajo. Sustituyen las fotos de ejemplo.</small></div></label>
+<label><input type="checkbox"><div><b>Confirmar la ubicación de Zapopan</b><small>Que el pin de Google Maps que mandaron sea el correcto.</small></div></label>
+<label><input type="checkbox"><div><b>Logo en vector</b><small>Archivo PDF, AI o SVG, si lo tienen. No es urgente.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>4</span><h2>Sementales</h2><em>Importante</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Fichas de los 9 que faltan</b><small>Charrasqueado, Centenario, Capricho, Cardenal, Catrín, Coronel, Cálico, Mezcalero 66 y Cantador: cómo se ofrecen (monta, fresco o congelado) y sus logros que se puedan comprobar. Parece que existe un documento con las 15 fichas.</small></div></label>
+<label><input type="checkbox"><div><b>Nombres oficiales</b><small>Tal como vienen en el registro (Wimpyneedsacocktail viene escrito de dos formas).</small></div></label>
+<label><input type="checkbox"><div><b>Video de cada semental</b><small>Montado o en movimiento. Con celular y en horizontal está bien.</small></div></label>
+<label><input type="checkbox"><div><b>Cupos para la temporada 2027</b><small>Cuántas yeguas por semental, o lo dejamos como "sujeto a disponibilidad".</small></div></label>
+<label><input type="checkbox"><div><b>Fotos de Rodrigo Cervantes</b><small>Cuáles son suyas, para darle crédito solo en esas.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>5</span><h2>Potrillos en venta</h2><em>Importante</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Lista real de potrillos y preñeces</b><small>Papá, mamá, fecha de nacimiento o fecha de parto, color, si está disponible o vendido, y fotos o video de cada uno.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>6</span><h2>Contrato y servicio</h2></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Contrato de maquila y garantía de preñez</b><small>Para que lo que dice la página coincida. El contrato no se publica completo.</small></div></label>
+<label><input type="checkbox"><div><b>Qué incluye el semen congelado</b><small>Cuántas dosis o intentos incluye el servicio.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>7</span><h2>Clientes que ya confiaron</h2></div>
+<div class="card">
+<label><input type="checkbox"><div><b>2 o 3 opiniones reales</b><small>Nombre, ciudad y su permiso para publicarlas.</small></div></label>
+<label><input type="checkbox"><div><b>Fotos de potrillos de clientes</b><small>Con permiso del dueño.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>8</span><h2>Premios y noticias</h2></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Resultados de la Expo Ganadera Ixtlahuacán 2026</b><small>Fecha, categoría, lugar obtenido y foto de la premiación de Cardenal, Catrín, Calexo, Mezcalero 66, Madona y Sanger Trash.</small></div></label>
+<label><input type="checkbox"><div><b>Fotos de trofeos, hebillas y listones</b><small>Del rancho o de hijos de sus sementales.</small></div></label>
+<label><input type="checkbox"><div><b>Noticias recientes</b><small>Ventas, entregas, nacimientos y gestaciones, con fecha y foto.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>9</span><h2>Rifa</h2><em class="opt">Si va</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Precio del boleto y cuántos son</b><small>Y cómo se reparten los 5 números de cada boleto.</small></div></label>
+<label><input type="checkbox"><div><b>Boletos vendidos</b><small>Cuáles ya se vendieron y quién lleva el control.</small></div></label>
+<label><input type="checkbox"><div><b>Permiso de Gobernación (SEGOB)</b><small>Número de permiso, si lo tienen.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>10</span><h2>Tienda</h2><em class="opt">Si va</em></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Productos reales</b><small>Una foto de cada uno (fondo liso, con celular está bien), precio, tallas y colores.</small></div></label>
+<label><input type="checkbox"><div><b>Cómo se entrega</b><small>Envío, recoger en el rancho y en cuánto tiempo.</small></div></label>
+</div></section>
+
+<section><div class="sh"><span>11</span><h2>Para cerrar</h2></div>
+<div class="card">
+<label><input type="checkbox"><div><b>Revisar las preguntas frecuentes</b><small>Las 10 que armamos, y agregar las que más les hacen por WhatsApp.</small></div></label>
+<label><input type="checkbox"><div><b>Datos para el aviso de privacidad</b><small>Nombre del responsable (persona o empresa) y un correo de contacto. Lo pide la ley porque la página recibe nombre y WhatsApp.</small></div></label>
+</div></section>
+
+<div class="how"><h3>¿Cómo nos lo mandan?</h3><p>Por WhatsApp a Jesús, o en una carpeta de Google Drive compartida. Las fotos y videos, de preferencia en tamaño original.</p></div>
+<div style="text-align:center"><button class="reset" id="reset">Desmarcar todo</button></div>
+<footer><img src="../fotos/ea-mark.png" alt="">Entre Amigos · Desarrollo web</footer>
+</main>
+<script>
+const boxes = [...document.querySelectorAll('input[type=checkbox]')];
+let saved = [];
+try { saved = JSON.parse(localStorage.getItem('mqh-pend') || '[]'); } catch (e) {}
+boxes.forEach((b, i) => { b.checked = !!saved[i]; });
+function upd() {
+  const n = boxes.filter(b => b.checked).length;
+  document.getElementById('pn').textContent = n; document.getElementById('pt').textContent = boxes.length;
+  document.getElementById('pb').style.width = (100 * n / boxes.length) + '%';
+  try { localStorage.setItem('mqh-pend', JSON.stringify(boxes.map(b => b.checked))); } catch (e) {}
+}
+boxes.forEach(b => b.addEventListener('change', upd));
+document.getElementById('reset').onclick = () => { boxes.forEach(b => b.checked = false); upd(); };
+upd();
+</script>
+</body>
+</html>
